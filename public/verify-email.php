@@ -1,0 +1,3 @@
+<?php
+// This file is the endpoint in the email link: ?token=...
+require_once __DIR__ . "/../app/auth/verify_handler.php";

@@ -36,8 +36,6 @@ $isAdmin = Auth::isAdmin();
         <a class="tile" href="/modules/medications/list.php">Medication Management</a>
         <?php if ($isAdmin): ?>
         <a class="tile" href="/modules/admin/users.php">User Management</a>
-        <?php else: ?>
-        <a class="tile" href="#">Coming soon</a>
         <?php endif; ?>
     </div>
 </body>

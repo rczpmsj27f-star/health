@@ -3,7 +3,13 @@ require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 require_once "../../../app/config/database.php";
 
-$id = $_GET['id'];
+// Validate ID parameter
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    http_response_code(400);
+    die("Invalid user ID");
+}
+
+$id = (int)$_GET['id'];
 
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$id]);

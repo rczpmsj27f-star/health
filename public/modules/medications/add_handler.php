@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once "../../../app/config/database.php";
 
 $userId = $_SESSION['user_id'];

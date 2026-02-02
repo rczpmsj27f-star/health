@@ -1,15 +1,26 @@
 <?php
-require_once "../../../app/core/Auth.php";
+require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 require_once "../../../app/config/database.php";
 require_once "../../../app/config/mailer.php";
 
-$id = $_GET['id'];
+// Validate ID parameter
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    http_response_code(400);
+    die("Invalid user ID");
+}
 
-// Get user
+$id = (int)$_GET['id'];
+
+// Get user and verify exists
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$id]);
 $user = $stmt->fetch();
+
+if (!$user) {
+    http_response_code(404);
+    die("User not found");
+}
 
 // Create reset token
 $token = bin2hex(random_bytes(32));

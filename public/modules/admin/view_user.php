@@ -1,9 +1,15 @@
 <?php
-require_once "../../../app/core/Auth.php";
+require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 require_once "../../../app/config/database.php";
 
-$id = $_GET['id'];
+// Validate ID parameter
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    http_response_code(400);
+    die("Invalid user ID");
+}
+
+$id = (int)$_GET['id'];
 
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$id]);
@@ -52,6 +58,8 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
     <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $id ?>">
         Force Password Reset
     </a>
+
+    <p><a href="/modules/admin/users.php">Back to User Management</a></p>
 
 </div>
 

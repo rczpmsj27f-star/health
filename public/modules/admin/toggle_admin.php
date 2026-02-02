@@ -1,9 +1,23 @@
 <?php
-require_once "../../../app/core/Auth.php";
+require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 require_once "../../../app/config/database.php";
 
-$id = $_GET['id'];
+// Validate ID parameter
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    http_response_code(400);
+    die("Invalid user ID");
+}
+
+$id = (int)$_GET['id'];
+
+// Verify user exists
+$userCheck = $pdo->prepare("SELECT id FROM users WHERE id = ?");
+$userCheck->execute([$id]);
+if (!$userCheck->fetch()) {
+    http_response_code(404);
+    die("User not found");
+}
 
 // Get admin role ID
 $role = $pdo->query("SELECT id FROM user_roles WHERE role_name = 'admin'")->fetchColumn();

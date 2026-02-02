@@ -1,5 +1,6 @@
 <?php
-require_once "../../../app/core/Auth.php";
+session_start();
+require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 require_once "../../../app/config/database.php";
 
@@ -42,6 +43,8 @@ $users = $stmt->fetchAll();
             </a>
         <?php endforeach; ?>
     </div>
+
+    <p><a href="/dashboard.php">Back to Dashboard</a></p>
 </div>
 
 </body>

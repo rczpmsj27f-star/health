@@ -3,6 +3,8 @@ require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 require_once "../../../app/config/database.php";
 
+session_start();
+
 $search = $_GET['q'] ?? "";
 
 if ($search) {
@@ -42,6 +44,8 @@ $users = $stmt->fetchAll();
             </a>
         <?php endforeach; ?>
     </div>
+
+    <p><a href="/dashboard.php">Back to Dashboard</a></p>
 </div>
 
 </body>

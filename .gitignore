@@ -1,0 +1,34 @@
+# Ignore uploaded files but keep directory structure
+uploads/*
+!uploads/.gitkeep
+!uploads/*/
+uploads/*/*.jpg
+uploads/*/*.jpeg
+uploads/*/*.png
+uploads/*/*.gif
+uploads/*/*.pdf
+uploads/*/*.doc
+uploads/*/*.docx
+
+# Keep .gitkeep files
+!**/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+app/logs/*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp

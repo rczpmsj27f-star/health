@@ -25,6 +25,7 @@ $meds = $stmt->fetchAll();
 
 <div style="padding:16px;">
     <a class="btn btn-accept" href="/modules/medications/add.php">Add Medication</a>
+    <a class="btn btn-info" href="/dashboard.php">Back to Dashboard</a>
 </div>
 
 <div class="dashboard-grid">

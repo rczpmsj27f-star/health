@@ -4,6 +4,10 @@ if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
 }
+
+// Check if user is admin
+require_once __DIR__ . '/../app/core/auth.php';
+$isAdmin = Auth::isAdmin();
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,12 +26,19 @@ if (empty($_SESSION['user_id'])) {
         <h3>Menu</h3>
         <a href="/modules/profile/view.php">Profile</a><br>
         <a href="/modules/medications/list.php">Medication Management</a><br>
+        <?php if ($isAdmin): ?>
+        <a href="/modules/admin/users.php">User Management</a><br>
+        <?php endif; ?>
         <a href="/logout.php">Logout</a>
     </div>
 
     <div class="dashboard-grid">
         <a class="tile" href="/modules/medications/list.php">Medication Management</a>
+        <?php if ($isAdmin): ?>
+        <a class="tile" href="/modules/admin/users.php">User Management</a>
+        <?php else: ?>
         <a class="tile" href="#">Coming soon</a>
+        <?php endif; ?>
     </div>
 </body>
 </html>

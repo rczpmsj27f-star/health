@@ -53,6 +53,8 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         Force Password Reset
     </a>
 
+    <p><a href="/modules/admin/users.php">Back to User Management</a></p>
+
 </div>
 
 </body>

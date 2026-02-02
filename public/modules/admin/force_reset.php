@@ -12,10 +12,15 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $id = (int)$_GET['id'];
 
-// Get user
+// Get user and verify exists
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$id]);
 $user = $stmt->fetch();
+
+if (!$user) {
+    http_response_code(404);
+    die("User not found");
+}
 
 // Create reset token
 $token = bin2hex(random_bytes(32));

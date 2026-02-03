@@ -11,24 +11,24 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
-// Get active medications (no end_date or end_date in future)
+// Get active medications (not archived)
 $stmt = $pdo->prepare("
     SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week 
     FROM medications m 
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id 
-    WHERE m.user_id = ? AND (m.end_date IS NULL OR m.end_date >= CURDATE()) 
+    WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL) 
     ORDER BY m.created_at DESC
 ");
 $stmt->execute([$userId]);
 $activeMeds = $stmt->fetchAll();
 
-// Get archived medications (end_date in past)
+// Get archived medications
 $stmt = $pdo->prepare("
     SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week 
     FROM medications m 
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id 
-    WHERE m.user_id = ? AND m.end_date IS NOT NULL AND m.end_date < CURDATE() 
-    ORDER BY m.end_date DESC
+    WHERE m.user_id = ? AND m.archived = 1 
+    ORDER BY m.archived_at DESC
 ");
 $stmt->execute([$userId]);
 $archivedMeds = $stmt->fetchAll();

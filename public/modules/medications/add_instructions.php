@@ -5,26 +5,43 @@ $medId = $_GET['med'];
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instructions</title>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="centered-page">
+    <div class="page-card">
+        <div class="page-header">
+            <h2>Special Instructions</h2>
+            <p>Add any special instructions for this medication</p>
+        </div>
 
-<div style="padding:16px;">
-    <h2>Special Instructions</h2>
+        <form method="POST" action="/modules/medications/add_instructions_handler.php">
+            <input type="hidden" name="med_id" value="<?= htmlspecialchars($medId) ?>">
 
-    <form method="POST" action="/modules/medications/add_instructions_handler.php">
-        <input type="hidden" name="med_id" value="<?= $medId ?>">
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" name="instructions[]" value="Take with water">
+                    Take with water
+                </label>
+                <label>
+                    <input type="checkbox" name="instructions[]" value="Take on empty stomach">
+                    Take on empty stomach
+                </label>
+                <label>
+                    <input type="checkbox" name="instructions[]" value="Take with food">
+                    Take with food
+                </label>
+            </div>
 
-        <label><input type="checkbox" name="instructions[]" value="Take with water"> Take with water</label><br>
-        <label><input type="checkbox" name="instructions[]" value="Take on empty stomach"> Take on empty stomach</label><br>
+            <div class="form-group">
+                <label>Other Instructions (optional)</label>
+                <textarea name="other_instruction" rows="3" placeholder="Enter any additional instructions..."></textarea>
+            </div>
 
-        <label>Other</label>
-        <input type="text" name="other_instruction">
-
-        <button class="btn btn-accept" type="submit">Continue</button>
-    </form>
-</div>
-
+            <button class="btn btn-accept" type="submit">Continue to Condition</button>
+        </form>
+    </div>
 </body>
 </html>

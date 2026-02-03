@@ -27,42 +27,74 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin – View User</title>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="centered-page">
+    <div class="page-card">
+        <div class="page-header">
+            <h2><?= htmlspecialchars($user['username']) ?></h2>
+            <p>User Details & Actions</p>
+        </div>
 
-<div style="padding:16px;">
-    <h2>User: <?= htmlspecialchars($user['username']) ?></h2>
+        <div class="info-item">
+            <div class="info-label">Email</div>
+            <div class="info-value"><?= htmlspecialchars($user['email']) ?></div>
+        </div>
 
-    <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
-    <p><strong>Name:</strong> <?= htmlspecialchars($user['first_name'] . " " . $user['surname']) ?></p>
-    <p><strong>Email Verified:</strong> <?= $user['is_email_verified'] ? "Yes" : "No" ?></p>
-    <p><strong>Active:</strong> <?= $user['is_active'] ? "Yes" : "No" ?></p>
-    <p><strong>Roles:</strong> <?= implode(", ", $roleList) ?></p>
+        <div class="info-item">
+            <div class="info-label">Name</div>
+            <div class="info-value"><?= htmlspecialchars($user['first_name'] . " " . $user['surname']) ?></div>
+        </div>
 
-    <h3>Actions</h3>
+        <div class="info-item">
+            <div class="info-label">Email Verified</div>
+            <div class="info-value">
+                <span style="color: <?= $user['is_email_verified'] ? '#28a745' : '#dc3545' ?>">
+                    <?= $user['is_email_verified'] ? "✓ Yes" : "✗ No" ?>
+                </span>
+            </div>
+        </div>
 
-    <a class="btn btn-info" href="/modules/admin/toggle_verify.php?id=<?= $id ?>">
-        <?= $user['is_email_verified'] ? "Unverify Email" : "Verify Email" ?>
-    </a>
+        <div class="info-item">
+            <div class="info-label">Active</div>
+            <div class="info-value">
+                <span style="color: <?= $user['is_active'] ? '#28a745' : '#dc3545' ?>">
+                    <?= $user['is_active'] ? "✓ Yes" : "✗ No" ?>
+                </span>
+            </div>
+        </div>
 
-    <a class="btn btn-info" href="/modules/admin/toggle_active.php?id=<?= $id ?>">
-        <?= $user['is_active'] ? "Deactivate Account" : "Activate Account" ?>
-    </a>
+        <div class="info-item">
+            <div class="info-label">Roles</div>
+            <div class="info-value"><?= empty($roleList) ? "None" : implode(", ", $roleList) ?></div>
+        </div>
 
-    <a class="btn btn-info" href="/modules/admin/toggle_admin.php?id=<?= $id ?>">
-        <?= in_array("admin", $roleList) ? "Remove Admin" : "Make Admin" ?>
-    </a>
+        <div style="margin-top: 24px;">
+            <h3 style="margin-bottom: 16px; color: #333;">Admin Actions</h3>
 
-    <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $id ?>">
-        Force Password Reset
-    </a>
+            <a class="btn btn-info" href="/modules/admin/toggle_verify.php?id=<?= $id ?>">
+                <?= $user['is_email_verified'] ? "Unverify Email" : "Verify Email" ?>
+            </a>
 
-    <p><a href="/modules/admin/users.php">Back to User Management</a></p>
+            <a class="btn btn-info" href="/modules/admin/toggle_active.php?id=<?= $id ?>">
+                <?= $user['is_active'] ? "Deactivate Account" : "Activate Account" ?>
+            </a>
 
-</div>
+            <a class="btn btn-info" href="/modules/admin/toggle_admin.php?id=<?= $id ?>">
+                <?= in_array("admin", $roleList) ? "Remove Admin" : "Make Admin" ?>
+            </a>
 
+            <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $id ?>">
+                Force Password Reset
+            </a>
+        </div>
+
+        <div class="page-footer">
+            <p><a href="/modules/admin/users.php">Back to User Management</a></p>
+        </div>
+    </div>
 </body>
 </html>
-

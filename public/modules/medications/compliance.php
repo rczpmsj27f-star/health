@@ -1341,12 +1341,14 @@ foreach ($medications as $med) {
         let expanded = urlParams.get('expanded');
         let expandedList = expanded ? expanded.split(',').filter(id => id) : [];
         
+        const medIdStr = medId.toString();
+        
         if (isExpanded) {
-            if (!expandedList.includes(medId.toString())) {
-                expandedList.push(medId);
+            if (!expandedList.includes(medIdStr)) {
+                expandedList.push(medIdStr);
             }
         } else {
-            expandedList = expandedList.filter(id => id !== medId.toString());
+            expandedList = expandedList.filter(id => id !== medIdStr);
         }
         
         if (expandedList.length > 0) {
@@ -1356,7 +1358,8 @@ foreach ($medications as $med) {
         }
         
         // Update URL without reload
-        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        const params = urlParams.toString();
+        const newUrl = window.location.pathname + (params ? '?' + params : '');
         window.history.replaceState({}, '', newUrl);
     }
     

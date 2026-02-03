@@ -32,7 +32,7 @@ if ($currentYear < 2020 || $currentYear > 2100) {
 
 // Get all active medications (exclude PRN medications from compliance)
 $stmt = $pdo->prepare("
-    SELECT m.id, m.name, m.start_date, m.end_date, m.created_at, md.dose_amount, md.dose_unit
+    SELECT m.id, m.name, m.end_date, m.created_at, md.dose_amount, md.dose_unit
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -551,7 +551,7 @@ foreach ($medications as $med) {
                     $skippedLogs = $data['skipped_logs'];
                     
                     // Check if medication was active today
-                    $medStartDate = $med['start_date'] ?? $med['created_at'];
+                    $medStartDate = $med['created_at'];
                     $medEndDate = $med['end_date'];
                     $isMedActiveToday = true;
                     
@@ -676,7 +676,7 @@ foreach ($medications as $med) {
                                     $isToday = $day['is_today'];
                                     
                                     // Check if medication was active on this date
-                                    $medStartDate = $med['start_date'] ?? $med['created_at'];
+                                    $medStartDate = $med['created_at'];
                                     $medEndDate = $med['end_date'];
                                     $isMedActive = true;
                                     
@@ -985,7 +985,7 @@ foreach ($medications as $med) {
                                 $isFuture = strtotime($dateStr) > strtotime(date('Y-m-d'));
                                 
                                 // Check if medication was active on this date
-                                $medStartDate = $med['start_date'] ?? $med['created_at'];
+                                $medStartDate = $med['created_at'];
                                 $medEndDate = $med['end_date'];
                                 $isMedActive = true;
                                 

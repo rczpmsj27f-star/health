@@ -343,6 +343,23 @@ foreach ($prnMedications as $med) {
             background: #e0a800;
         }
         
+        .btn-untake {
+            background: var(--color-danger);
+            color: white;
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: 8px;
+        }
+        
+        .btn-untake:hover {
+            background: #c82333;
+        }
+        
         .status-icon {
             font-size: 20px;
             margin-right: 4px;
@@ -587,6 +604,10 @@ foreach ($prnMedications as $med) {
                                         <span class="status-taken">
                                             <span class="status-icon">✓</span> Taken
                                         </span>
+                                        <button type="button" class="btn-untake" 
+                                            onclick="untakeMedication(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                            ↶ Untake
+                                        </button>
                                     <?php elseif ($med['log_status'] === 'skipped'): ?>
                                         <span class="status-skipped">
                                             <span class="status-icon">⊘</span> Skipped
@@ -629,6 +650,10 @@ foreach ($prnMedications as $med) {
                                         <span class="status-taken">
                                             <span class="status-icon">✓</span> Taken
                                         </span>
+                                        <button type="button" class="btn-untake" 
+                                            onclick="untakeMedication(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                            ↶ Untake
+                                        </button>
                                     <?php elseif ($med['log_status'] === 'skipped'): ?>
                                         <span class="status-skipped">
                                             <span class="status-icon">⊘</span> Skipped
@@ -781,6 +806,38 @@ foreach ($prnMedications as $med) {
                 });
             } else {
                 showErrorModal(data.message || 'Failed to mark medication as taken');
+            }
+        })
+        .catch(error => {
+            showErrorModal('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+    
+    function untakeMedication(medId, scheduledDateTime) {
+        if (!confirm('Are you sure you want to undo taking this medication? This will remove the log entry and restore 1 unit to your stock.')) {
+            return;
+        }
+        
+        fetch('/modules/medications/untake_medication_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'medication_id': medId,
+                'scheduled_date_time': scheduledDateTime,
+                'ajax': '1'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal(data.message, 2000, () => {
+                    window.location.reload();
+                });
+            } else {
+                showErrorModal(data.message || 'Failed to untake medication');
             }
         })
         .catch(error => {

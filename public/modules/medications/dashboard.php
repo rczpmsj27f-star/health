@@ -49,7 +49,15 @@ while ($log = $stmt->fetch()) {
     $medLogs[$key] = $log;
 }
 
+// Separate medications into timed and untimed (daily without specific times)
+$untimedDailyMeds = [];
+
 foreach ($todaysMeds as $med) {
+    // Skip PRN medications - they're handled separately
+    if ($med['is_prn']) {
+        continue;
+    }
+    
     $stmt = $pdo->prepare("
         SELECT dose_number, dose_time 
         FROM medication_dose_times 
@@ -80,11 +88,85 @@ foreach ($todaysMeds as $med) {
             
             $scheduleByTime[$timeKey][] = $medWithStatus;
         }
+    } else {
+        // Daily medication without specific times
+        // Use generic scheduled time for today
+        $scheduledDateTime = $todayDate . ' 12:00:00';
+        $medWithStatus = $med;
+        $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
+        $logKey = $med['id'] . '_' . $scheduledDateTime;
+        $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
+        $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
+        $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
+        
+        $untimedDailyMeds[] = $medWithStatus;
     }
 }
 
 // Sort by time (earliest first)
 ksort($scheduleByTime);
+
+// Get PRN medications
+$stmt = $pdo->prepare("
+    SELECT m.id, m.name, m.current_stock, md.dose_amount, md.dose_unit, 
+           ms.max_doses_per_day, ms.min_hours_between_doses
+    FROM medications m
+    LEFT JOIN medication_doses md ON m.id = md.medication_id
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+    WHERE m.user_id = ? 
+    AND (m.archived = 0 OR m.archived IS NULL)
+    AND ms.is_prn = 1
+    ORDER BY m.name
+");
+$stmt->execute([$userId]);
+$prnMedications = $stmt->fetchAll();
+
+// For each PRN medication, get dose count in last 24 hours
+$prnData = [];
+foreach ($prnMedications as $med) {
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken
+        FROM medication_logs 
+        WHERE medication_id = ? 
+        AND user_id = ?
+        AND taken_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        AND status = 'taken'
+    ");
+    $stmt->execute([$med['id'], $userId]);
+    $logData = $stmt->fetch();
+    
+    $doseCount = $logData['dose_count'] ?? 0;
+    $lastTaken = $logData['last_taken'];
+    $maxDoses = $med['max_doses_per_day'] ?? 999;
+    $minHours = $med['min_hours_between_doses'] ?? 0;
+    
+    // Calculate if can take now
+    $canTakeNow = true;
+    
+    // Check max doses
+    if ($doseCount >= $maxDoses) {
+        $canTakeNow = false;
+    }
+    
+    // Check minimum time between doses
+    if ($lastTaken && $minHours > 0) {
+        $lastTakenTimestamp = strtotime($lastTaken);
+        $minGapSeconds = $minHours * 3600;
+        $nextAvailableTimestamp = $lastTakenTimestamp + $minGapSeconds;
+        $timeRemaining = $nextAvailableTimestamp - time();
+        
+        if ($timeRemaining > 0) {
+            $canTakeNow = false;
+        }
+    }
+    
+    $prnData[] = [
+        'medication' => $med,
+        'dose_count' => $doseCount,
+        'max_doses' => $maxDoses,
+        'can_take_now' => $canTakeNow
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -453,6 +535,7 @@ ksort($scheduleByTime);
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
                 <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
             </div>
         </div>
         
@@ -477,8 +560,48 @@ ksort($scheduleByTime);
                 <div class="no-meds">
                     <p>No medications scheduled for today</p>
                 </div>
-            <?php elseif (!empty($scheduleByTime)): ?>
+            <?php else: ?>
+                <!-- Display untimed daily medications first -->
+                <?php if (!empty($untimedDailyMeds)): ?>
+                    <div class="time-group-compact">
+                        <div class="time-header-compact">Daily Medications</div>
+                        <?php foreach ($untimedDailyMeds as $med): ?>
+                            <div class="med-item-compact">
+                                <div class="med-info">
+                                    💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                    <?php if ($med['frequency_type'] === 'per_day' && $med['times_per_day'] > 1): ?>
+                                        <br><small style="color: var(--color-text-secondary);"><?= $med['times_per_day'] ?> times per day</small>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="med-actions">
+                                    <?php if ($med['log_status'] === 'taken'): ?>
+                                        <span class="status-taken">
+                                            <span class="status-icon">✓</span> Taken
+                                        </span>
+                                    <?php elseif ($med['log_status'] === 'skipped'): ?>
+                                        <span class="status-skipped">
+                                            <span class="status-icon">⊘</span> Skipped
+                                        </span>
+                                    <?php else: ?>
+                                        <form method="POST" action="/modules/medications/take_medication_handler.php" style="display: inline;">
+                                            <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
+                                            <input type="hidden" name="scheduled_date_time" value="<?= $med['scheduled_date_time'] ?>">
+                                            <button type="submit" class="btn-taken">✓ Taken</button>
+                                        </form>
+                                        <button type="button" class="btn-skipped" 
+                                            onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
+                                            ⊘ Skipped
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                
                 <!-- Display medications grouped by time in compact format -->
+                <?php if (!empty($scheduleByTime)): ?>
                 <?php 
                 $currentTime = strtotime(date('H:i'));
                 foreach ($scheduleByTime as $time => $meds): 
@@ -490,7 +613,7 @@ ksort($scheduleByTime);
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
                                 <div class="med-info">
-                                    💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?>
+                                    💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                     <?php if ($med['is_prn']): ?> <span class="prn-badge">PRN</span><?php endif; ?>
                                 </div>
                                 
@@ -522,34 +645,53 @@ ksort($scheduleByTime);
                         <?php endforeach; ?>
                     </div>
                 <?php endforeach; ?>
-            <?php else: ?>
-                <!-- Fallback for PRN or medications without specific times -->
-                <?php foreach ($todaysMeds as $med): ?>
-                    <div class="schedule-card">
-                        <div class="med-name">
-                            💊 <?= htmlspecialchars($med['name']) ?>
-                            <?php if ($med['is_prn']): ?>
-                                <span class="prn-badge">PRN</span>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <?php if ($med['is_prn']): ?>
-                            <div class="dose-time">
-                                <span class="time">As needed</span>
-                                <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>
-                            </div>
-                        <?php else: ?>
-                            <div class="dose-time">
-                                <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>
-                                <?php if ($med['times_per_day']): ?>
-                                    <span>(<?= $med['times_per_day'] ?> time<?= $med['times_per_day'] > 1 ? 's' : '' ?> per day)</span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
+        
+        <!-- PRN Medications Section -->
+        <?php if (!empty($prnMedications)): ?>
+        <div class="schedule-section">
+            <h3>Take PRN Medication</h3>
+            <p style="color: var(--color-text-secondary); margin: 0 0 20px 0;">As-needed medications available to take</p>
+            
+            <?php foreach ($prnData as $data): ?>
+                <?php 
+                $med = $data['medication'];
+                $doseCount = $data['dose_count'];
+                $maxDoses = $data['max_doses'];
+                $canTake = $data['can_take_now'];
+                $remainingDoses = max(0, $maxDoses - $doseCount);
+                ?>
+                <div class="med-item-compact" style="margin-bottom: 12px;">
+                    <div class="med-info">
+                        💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                        <span class="prn-badge">PRN</span>
+                        <br>
+                        <small style="color: var(--color-text-secondary);">
+                            <?= $doseCount ?> of <?= $maxDoses ?> doses taken today
+                            <?php if ($canTake && $remainingDoses > 0): ?>
+                                • <?= $remainingDoses ?> remaining
+                            <?php endif; ?>
+                        </small>
+                    </div>
+                    
+                    <div class="med-actions">
+                        <?php if ($canTake): ?>
+                            <form method="POST" action="/modules/medications/log_prn_handler.php" style="margin: 0; display: inline;">
+                                <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
+                                <button type="submit" class="btn-taken">✓ Take Dose</button>
+                            </form>
+                        <?php else: ?>
+                            <span class="status-skipped">
+                                <span class="status-icon">⊘</span> Not Available
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
         
         <!-- Dashboard Tiles -->
         <div class="dashboard-tiles-half">

@@ -63,12 +63,11 @@ $medications = $stmt->fetchAll();
         }
         
         .stock-item {
-            display: grid;
-            grid-template-columns: 1fr auto auto;
+            display: flex;
+            flex-direction: column;
             gap: 16px;
             padding: 20px 24px;
             border-bottom: 1px solid var(--color-border);
-            align-items: center;
         }
         
         .stock-item:last-child {
@@ -87,24 +86,37 @@ $medications = $stmt->fetchAll();
             color: var(--color-text-secondary);
         }
         
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
         .stock-level {
-            text-align: center;
+            text-align: right;
             min-width: 120px;
         }
         
         .stock-count {
             font-size: 32px;
             font-weight: 700;
-            color: var(--color-primary);
             margin: 0;
         }
         
+        .stock-count.high {
+            color: #28a745;
+        }
+        
+        .stock-count.medium {
+            color: #ffc107;
+        }
+        
         .stock-count.low {
-            color: var(--color-warning);
+            color: #dc3545;
         }
         
         .stock-count.empty {
-            color: var(--color-danger);
+            color: var(--color-text-secondary);
         }
         
         .stock-label {
@@ -119,62 +131,71 @@ $medications = $stmt->fetchAll();
             font-style: italic;
         }
         
+        .stock-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
         .btn-add-stock {
-            background: transparent;
-            color: var(--color-success);
+            background: var(--color-success);
+            color: white;
             padding: 10px 20px;
             border-radius: var(--radius-sm);
             text-decoration: none;
-            font-weight: 600;
-            border: 2px solid var(--color-success);
+            font-weight: 500;
+            border: none;
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.2s, color 0.2s;
+            transition: opacity 0.2s;
             text-align: center;
+            flex: 1;
+            min-width: 150px;
         }
         
         .btn-add-stock:hover {
-            background: var(--color-success);
-            color: var(--color-bg-white);
+            opacity: 0.9;
         }
         
         .btn-remove-stock {
-            background: transparent;
-            color: var(--color-danger);
+            background: var(--color-danger);
+            color: white;
             padding: 10px 20px;
             border-radius: var(--radius-sm);
             text-decoration: none;
-            font-weight: 600;
-            border: 2px solid var(--color-danger);
+            font-weight: 500;
+            border: none;
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.2s, color 0.2s;
+            transition: opacity 0.2s;
             text-align: center;
+            flex: 1;
+            min-width: 150px;
         }
         
         .btn-remove-stock:hover {
-            background: var(--color-danger);
-            color: var(--color-bg-white);
+            opacity: 0.9;
         }
         
         .btn-edit-med {
-            background: transparent;
-            color: var(--color-primary);
+            background: var(--color-primary);
+            color: white;
             padding: 10px 20px;
             border-radius: var(--radius-sm);
             text-decoration: none;
-            font-weight: 600;
-            border: 2px solid var(--color-primary);
+            font-weight: 500;
+            border: none;
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.2s, color 0.2s;
+            transition: opacity 0.2s;
             text-align: center;
             display: inline-block;
+            flex: 1;
+            min-width: 150px;
         }
         
         .btn-edit-med:hover {
-            background: var(--color-primary);
-            color: var(--color-bg-white);
+            opacity: 0.9;
         }
         
         .no-meds {
@@ -295,6 +316,7 @@ $medications = $stmt->fetchAll();
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
                 <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
             </div>
         </div>
         
@@ -319,58 +341,64 @@ $medications = $stmt->fetchAll();
             <div class="stock-list">
                 <?php foreach ($medications as $med): ?>
                     <div class="stock-item">
-                        <div class="stock-info">
-                            <h3>💊 <?= htmlspecialchars($med['name']) ?></h3>
-                            <p style="margin: 4px 0; font-size: 14px; color: var(--color-text-secondary);">
-                                <?php 
-                                $infoParts = [];
-                                if (!empty($med['dose_amount']) && !empty($med['dose_unit'])) {
-                                    $infoParts[] = htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']);
-                                }
-                                if (!empty($med['created_at'])) {
-                                    $infoParts[] = 'Date added: ' . date('M j, Y', strtotime($med['created_at']));
-                                }
-                                if (!empty($med['end_date'])) {
-                                    $infoParts[] = 'End due: ' . date('M j, Y', strtotime($med['end_date']));
-                                }
-                                echo implode(' • ', $infoParts);
-                                ?>
-                            </p>
-                            <?php if ($med['stock_updated_at']): ?>
-                                <p class="stock-updated">Stock updated: <?= date('M j, Y H:i', strtotime($med['stock_updated_at'])) ?></p>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="stock-level">
-                            <?php
-                            $stockClass = '';
-                            $stockDisplay = $med['current_stock'] ?? '—';
+                        <div class="stock-header">
+                            <div class="stock-info">
+                                <h3>💊 <?= htmlspecialchars($med['name']) ?></h3>
+                                <p style="margin: 4px 0; font-size: 14px; color: var(--color-text-secondary);">
+                                    <?php 
+                                    $infoParts = [];
+                                    if (!empty($med['dose_amount']) && !empty($med['dose_unit'])) {
+                                        $infoParts[] = htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']);
+                                    }
+                                    if (!empty($med['created_at'])) {
+                                        $infoParts[] = 'Date added: ' . date('M j, Y', strtotime($med['created_at']));
+                                    }
+                                    if (!empty($med['end_date'])) {
+                                        $infoParts[] = 'End due: ' . date('M j, Y', strtotime($med['end_date']));
+                                    }
+                                    echo implode(' • ', $infoParts);
+                                    ?>
+                                </p>
+                                <?php if ($med['stock_updated_at']): ?>
+                                    <p class="stock-updated">Stock updated: <?= date('M j, Y H:i', strtotime($med['stock_updated_at'])) ?></p>
+                                <?php endif; ?>
+                            </div>
                             
-                            if ($med['current_stock'] === null) {
+                            <div class="stock-level">
+                                <?php
                                 $stockClass = '';
-                            } elseif ($med['current_stock'] == 0) {
-                                $stockClass = 'empty';
-                            } elseif ($med['current_stock'] < 10) {
-                                $stockClass = 'low';
-                            }
-                            ?>
-                            <div class="stock-count <?= $stockClass ?>">
-                                <?= $stockDisplay ?>
-                            </div>
-                            <div class="stock-label">
-                                Current stock
+                                $stockDisplay = $med['current_stock'] ?? '—';
+                                
+                                if ($med['current_stock'] === null) {
+                                    $stockClass = 'empty';
+                                } elseif ($med['current_stock'] == 0) {
+                                    $stockClass = 'empty';
+                                } elseif ($med['current_stock'] < 5) {
+                                    $stockClass = 'low';
+                                } elseif ($med['current_stock'] < 10) {
+                                    $stockClass = 'medium';
+                                } else {
+                                    $stockClass = 'high';
+                                }
+                                ?>
+                                <div class="stock-count <?= $stockClass ?>">
+                                    <?= $stockDisplay ?>
+                                </div>
+                                <div class="stock-label">
+                                    Current stock
+                                </div>
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap; flex-direction: column;">
+                        <div class="stock-actions">
                             <button class="btn-add-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
-                                + ADD STOCK
+                                Add Stock
                             </button>
                             <button class="btn-remove-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
-                                - REMOVE STOCK
+                                Remove Stock
                             </button>
                             <a href="/modules/medications/edit.php?id=<?= $med['id'] ?>" class="btn-edit-med">
-                                ~ EDIT MEDICATION
+                                Edit Medication
                             </a>
                         </div>
                     </div>

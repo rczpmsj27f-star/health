@@ -128,11 +128,18 @@ if ($schedule && $schedule['days_of_week']) {
 
             <div class="section-header">Schedule</div>
             <div class="schedule-grid">
-                <?php if ($schedule['frequency_type'] === 'per_day'): ?>
+                <?php if (!empty($schedule['is_prn'])): ?>
+                    <div class="schedule-time">
+                        <div class="schedule-time-label">💊 PRN Schedule</div>
+                        <div class="schedule-time-value">
+                            As and when needed
+                        </div>
+                    </div>
+                <?php elseif ($schedule['frequency_type'] === 'per_day'): ?>
                     <div class="schedule-time">
                         <div class="schedule-time-label">⏰ Daily Schedule</div>
                         <div class="schedule-time-value">
-                            <?= htmlspecialchars($schedule['times_per_day']) ?> time(s) per day
+                            <?= htmlspecialchars($schedule['times_per_day'] ?? '') ?> time(s) per day
                         </div>
                     </div>
                     
@@ -142,11 +149,11 @@ if ($schedule && $schedule['days_of_week']) {
                             <div class="day-badge active"><?= $day ?></div>
                         <?php endforeach; ?>
                     </div>
-                <?php else: ?>
+                <?php elseif ($schedule['frequency_type'] === 'per_week'): ?>
                     <div class="schedule-time">
                         <div class="schedule-time-label">📅 Weekly Schedule</div>
                         <div class="schedule-time-value">
-                            <?= htmlspecialchars($schedule['times_per_week']) ?> time(s) per week
+                            <?= htmlspecialchars($schedule['times_per_week'] ?? '') ?> time(s) per week
                         </div>
                     </div>
                     
@@ -157,6 +164,12 @@ if ($schedule && $schedule['days_of_week']) {
                                 <?= $day ?>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="schedule-time">
+                        <div class="schedule-time-value">
+                            No schedule set
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>

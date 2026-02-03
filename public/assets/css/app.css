@@ -1029,3 +1029,102 @@ body {
     color: var(--color-text-secondary);
 }
 
+/* Schedule date styling */
+.schedule-date {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
+
+/* Back to dashboard button */
+.back-to-dashboard {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    padding: 10px 16px;
+    background: var(--color-bg-white);
+    color: var(--color-primary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    font-weight: 500;
+    font-size: 14px;
+    transition: var(--transition);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.back-to-dashboard:hover {
+    background: var(--color-primary);
+    color: var(--color-bg-white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Hierarchical menu structure */
+.menu-parent {
+    margin-bottom: 4px;
+}
+
+.menu-parent-link {
+    display: block;
+    padding: 12px 16px;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.menu-parent-link:hover {
+    background: var(--color-primary);
+    color: var(--color-bg-white);
+}
+
+.menu-children {
+    padding-left: 20px;
+    border-left: 2px solid var(--color-primary);
+    margin-left: 16px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.menu-children a {
+    display: block;
+    padding: 8px 16px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    font-size: 14px;
+}
+
+.menu-children a:hover {
+    background: var(--color-bg-light);
+    color: var(--color-primary);
+}
+
+/* Time group styling for dashboard */
+.time-group {
+    margin-bottom: 24px;
+}
+
+.time-group-header {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-group-medications {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+

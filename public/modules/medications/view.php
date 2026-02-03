@@ -102,6 +102,8 @@ if ($schedule && $schedule['days_of_week']) {
             <div class="menu-children">
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
+                <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
             </div>
         </div>
         

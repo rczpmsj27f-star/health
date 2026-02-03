@@ -20,7 +20,18 @@ $stmt = $pdo->prepare("
     ORDER BY m.created_at DESC
 ");
 $stmt->execute([$userId]);
-$activeMeds = $stmt->fetchAll();
+$allActiveMeds = $stmt->fetchAll();
+
+// Separate into scheduled and PRN medications
+$scheduledMeds = [];
+$prnMeds = [];
+foreach ($allActiveMeds as $med) {
+    if (!empty($med['is_prn'])) {
+        $prnMeds[] = $med;
+    } else {
+        $scheduledMeds[] = $med;
+    }
+}
 
 // Get archived medications
 $stmt = $pdo->prepare("
@@ -101,6 +112,7 @@ $archivedMeds = $stmt->fetchAll();
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
                 <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
             </div>
         </div>
         
@@ -116,20 +128,20 @@ $archivedMeds = $stmt->fetchAll();
             <p>Track and manage your medications</p>
         </div>
 
-        <?php if (empty($activeMeds) && empty($archivedMeds)): ?>
+        <?php if (empty($scheduledMeds) && empty($prnMeds) && empty($archivedMeds)): ?>
             <div class="content-card" style="text-align: center;">
                 <p style="color: var(--color-text-secondary); margin: 0;">No medications added yet. Click "Add Medication" to get started.</p>
             </div>
         <?php else: ?>
-            <?php if (!empty($activeMeds)): ?>
-                <div class="expandable-section expanded" id="currentSection">
-                    <div class="section-header-toggle" onclick="toggleSection('currentSection')">
+            <?php if (!empty($scheduledMeds)): ?>
+                <div class="expandable-section expanded" id="scheduledSection">
+                    <div class="section-header-toggle" onclick="toggleSection('scheduledSection')">
                         <span class="toggle-icon">▶</span>
-                        <span>Your Current Medications (<?= count($activeMeds) ?>)</span>
+                        <span>Scheduled Medications (<?= count($scheduledMeds) ?>)</span>
                     </div>
                     <div class="section-content">
                         <div style="padding: 0 16px;">
-                            <?php foreach ($activeMeds as $m): ?>
+                            <?php foreach ($scheduledMeds as $m): ?>
                                 <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
                                     <div class="medication-tile-line1">
                                         <span>💊</span>
@@ -137,9 +149,7 @@ $archivedMeds = $stmt->fetchAll();
                                     </div>
                                     <div class="medication-tile-line2">
                                         <strong>Schedule:</strong> 
-                                        <?php if (!empty($m['is_prn'])): ?>
-                                            As and when needed (PRN)
-                                        <?php elseif ($m['frequency_type']): ?>
+                                        <?php if ($m['frequency_type']): ?>
                                             <?php if ($m['frequency_type'] === 'per_day'): ?>
                                                 <?= htmlspecialchars($m['times_per_day']) ?> time<?= $m['times_per_day'] > 1 ? 's' : '' ?> per day
                                             <?php else: ?>
@@ -151,6 +161,39 @@ $archivedMeds = $stmt->fetchAll();
                                         <?php else: ?>
                                             Not scheduled
                                         <?php endif; ?>
+                                    </div>
+                                    <div class="medication-tile-line3">
+                                        <strong>Added:</strong> <?= date('M d, Y', strtotime($m['created_at'])) ?>
+                                        <?php if ($m['end_date']): ?>
+                                            | <strong>Expiry:</strong> <?= date('M d, Y', strtotime($m['end_date'])) ?>
+                                        <?php endif; ?>
+                                        <?php if ($m['current_stock']): ?>
+                                            | <strong>Stock:</strong> <?= htmlspecialchars($m['current_stock']) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($prnMeds)): ?>
+                <div class="expandable-section expanded" id="prnSection">
+                    <div class="section-header-toggle" onclick="toggleSection('prnSection')">
+                        <span class="toggle-icon">▶</span>
+                        <span>PRN Medications (<?= count($prnMeds) ?>)</span>
+                    </div>
+                    <div class="section-content">
+                        <div style="padding: 0 16px;">
+                            <?php foreach ($prnMeds as $m): ?>
+                                <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
+                                    <div class="medication-tile-line1">
+                                        <span>💊</span>
+                                        <span><?= htmlspecialchars($m['name']) ?></span>
+                                    </div>
+                                    <div class="medication-tile-line2">
+                                        <strong>Schedule:</strong> As and when needed (PRN)
                                     </div>
                                     <div class="medication-tile-line3">
                                         <strong>Added:</strong> <?= date('M d, Y', strtotime($m['created_at'])) ?>

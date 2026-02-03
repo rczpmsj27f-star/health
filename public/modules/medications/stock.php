@@ -316,6 +316,7 @@ $medications = $stmt->fetchAll();
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
                 <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
             </div>
         </div>
         
@@ -347,7 +348,7 @@ $medications = $stmt->fetchAll();
                                     <?php 
                                     $infoParts = [];
                                     if (!empty($med['dose_amount']) && !empty($med['dose_unit'])) {
-                                        $infoParts[] = htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']);
+                                        $infoParts[] = htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']);
                                     }
                                     if (!empty($med['created_at'])) {
                                         $infoParts[] = 'Date added: ' . date('M j, Y', strtotime($med['created_at']));

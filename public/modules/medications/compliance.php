@@ -249,6 +249,7 @@ foreach ($medications as $med) {
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
                 <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
             </div>
         </div>
         
@@ -291,7 +292,7 @@ foreach ($medications as $med) {
                         </div>
                         <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                             <div class="med-dose">
-                                <?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?>
+                                <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                             </div>
                         <?php endif; ?>
                     </div>

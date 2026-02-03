@@ -555,10 +555,11 @@ foreach ($medications as $med) {
                     $medEndDate = $med['end_date'];
                     $isMedActiveToday = true;
                     
-                    if ($medStartDate && strtotime($medStartDate) > strtotime($todayDate)) {
+                    // Use date comparison only (ignore time)
+                    if ($medStartDate && date('Y-m-d', strtotime($medStartDate)) > $todayDate) {
                         $isMedActiveToday = false;
                     }
-                    if ($medEndDate && strtotime($medEndDate) < strtotime($todayDate)) {
+                    if ($medEndDate && date('Y-m-d', strtotime($medEndDate)) < $todayDate) {
                         $isMedActiveToday = false;
                     }
                     
@@ -680,10 +681,11 @@ foreach ($medications as $med) {
                                     $medEndDate = $med['end_date'];
                                     $isMedActive = true;
                                     
-                                    if ($medStartDate && strtotime($medStartDate) > strtotime($date)) {
+                                    // Use date comparison only (ignore time)
+                                    if ($medStartDate && date('Y-m-d', strtotime($medStartDate)) > $date) {
                                         $isMedActive = false;
                                     }
-                                    if ($medEndDate && strtotime($medEndDate) < strtotime($date)) {
+                                    if ($medEndDate && date('Y-m-d', strtotime($medEndDate)) < $date) {
                                         $isMedActive = false;
                                     }
                                     
@@ -810,8 +812,31 @@ foreach ($medications as $med) {
                                 $expectedDosesPerDay = $schedule['times_per_day'] ?? count($data['dose_times']);
                             }
                             
-                            $daysInWeek = 7;
-                            $expectedWeekTotal = $expectedDosesPerDay * $daysInWeek;
+                            // Count only active days in the week
+                            $activeDaysInWeek = 0;
+                            for ($d = 0; $d < 7; $d++) {
+                                $dayDate = date('Y-m-d', strtotime("+$d days", strtotime($week['start'])));
+                                $medStartDate = $med['created_at'];
+                                $medEndDate = $med['end_date'];
+                                $isMedActive = true;
+                                
+                                if ($medStartDate && strtotime($medStartDate) > strtotime($dayDate)) {
+                                    $isMedActive = false;
+                                }
+                                if ($medEndDate && strtotime($medEndDate) < strtotime($dayDate)) {
+                                    $isMedActive = false;
+                                }
+                                // Don't count future dates
+                                if (strtotime($dayDate) > strtotime(date('Y-m-d'))) {
+                                    $isMedActive = false;
+                                }
+                                
+                                if ($isMedActive) {
+                                    $activeDaysInWeek++;
+                                }
+                            }
+                            
+                            $expectedWeekTotal = $expectedDosesPerDay * $activeDaysInWeek;
                             
                             // For PRN, show doses taken
                             if ($schedule && $schedule['is_prn']) {
@@ -989,10 +1014,11 @@ foreach ($medications as $med) {
                                 $medEndDate = $med['end_date'];
                                 $isMedActive = true;
                                 
-                                if ($medStartDate && strtotime($medStartDate) > strtotime($dateStr)) {
+                                // Use date comparison only (ignore time)
+                                if ($medStartDate && date('Y-m-d', strtotime($medStartDate)) > $dateStr) {
                                     $isMedActive = false;
                                 }
-                                if ($medEndDate && strtotime($medEndDate) < strtotime($dateStr)) {
+                                if ($medEndDate && date('Y-m-d', strtotime($medEndDate)) < $dateStr) {
                                     $isMedActive = false;
                                 }
                                 
@@ -1070,10 +1096,29 @@ foreach ($medications as $med) {
                             $expectedDosesPerDay = $schedule['times_per_day'] ?? count($data['dose_times']);
                         }
                         
-                        // Days from start of year to today (or end of year if past year)
-                        $endDate = min(strtotime(date('Y-m-d')), strtotime($yearEnd));
-                        $daysThisYear = ($endDate - strtotime($yearStart)) / 86400 + 1;
-                        $expectedYearTotal = $expectedDosesPerDay * $daysThisYear;
+                        // Count only active days in the year (from med start to today or year end, excluding future and before med creation)
+                        $medStartDate = $med['created_at'];
+                        $medEndDate = $med['end_date'];
+                        
+                        // Determine the actual start date for counting
+                        $countStartDate = $yearStart;
+                        if ($medStartDate && strtotime($medStartDate) > strtotime($yearStart)) {
+                            $countStartDate = date('Y-m-d', strtotime($medStartDate));
+                        }
+                        
+                        // Determine the actual end date for counting
+                        $countEndDate = min(strtotime(date('Y-m-d')), strtotime($yearEnd));
+                        if ($medEndDate && strtotime($medEndDate) < $countEndDate) {
+                            $countEndDate = strtotime($medEndDate);
+                        }
+                        
+                        // Calculate active days
+                        $activeDaysThisYear = 0;
+                        if (strtotime($countStartDate) <= $countEndDate) {
+                            $activeDaysThisYear = ($countEndDate - strtotime($countStartDate)) / 86400 + 1;
+                        }
+                        
+                        $expectedYearTotal = $expectedDosesPerDay * $activeDaysThisYear;
                         
                         // Calculate compliance
                         $compliancePercent = $expectedYearTotal > 0 ? round(($yearTaken / $expectedYearTotal) * 100) : 0;

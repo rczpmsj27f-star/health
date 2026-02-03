@@ -202,17 +202,17 @@ if ($schedule && $schedule['days_of_week']) {
                 <div class="action-buttons three-col" style="margin-top: 32px;">
                     <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
                     <button class="btn btn-success" id="addStockBtn" data-med-id="<?= $medId ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">📦 Add Stock</button>
-                    <a class="btn btn-secondary" href="/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive" onclick="return confirm('Archive this medication?')">📦 Archive</a>
+                    <button class="btn btn-secondary" onclick="showConfirmModal('Archive Medication', 'Archive this medication?', function() { window.location.href = '/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive'; })">📦 Archive</button>
                 </div>
                 
                 <div class="action-buttons" style="margin-top: 16px;">
-                    <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
+                    <button class="btn btn-danger" onclick="showConfirmModal('Delete Medication', 'Are you sure you want to delete this medication? This action cannot be undone.', function() { window.location.href = '/modules/medications/delete_handler.php?id=<?= $medId ?>'; })">🗑️ Delete</button>
                 </div>
             <?php else: ?>
                 <!-- If ARCHIVED, show only Unarchive and Delete -->
                 <div class="action-buttons" style="margin-top: 32px;">
                     <button class="btn btn-primary" onclick="showUnarchiveModal(<?= $medId ?>)">📤 Unarchive</button>
-                    <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
+                    <button class="btn btn-danger" onclick="showConfirmModal('Delete Medication', 'Are you sure you want to delete this medication? This action cannot be undone.', function() { window.location.href = '/modules/medications/delete_handler.php?id=<?= $medId ?>'; })">🗑️ Delete</button>
                 </div>
             <?php endif; ?>
             
@@ -262,6 +262,18 @@ if ($schedule && $schedule['days_of_week']) {
             <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
                 <button class="btn btn-secondary" onclick="closeUnarchiveModal()">No, Cancel</button>
                 <button class="btn btn-primary" onclick="confirmUnarchive(<?= $medId ?>)">Yes, Unarchive</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Generic Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="confirmModalTitle">Confirm Action</h3>
+            <p id="confirmModalMessage">Are you sure?</p>
+            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirmModalAction">Confirm</button>
             </div>
         </div>
     </div>
@@ -368,6 +380,15 @@ if ($schedule && $schedule['days_of_week']) {
             });
         }
         
+        var confirmModal = document.getElementById('confirmModal');
+        if (confirmModal) {
+            confirmModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeConfirmModal();
+                }
+            });
+        }
+        
         // Check for success messages from session
         <?php if (isset($_SESSION['success'])): ?>
             showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
@@ -396,6 +417,20 @@ if ($schedule && $schedule['days_of_week']) {
     
     function confirmUnarchive(medId) {
         window.location.href = '/modules/medications/archive_handler.php?id=' + medId + '&action=unarchive';
+    }
+    
+    function showConfirmModal(title, message, onConfirm) {
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalMessage').textContent = message;
+        document.getElementById('confirmModalAction').onclick = function() {
+            closeConfirmModal();
+            onConfirm();
+        };
+        document.getElementById('confirmModal').style.display = 'flex';
+    }
+    
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').style.display = 'none';
     }
     </script>
 </body>

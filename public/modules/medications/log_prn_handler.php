@@ -9,6 +9,11 @@ if (empty($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
+// Get quantity taken from POST (default to 1 for backwards compatibility)
+$quantityTaken = !empty($_POST['quantity_taken']) ? (int)$_POST['quantity_taken'] : 1;
+// Ensure quantity is within reasonable bounds
+$quantityTaken = max(1, min(10, $quantityTaken));
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['medication_id'])) {
     $_SESSION['error'] = "Invalid request.";
     header("Location: /modules/medications/log_prn.php");
@@ -72,17 +77,18 @@ try {
         }
     }
     
-    // 4. Log the dose
+    // 4. Log the dose with quantity
     $now = date('Y-m-d H:i:s');
     $stmt = $pdo->prepare("
-        INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status, taken_at)
-        VALUES (?, ?, ?, 'taken', ?)
+        INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status, quantity_taken, taken_at)
+        VALUES (?, ?, ?, 'taken', ?, ?)
     ");
-    $stmt->execute([$medicationId, $userId, $now, $now]);
+    $stmt->execute([$medicationId, $userId, $now, $quantityTaken, $now]);
     
-    // 5. Decrement stock if stock tracking is enabled (by doses_per_administration)
+    // 5. Decrement stock by quantity taken (quantity * doses_per_administration)
     if ($medication['current_stock'] !== null && $medication['current_stock'] > 0) {
-        $stockToRemove = min($dosesPerAdmin, $medication['current_stock']); // Don't go below 0
+        $stockToRemove = $quantityTaken * $dosesPerAdmin;
+        $stockToRemove = min($stockToRemove, $medication['current_stock']); // Don't go below 0
         
         $stmt = $pdo->prepare("
             UPDATE medications 
@@ -96,7 +102,8 @@ try {
             INSERT INTO medication_stock_log (medication_id, user_id, quantity_change, change_type, reason)
             VALUES (?, ?, ?, 'remove', ?)
         ");
-        $reason = $dosesPerAdmin > 1 ? "PRN dose taken ({$dosesPerAdmin} tablets)" : 'PRN dose taken';
+        $tabletText = $quantityTaken > 1 ? "{$quantityTaken} tablets" : "1 tablet";
+        $reason = "PRN dose taken ({$tabletText})";
         $stmt->execute([$medicationId, $userId, -$stockToRemove, $reason]);
     }
     
@@ -112,7 +119,8 @@ try {
     }
     
     $currentTime = date('H:i');
-    $_SESSION['success'] = "Dose logged successfully at {$currentTime}.{$nextDoseMessage}";
+    $tabletText = $quantityTaken > 1 ? "{$quantityTaken} tablets" : "1 tablet";
+    $_SESSION['success'] = "Took {$tabletText} at {$currentTime}.{$nextDoseMessage}";
     header("Location: /modules/medications/log_prn.php");
     exit;
     

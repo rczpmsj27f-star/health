@@ -388,12 +388,12 @@ foreach ($instructions as $i) {
             </div>
 
             <!-- Section 6: Condition -->
-            <div class="form-section">
+            <div class="form-section" style="display: none;">
                 <div class="form-section-title">6. Condition Being Treated</div>
                 
                 <div class="form-group">
                     <label>Condition Name *</label>
-                    <input type="text" name="condition_name" id="condition_name" autocomplete="off" value="<?= htmlspecialchars($condition['condition_name'] ?? '') ?>" required>
+                    <input type="text" name="condition_name" id="condition_name" autocomplete="off" value="<?= htmlspecialchars($condition['condition_name'] ?? '') ?>">
                 </div>
             </div>
 

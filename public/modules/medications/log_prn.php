@@ -353,6 +353,11 @@ foreach ($prnMedications as $med) {
                         <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                             <p><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></p>
                         <?php endif; ?>
+                        <?php if (!$canTake && $nextTime): ?>
+                            <div class="next-dose-info" style="margin-top: 8px; font-size: 14px; color: var(--color-text-secondary);">
+                                ⏱️ Next dose available at <span class="countdown" data-target="<?= strtotime($data['last_taken']) + ($data['medication']['min_hours_between_doses'] * 3600) ?>"><?= $nextTime ?></span>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     
                     <div class="dose-info">
@@ -378,8 +383,6 @@ foreach ($prnMedications as $med) {
                         </div>
                     <?php elseif (!$canTake && $nextTime): ?>
                         <div class="status-message warning">
-                            ⏱️ <strong>Next dose available at <span class="countdown" data-target="<?= strtotime($data['last_taken']) + ($data['medication']['min_hours_between_doses'] * 3600) ?>"><?= $nextTime ?></span></strong>
-                            <br>
                             <small>Minimum time between doses: <?= $med['min_hours_between_doses'] ?> hours</small>
                         </div>
                     <?php else: ?>
@@ -388,18 +391,133 @@ foreach ($prnMedications as $med) {
                         </div>
                     <?php endif; ?>
                     
-                    <form method="POST" action="/modules/medications/log_prn_handler.php" style="margin: 0;">
-                        <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                        <button type="submit" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?>>
-                            <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
-                        </button>
-                    </form>
+                    <button type="button" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?> 
+                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\')' : '' ?>">
+                        <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
+                    </button>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
     
+    <!-- Quantity Selection Modal -->
+    <div id="quantityModal" class="modal">
+        <div class="modal-content">
+            <h3 id="quantityModalTitle" style="margin: 0 0 16px 0; color: var(--color-primary);">💊 Take Medication</h3>
+            <p id="quantityModalDose" style="margin: 0 0 24px 0; color: var(--color-text-secondary);"></p>
+            
+            <div style="text-align: center; margin-bottom: 24px;">
+                <p style="margin: 0 0 16px 0; font-weight: 600;">How many tablets?</p>
+                <div class="number-stepper" style="max-width: 200px; margin: 0 auto;">
+                    <button type="button" class="stepper-btn" onclick="decrementQuantity()">−</button>
+                    <input type="number" id="quantityInput" value="1" min="1" max="10" style="flex: 1; text-align: center; background: var(--color-bg-gray);">
+                    <button type="button" class="stepper-btn" onclick="incrementQuantity()">+</button>
+                </div>
+            </div>
+            
+            <form id="quantityForm" method="POST" action="/modules/medications/log_prn_handler.php">
+                <input type="hidden" name="medication_id" id="quantityMedicationId">
+                <input type="hidden" name="quantity_taken" id="quantityTaken" value="1">
+                <div class="modal-buttons" style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeQuantityModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--color-bg-white);
+        padding: 32px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        max-width: 400px;
+        width: 90%;
+    }
+    
+    .modal-buttons {
+        margin-top: 24px;
+    }
+    
+    .next-dose-info {
+        font-style: italic;
+    }
+    </style>
+    
     <script>
+    let currentMedicationId = null;
+    
+    function showQuantityModal(medId, medName, doseInfo) {
+        currentMedicationId = medId;
+        document.getElementById('quantityModalTitle').textContent = '💊 Take ' + medName;
+        document.getElementById('quantityModalDose').textContent = doseInfo;
+        document.getElementById('quantityMedicationId').value = medId;
+        document.getElementById('quantityInput').value = 1;
+        document.getElementById('quantityTaken').value = 1;
+        document.getElementById('quantityModal').classList.add('active');
+    }
+    
+    function closeQuantityModal() {
+        document.getElementById('quantityModal').classList.remove('active');
+        currentMedicationId = null;
+    }
+    
+    function incrementQuantity() {
+        const input = document.getElementById('quantityInput');
+        const currentValue = parseInt(input.value) || 1;
+        if (currentValue < 10) {
+            input.value = currentValue + 1;
+            document.getElementById('quantityTaken').value = currentValue + 1;
+        }
+    }
+    
+    function decrementQuantity() {
+        const input = document.getElementById('quantityInput');
+        const currentValue = parseInt(input.value) || 1;
+        if (currentValue > 1) {
+            input.value = currentValue - 1;
+            document.getElementById('quantityTaken').value = currentValue - 1;
+        }
+    }
+    
+    // Sync input field with hidden field
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantityInput');
+        if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                const value = parseInt(this.value) || 1;
+                const clampedValue = Math.max(1, Math.min(10, value));
+                this.value = clampedValue;
+                document.getElementById('quantityTaken').value = clampedValue;
+            });
+        }
+        
+        // Close modal on outside click
+        document.getElementById('quantityModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeQuantityModal();
+            }
+        });
+    });
+    
     // Update countdown timers
     function updateCountdowns() {
         const countdowns = document.querySelectorAll('.countdown[data-target]');

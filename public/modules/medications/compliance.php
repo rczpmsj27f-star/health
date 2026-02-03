@@ -943,18 +943,24 @@ foreach ($medications as $med) {
                         $expectedDosesPerDay = $schedule['times_per_day'] ?? count($data['dose_times']);
                     }
                     ?>
-                    <div class="compliance-section">
-                        <div class="med-header">
-                            <div class="med-name">
-                                💊 <?= htmlspecialchars($med['name']) ?>
-                            </div>
-                            <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
-                                <div class="med-dose">
-                                    <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                    <div class="compliance-section" id="med-section-<?= $medId ?>">
+                        <div class="med-header" style="cursor: pointer;" onclick="toggleMonthlyMed(<?= $medId ?>)">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <div>
+                                    <div class="med-name">
+                                        💊 <?= htmlspecialchars($med['name']) ?>
+                                    </div>
+                                    <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
+                                        <div class="med-dose">
+                                            <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
-                            <?php endif; ?>
+                                <span id="toggle-icon-<?= $medId ?>" style="font-size: 24px; font-weight: bold; color: var(--color-primary);">+</span>
+                            </div>
                         </div>
                         
+                        <div id="calendar-content-<?= $medId ?>" style="display: none; margin-top: 20px;">
                         <div class="calendar-grid">
                             <!-- Day headers -->
                             <div class="calendar-day-header">Mon</div>
@@ -1008,6 +1014,7 @@ foreach ($medications as $med) {
                                     </div>
                                 </a>
                             <?php endfor; ?>
+                        </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1182,6 +1189,19 @@ foreach ($medications as $med) {
     function toggleMedicationWeeks(medId) {
         const content = document.getElementById(medId + '-weeks');
         const toggle = document.getElementById('toggle-' + medId);
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            toggle.textContent = '−';
+        } else {
+            content.style.display = 'none';
+            toggle.textContent = '+';
+        }
+    }
+    
+    function toggleMonthlyMed(medId) {
+        const content = document.getElementById('calendar-content-' + medId);
+        const toggle = document.getElementById('toggle-icon-' + medId);
         
         if (content.style.display === 'none') {
             content.style.display = 'block';

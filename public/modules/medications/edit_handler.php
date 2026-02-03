@@ -63,8 +63,15 @@ if ($isPrn) {
 
 $timesPerDay = filter_input(INPUT_POST, 'times_per_day', FILTER_VALIDATE_INT);
 $timesPerWeek = filter_input(INPUT_POST, 'times_per_week', FILTER_VALIDATE_INT);
+$dosesPerAdministration = filter_input(INPUT_POST, 'doses_per_administration', FILTER_VALIDATE_INT);
 $maxDosesPerDay = filter_input(INPUT_POST, 'max_doses_per_day', FILTER_VALIDATE_INT);
 $minHoursBetweenDoses = filter_input(INPUT_POST, 'min_hours_between_doses', FILTER_VALIDATE_FLOAT);
+
+// Validate doses per administration
+if ($dosesPerAdministration !== false && $dosesPerAdministration !== null && ($dosesPerAdministration < 1 || $dosesPerAdministration > 10)) {
+    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_doses_per_administration");
+    exit;
+}
 
 // Validate numeric ranges
 if ($timesPerDay !== false && $timesPerDay !== null && ($timesPerDay < 1 || $timesPerDay > 24)) {
@@ -110,7 +117,7 @@ if (!empty($_POST['days_of_week']) && is_array($_POST['days_of_week'])) {
 $stmt = $pdo->prepare("
     UPDATE medication_schedules 
     SET frequency_type = ?, times_per_day = ?, times_per_week = ?, days_of_week = ?, 
-        is_prn = ?, max_doses_per_day = ?, min_hours_between_doses = ?
+        is_prn = ?, doses_per_administration = ?, max_doses_per_day = ?, min_hours_between_doses = ?
     WHERE medication_id = ?
 ");
 $stmt->execute([
@@ -119,6 +126,7 @@ $stmt->execute([
     $timesPerWeek,
     $daysOfWeek,
     $isPrn,
+    $isPrn && $dosesPerAdministration ? $dosesPerAdministration : 1,
     $maxDosesPerDay,
     $minHoursBetweenDoses,
     $medId

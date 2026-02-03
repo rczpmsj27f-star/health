@@ -254,10 +254,18 @@ foreach ($instructions as $i) {
                 <div id="prn-limits" style="<?= !empty($schedule['is_prn']) ? '' : 'display:none;' ?>">
                     <div class="form-grid">
                         <div class="form-group">
+                            <label for="doses_per_administration">Doses per administration</label>
+                            <input type="number" name="doses_per_administration" id="doses_per_administration" min="1" max="10" value="<?= htmlspecialchars($schedule['doses_per_administration'] ?? '1') ?>">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Number of tablets/doses to take each time (e.g., 2 for paracetamol)
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="max_doses_per_day">Max doses per day (optional)</label>
                             <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" value="<?= htmlspecialchars($schedule['max_doses_per_day'] ?? '') ?>">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Maximum doses allowed in 24 hours
+                                Maximum number of times you can take this per day
                             </small>
                         </div>
 

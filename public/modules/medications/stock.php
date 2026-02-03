@@ -13,7 +13,7 @@ $isAdmin = Auth::isAdmin();
 
 // Get active medications with stock information
 $stmt = $pdo->prepare("
-    SELECT m.*, md.dose_unit
+    SELECT m.*, md.dose_amount, md.dose_unit
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL)
@@ -120,37 +120,61 @@ $medications = $stmt->fetchAll();
         }
         
         .btn-add-stock {
-            background: var(--color-success);
-            color: var(--color-bg-white);
+            background: transparent;
+            color: var(--color-success);
             padding: 10px 20px;
             border-radius: var(--radius-sm);
             text-decoration: none;
-            font-weight: 500;
-            border: none;
+            font-weight: 600;
+            border: 2px solid var(--color-success);
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
+            text-align: center;
         }
         
         .btn-add-stock:hover {
-            background: #28a745;
+            background: var(--color-success);
+            color: var(--color-bg-white);
         }
         
         .btn-remove-stock {
-            background: var(--color-danger);
-            color: var(--color-bg-white);
+            background: transparent;
+            color: var(--color-danger);
             padding: 10px 20px;
             border-radius: var(--radius-sm);
             text-decoration: none;
-            font-weight: 500;
-            border: none;
+            font-weight: 600;
+            border: 2px solid var(--color-danger);
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
+            text-align: center;
         }
         
         .btn-remove-stock:hover {
-            background: #c82333;
+            background: var(--color-danger);
+            color: var(--color-bg-white);
+        }
+        
+        .btn-edit-med {
+            background: transparent;
+            color: var(--color-primary);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--color-primary);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s, color 0.2s;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .btn-edit-med:hover {
+            background: var(--color-primary);
+            color: var(--color-bg-white);
         }
         
         .no-meds {
@@ -270,6 +294,7 @@ $medications = $stmt->fetchAll();
             <div class="menu-children">
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
+                <a href="/modules/medications/compliance.php">Compliance</a>
             </div>
         </div>
         
@@ -296,8 +321,23 @@ $medications = $stmt->fetchAll();
                     <div class="stock-item">
                         <div class="stock-info">
                             <h3>💊 <?= htmlspecialchars($med['name']) ?></h3>
+                            <p style="margin: 4px 0; font-size: 14px; color: var(--color-text-secondary);">
+                                <?php 
+                                $infoParts = [];
+                                if (!empty($med['dose_amount']) && !empty($med['dose_unit'])) {
+                                    $infoParts[] = htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']);
+                                }
+                                if (!empty($med['created_at'])) {
+                                    $infoParts[] = 'Date added: ' . date('M j, Y', strtotime($med['created_at']));
+                                }
+                                if (!empty($med['end_date'])) {
+                                    $infoParts[] = 'End due: ' . date('M j, Y', strtotime($med['end_date']));
+                                }
+                                echo implode(' • ', $infoParts);
+                                ?>
+                            </p>
                             <?php if ($med['stock_updated_at']): ?>
-                                <p class="stock-updated">Last updated: <?= date('M j, Y H:i', strtotime($med['stock_updated_at'])) ?></p>
+                                <p class="stock-updated">Stock updated: <?= date('M j, Y H:i', strtotime($med['stock_updated_at'])) ?></p>
                             <?php endif; ?>
                         </div>
                         
@@ -318,17 +358,20 @@ $medications = $stmt->fetchAll();
                                 <?= $stockDisplay ?>
                             </div>
                             <div class="stock-label">
-                                <?= $med['current_stock'] !== null ? htmlspecialchars($med['dose_unit'] ?? 'units') : 'Not tracked' ?>
+                                Current stock
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; flex-direction: column;">
                             <button class="btn-add-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
-                                ➕ Add Stock
+                                + ADD STOCK
                             </button>
                             <button class="btn-remove-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
-                                ➖ Remove Stock
+                                - REMOVE STOCK
                             </button>
+                            <a href="/modules/medications/edit.php?id=<?= $med['id'] ?>" class="btn-edit-med">
+                                ~ EDIT MEDICATION
+                            </a>
                         </div>
                     </div>
                 <?php endforeach; ?>

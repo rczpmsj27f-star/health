@@ -34,6 +34,20 @@ $todaysMeds = $stmt->fetchAll();
 // Get dose times for each medication and build schedule by time
 $medDoseTimes = [];
 $scheduleByTime = [];
+$todayDate = date('Y-m-d');
+
+// Get medication logs for today
+$stmt = $pdo->prepare("
+    SELECT medication_id, scheduled_date_time, status, taken_at, skipped_reason
+    FROM medication_logs
+    WHERE user_id = ? AND DATE(scheduled_date_time) = ?
+");
+$stmt->execute([$userId, $todayDate]);
+$medLogs = [];
+while ($log = $stmt->fetch()) {
+    $key = $log['medication_id'] . '_' . $log['scheduled_date_time'];
+    $medLogs[$key] = $log;
+}
 
 foreach ($todaysMeds as $med) {
     $stmt = $pdo->prepare("
@@ -50,10 +64,21 @@ foreach ($todaysMeds as $med) {
     if (!empty($doseTimes)) {
         foreach ($doseTimes as $doseTime) {
             $timeKey = date('H:i', strtotime($doseTime['dose_time']));
+            $scheduledDateTime = $todayDate . ' ' . $timeKey . ':00';
+            
             if (!isset($scheduleByTime[$timeKey])) {
                 $scheduleByTime[$timeKey] = [];
             }
-            $scheduleByTime[$timeKey][] = $med;
+            
+            // Add log status to medication data
+            $medWithStatus = $med;
+            $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
+            $logKey = $med['id'] . '_' . $scheduledDateTime;
+            $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
+            $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
+            $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
+            
+            $scheduleByTime[$timeKey][] = $medWithStatus;
         }
     }
 }
@@ -150,6 +175,185 @@ ksort($scheduleByTime);
             font-size: 12px;
             font-weight: 600;
             margin-left: 8px;
+        }
+        
+        /* Compact schedule display */
+        .time-group-compact {
+            margin-bottom: 24px;
+            background: var(--color-bg-gray);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+        }
+        
+        .time-header-compact {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 12px;
+        }
+        
+        .med-item-compact {
+            padding: 12px;
+            color: var(--color-text);
+            font-size: 15px;
+            background: white;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .med-item-compact:last-child {
+            margin-bottom: 0;
+        }
+        
+        .med-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .med-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .btn-taken {
+            background: var(--color-success);
+            color: white;
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-taken:hover {
+            background: #28a745;
+        }
+        
+        .btn-skipped {
+            background: var(--color-warning);
+            color: white;
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-skipped:hover {
+            background: #e0a800;
+        }
+        
+        .status-icon {
+            font-size: 20px;
+            margin-right: 4px;
+        }
+        
+        .status-taken {
+            color: var(--color-success);
+            font-weight: 600;
+        }
+        
+        .status-skipped {
+            color: var(--color-warning);
+            font-weight: 600;
+        }
+        
+        .status-overdue {
+            color: var(--color-danger);
+            font-weight: 600;
+            font-size: 12px;
+            background: rgba(220, 53, 69, 0.1);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .modal-header h3 {
+            margin: 0 0 16px 0;
+            color: var(--color-primary);
+        }
+        
+        .modal-body {
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--color-secondary);
+            color: white;
         }
         
         /* Compact schedule display */
@@ -266,6 +470,7 @@ ksort($scheduleByTime);
             <div class="menu-children">
                 <a href="/modules/medications/list.php">My Medications</a>
                 <a href="/modules/medications/stock.php">Medication Stock</a>
+                <a href="/modules/medications/compliance.php">Compliance</a>
             </div>
         </div>
         
@@ -292,12 +497,45 @@ ksort($scheduleByTime);
                 </div>
             <?php elseif (!empty($scheduleByTime)): ?>
                 <!-- Display medications grouped by time in compact format -->
-                <?php foreach ($scheduleByTime as $time => $meds): ?>
+                <?php 
+                $currentTime = strtotime(date('H:i'));
+                foreach ($scheduleByTime as $time => $meds): 
+                    $scheduleTime = strtotime($time);
+                    $isOverdue = $currentTime > $scheduleTime;
+                ?>
                     <div class="time-group-compact">
                         <div class="time-header-compact"><?= $time ?></div>
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
-                                💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?><?php if ($med['is_prn']): ?> <span class="prn-badge">PRN</span><?php endif; ?>
+                                <div class="med-info">
+                                    💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?>
+                                    <?php if ($med['is_prn']): ?> <span class="prn-badge">PRN</span><?php endif; ?>
+                                </div>
+                                
+                                <div class="med-actions">
+                                    <?php if ($med['log_status'] === 'taken'): ?>
+                                        <span class="status-taken">
+                                            <span class="status-icon">✓</span> Taken
+                                        </span>
+                                    <?php elseif ($med['log_status'] === 'skipped'): ?>
+                                        <span class="status-skipped">
+                                            <span class="status-icon">⊘</span> Skipped
+                                        </span>
+                                    <?php else: ?>
+                                        <?php if ($isOverdue): ?>
+                                            <span class="status-overdue">⚠ Overdue</span>
+                                        <?php endif; ?>
+                                        <form method="POST" action="/modules/medications/take_medication_handler.php" style="display: inline;">
+                                            <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
+                                            <input type="hidden" name="scheduled_date_time" value="<?= $med['scheduled_date_time'] ?>">
+                                            <button type="submit" class="btn-taken">✓ Taken</button>
+                                        </form>
+                                        <button type="button" class="btn-skipped" 
+                                            onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
+                                            ⊘ Skipped
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -346,5 +584,74 @@ ksort($scheduleByTime);
             </a>
         </div>
     </div>
+    
+    <!-- Skip Medication Modal -->
+    <div id="skipModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⊘ Skip Medication</h3>
+            </div>
+            <form method="POST" action="/modules/medications/skip_medication_handler.php" id="skipForm">
+                <div class="modal-body">
+                    <input type="hidden" name="medication_id" id="skip_medication_id">
+                    <input type="hidden" name="scheduled_date_time" id="skip_scheduled_date_time">
+                    
+                    <p style="margin-bottom: 16px; color: var(--color-text-secondary);">
+                        Why are you skipping <strong id="skip_medication_name"></strong>?
+                    </p>
+                    
+                    <div class="form-group">
+                        <label>Reason *</label>
+                        <select name="skipped_reason" id="skipped_reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="Unwell">Unwell</option>
+                            <option value="Forgot">Forgot</option>
+                            <option value="Did not have them with me">Did not have them with me</option>
+                            <option value="Lost">Lost</option>
+                            <option value="Side effects">Side effects</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeSkipModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm Skip</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+    function showSkipModal(medId, medName, scheduledDateTime) {
+        document.getElementById('skip_medication_id').value = medId;
+        document.getElementById('skip_medication_name').textContent = medName;
+        document.getElementById('skip_scheduled_date_time').value = scheduledDateTime;
+        document.getElementById('skipped_reason').value = '';
+        document.getElementById('skipModal').classList.add('active');
+    }
+    
+    function closeSkipModal() {
+        document.getElementById('skipModal').classList.remove('active');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('skipModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSkipModal();
+        }
+    });
+    
+    // Show success/error messages if present
+    <?php if (isset($_SESSION['success'])): ?>
+        alert('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error'])): ?>
+        alert('<?= htmlspecialchars($_SESSION['error'], ENT_QUOTES) ?>');
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+    </script>
 </body>
 </html>

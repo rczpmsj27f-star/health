@@ -618,11 +618,14 @@ foreach ($medications as $med) {
                 <?php
                 // Calculate last 4 weeks
                 $weeks = [];
+                $today = strtotime(date('Y-m-d'));
+                $currentDayOfWeek = date('N', $today); // 1=Mon, 7=Sun
+                
+                // Find the most recent Sunday (start of current/last week)
+                $lastSunday = strtotime('-' . ($currentDayOfWeek % 7) . ' days', $today);
+                
                 for ($i = 0; $i < 4; $i++) {
-                    $weekStart = date('Y-m-d', strtotime("-" . ($i * 7) . " days", strtotime('last Sunday')));
-                    if ($i === 0 && strtotime($weekStart) > strtotime(date('Y-m-d'))) {
-                        $weekStart = date('Y-m-d', strtotime("-7 days", strtotime($weekStart)));
-                    }
+                    $weekStart = date('Y-m-d', strtotime('-' . ($i * 7) . ' days', $lastSunday));
                     $weekEnd = date('Y-m-d', strtotime('+6 days', strtotime($weekStart)));
                     $weeks[] = [
                         'start' => $weekStart,

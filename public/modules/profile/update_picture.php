@@ -1,5 +1,7 @@
 <?php 
 session_start();
+require_once "../../../app/core/auth.php";
+$isAdmin = Auth::isAdmin();
 $err = $_SESSION['error'] ?? null;
 $ok  = $_SESSION['success'] ?? null;
 unset($_SESSION['error'], $_SESSION['success']);
@@ -11,8 +13,32 @@ unset($_SESSION['error'], $_SESSION['success']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Picture</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body class="centered-page">
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div><div></div><div></div>
+    </div>
+
+    <div class="menu" id="menu">
+        <h3>Menu</h3>
+        <a href="/dashboard.php">🏠 Dashboard</a>
+        <a href="/modules/profile/view.php">👤 My Profile</a>
+        
+        <div class="menu-parent">
+            <a href="/modules/medications/dashboard.php" class="menu-parent-link">💊 Medications</a>
+            <div class="menu-children">
+                <a href="/modules/medications/list.php">My Medications</a>
+                <a href="/modules/medications/stock.php">Medication Stock</a>
+            </div>
+        </div>
+        
+        <?php if ($isAdmin): ?>
+        <a href="/modules/admin/users.php">⚙️ User Management</a>
+        <?php endif; ?>
+        <a href="/logout.php">🚪 Logout</a>
+    </div>
+
     <div class="page-card">
         <div class="page-header">
             <h2>Update Profile Picture</h2>

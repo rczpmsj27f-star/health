@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once "../../../app/config/database.php";
+require_once "../../../app/core/auth.php";
+$isAdmin = Auth::isAdmin();
 
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
@@ -24,7 +26,18 @@ $user = $stmt->fetch();
         <h3>Menu</h3>
         <a href="/dashboard.php">🏠 Dashboard</a>
         <a href="/modules/profile/view.php">👤 My Profile</a>
-        <a href="/modules/medications/list.php">💊 Medications</a>
+        
+        <div class="menu-parent">
+            <a href="/modules/medications/dashboard.php" class="menu-parent-link">💊 Medications</a>
+            <div class="menu-children">
+                <a href="/modules/medications/list.php">My Medications</a>
+                <a href="/modules/medications/stock.php">Medication Stock</a>
+            </div>
+        </div>
+        
+        <?php if ($isAdmin): ?>
+        <a href="/modules/admin/users.php">⚙️ User Management</a>
+        <?php endif; ?>
         <a href="/logout.php">🚪 Logout</a>
     </div>
 

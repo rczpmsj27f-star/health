@@ -15,10 +15,24 @@ $stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ?");
 $stmt->execute([$medId]);
 $med = $stmt->fetch();
 
-$dose = $pdo->query("SELECT * FROM medication_doses WHERE medication_id = $medId")->fetch();
-$schedule = $pdo->query("SELECT * FROM medication_schedules WHERE medication_id = $medId")->fetch();
-$instructions = $pdo->query("SELECT * FROM medication_instructions WHERE medication_id = $medId")->fetchAll();
-$alerts = $pdo->query("SELECT * FROM medication_alerts WHERE medication_id = $medId")->fetchAll();
+// Check if medication is archived
+$isArchived = !empty($med['archived']) && $med['archived'] == 1;
+
+$stmt = $pdo->prepare("SELECT * FROM medication_doses WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$dose = $stmt->fetch();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_schedules WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$schedule = $stmt->fetch();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_instructions WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$instructions = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_alerts WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$alerts = $stmt->fetchAll();
 
 // Days of week for visualizer
 $daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -168,15 +182,24 @@ if ($schedule && $schedule['days_of_week']) {
             <?php endforeach; ?>
             <?php endif; ?>
 
-            <div class="action-buttons three-col" style="margin-top: 32px;">
-                <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
-                <button class="btn btn-success" id="addStockBtn" data-med-id="<?= $medId ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">📦 Add Stock</button>
-                <a class="btn btn-secondary" href="/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive">📦 Archive</a>
-            </div>
-            
-            <div class="action-buttons" style="margin-top: 16px;">
-                <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
-            </div>
+            <?php if (!$isArchived): ?>
+                <!-- If NOT archived, show these buttons -->
+                <div class="action-buttons three-col" style="margin-top: 32px;">
+                    <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
+                    <button class="btn btn-success" id="addStockBtn" data-med-id="<?= $medId ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">📦 Add Stock</button>
+                    <a class="btn btn-secondary" href="/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive" onclick="return confirm('Archive this medication?')">📦 Archive</a>
+                </div>
+                
+                <div class="action-buttons" style="margin-top: 16px;">
+                    <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
+                </div>
+            <?php else: ?>
+                <!-- If ARCHIVED, show only Unarchive and Delete -->
+                <div class="action-buttons" style="margin-top: 32px;">
+                    <button class="btn btn-primary" onclick="showUnarchiveModal(<?= $medId ?>)">📤 Unarchive</button>
+                    <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
+                </div>
+            <?php endif; ?>
             
             <div style="margin-top: 16px;">
                 <a class="btn btn-info" href="/modules/medications/list.php">⬅️ Back to Medications</a>
@@ -213,6 +236,18 @@ if ($schedule && $schedule['days_of_week']) {
                     <button type="submit" class="btn btn-primary">✅ Add Stock</button>
                 </div>
             </form>
+        </div>
+    </div>
+    
+    <!-- Unarchive Confirmation Modal -->
+    <div id="unarchiveModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>📤 Unarchive Medication</h3>
+            <p>Are you sure you want to unarchive <strong><?= htmlspecialchars($med['name']) ?></strong>?</p>
+            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeUnarchiveModal()">No, Cancel</button>
+                <button class="btn btn-primary" onclick="confirmUnarchive(<?= $medId ?>)">Yes, Unarchive</button>
+            </div>
         </div>
     </div>
     
@@ -308,6 +343,21 @@ if ($schedule && $schedule['days_of_week']) {
                 }
             });
         }
+        
+        var unarchiveModal = document.getElementById('unarchiveModal');
+        if (unarchiveModal) {
+            unarchiveModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeUnarchiveModal();
+                }
+            });
+        }
+        
+        // Check for success messages from session
+        <?php if (isset($_SESSION['success'])): ?>
+            showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
     });
     
     function showAddStockModal(medId, medName) {
@@ -319,6 +369,18 @@ if ($schedule && $schedule['days_of_week']) {
     
     function closeAddStockModal() {
         document.getElementById('addStockModal').classList.remove('active');
+    }
+    
+    function showUnarchiveModal(medId) {
+        document.getElementById('unarchiveModal').style.display = 'flex';
+    }
+    
+    function closeUnarchiveModal() {
+        document.getElementById('unarchiveModal').style.display = 'none';
+    }
+    
+    function confirmUnarchive(medId) {
+        window.location.href = '/modules/medications/archive_handler.php?id=' + medId + '&action=unarchive';
     }
     </script>
 </body>

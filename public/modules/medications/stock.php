@@ -136,6 +136,23 @@ $medications = $stmt->fetchAll();
             background: #28a745;
         }
         
+        .btn-remove-stock {
+            background: var(--color-danger);
+            color: var(--color-bg-white);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        
+        .btn-remove-stock:hover {
+            background: #c82333;
+        }
+        
         .no-meds {
             text-align: center;
             padding: 60px 20px;
@@ -305,9 +322,14 @@ $medications = $stmt->fetchAll();
                             </div>
                         </div>
                         
-                        <button class="btn-add-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
-                            ➕ Add Stock
-                        </button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn-add-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
+                                ➕ Add Stock
+                            </button>
+                            <button class="btn-remove-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
+                                ➖ Remove Stock
+                            </button>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -346,6 +368,55 @@ $medications = $stmt->fetchAll();
         </div>
     </div>
     
+    <!-- Remove Stock Modal -->
+    <div id="removeStockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➖ Remove Stock</h3>
+            </div>
+            <form method="POST" action="/modules/medications/remove_stock_handler.php" id="removeStockForm">
+                <div class="modal-body">
+                    <input type="hidden" name="medication_id" id="remove_medication_id">
+                    
+                    <div class="form-group">
+                        <label>Medication</label>
+                        <input type="text" id="remove_medication_name" readonly style="background: var(--color-bg-gray);">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Quantity to Remove *</label>
+                        <input type="number" name="quantity" id="remove_quantity" min="1" required placeholder="e.g., 10">
+                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                            Enter the number of tablets/doses to remove from stock
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Reason for Removal *</label>
+                        <select name="reason" id="remove_reason" required onchange="toggleOtherReason()">
+                            <option value="">Select a reason...</option>
+                            <option value="Taken/Used">Taken/Used</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Lost/Damaged">Lost/Damaged</option>
+                            <option value="Given away">Given away</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="other_reason_group" style="display: none;">
+                        <label>Please specify *</label>
+                        <input type="text" name="other_reason" id="other_reason" placeholder="Enter reason...">
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRemoveStockModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">✅ Remove Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -360,6 +431,17 @@ $medications = $stmt->fetchAll();
             });
         });
         
+        // Add event listeners to all Remove Stock buttons
+        var removeStockButtons = document.querySelectorAll('.btn-remove-stock');
+        removeStockButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                var medId = this.getAttribute('data-med-id');
+                var medName = this.getAttribute('data-med-name');
+                showRemoveStockModal(medId, medName);
+            });
+        });
+        
         // Cancel button handler
         var cancelBtn = document.querySelector('.cancel-stock-modal');
         if (cancelBtn) {
@@ -367,11 +449,20 @@ $medications = $stmt->fetchAll();
         }
         
         // Close modal when clicking outside
-        var modal = document.getElementById('addStockModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
+        var addModal = document.getElementById('addStockModal');
+        if (addModal) {
+            addModal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeAddStockModal();
+                }
+            });
+        }
+        
+        var removeModal = document.getElementById('removeStockModal');
+        if (removeModal) {
+            removeModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeRemoveStockModal();
                 }
             });
         }
@@ -397,6 +488,34 @@ $medications = $stmt->fetchAll();
     
     function closeAddStockModal() {
         document.getElementById('addStockModal').classList.remove('active');
+    }
+    
+    function showRemoveStockModal(medId, medName) {
+        document.getElementById('remove_medication_id').value = medId;
+        document.getElementById('remove_medication_name').value = medName;
+        document.getElementById('remove_quantity').value = '';
+        document.getElementById('remove_reason').value = '';
+        document.getElementById('other_reason').value = '';
+        document.getElementById('other_reason_group').style.display = 'none';
+        document.getElementById('removeStockModal').classList.add('active');
+    }
+    
+    function closeRemoveStockModal() {
+        document.getElementById('removeStockModal').classList.remove('active');
+    }
+    
+    function toggleOtherReason() {
+        var reasonSelect = document.getElementById('remove_reason');
+        var otherReasonGroup = document.getElementById('other_reason_group');
+        var otherReasonInput = document.getElementById('other_reason');
+        
+        if (reasonSelect.value === 'Other') {
+            otherReasonGroup.style.display = 'block';
+            otherReasonInput.required = true;
+        } else {
+            otherReasonGroup.style.display = 'none';
+            otherReasonInput.required = false;
+        }
     }
     </script>
 </body>

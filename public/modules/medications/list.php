@@ -220,7 +220,6 @@ $archivedMeds = $stmt->fetchAll();
         
         <div class="action-buttons" style="margin-top: 32px;">
             <a class="btn btn-primary" href="/modules/medications/add.php">➕ Add Medication</a>
-            <a class="btn btn-secondary" href="/dashboard.php">🏠 Back to Dashboard</a>
         </div>
     </div>
 </body>

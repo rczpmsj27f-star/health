@@ -38,13 +38,18 @@ $stmt = $pdo->prepare("SELECT * FROM medication_instructions WHERE medication_id
 $stmt->execute([$medId]);
 $instructions = $stmt->fetchAll();
 
-// Get existing dose times
-$stmt = $pdo->prepare("SELECT * FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_number");
-$stmt->execute([$medId]);
-$existingDoseTimes = $stmt->fetchAll();
+// Get existing dose times (table may not exist yet)
+$existingDoseTimes = [];
 $doseTimesArray = [];
-foreach ($existingDoseTimes as $dt) {
-    $doseTimesArray[$dt['dose_number']] = $dt['dose_time'];
+try {
+    $stmt = $pdo->prepare("SELECT * FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_number");
+    $stmt->execute([$medId]);
+    $existingDoseTimes = $stmt->fetchAll();
+    foreach ($existingDoseTimes as $dt) {
+        $doseTimesArray[$dt['dose_number']] = $dt['dose_time'];
+    }
+} catch (PDOException $e) {
+    // Table doesn't exist yet, continue with empty arrays
 }
 ?>
 <!DOCTYPE html>

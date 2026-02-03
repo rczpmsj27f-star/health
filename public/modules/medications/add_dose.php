@@ -5,26 +5,33 @@ $medId = $_GET['med'];
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Dose</title>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="centered-page">
+    <div class="page-card">
+        <div class="page-header">
+            <h2>Dose Information</h2>
+            <p>Enter the dosage details</p>
+        </div>
 
-<div style="padding:16px;">
-    <h2>Dose</h2>
+        <form method="POST" action="/modules/medications/add_dose_handler.php">
+            <input type="hidden" name="med_id" value="<?= htmlspecialchars($medId) ?>">
 
-    <form method="POST" action="/modules/medications/add_dose_handler.php">
-        <input type="hidden" name="med_id" value="<?= $medId ?>">
+            <div class="form-group">
+                <label>Dose Amount</label>
+                <input type="number" step="0.01" name="dose_amount" placeholder="e.g., 500" required>
+            </div>
 
-        <label>Dose Amount</label>
-        <input type="number" step="0.01" name="dose_amount" required>
+            <div class="form-group">
+                <label>Unit</label>
+                <input type="text" name="dose_unit" placeholder="e.g., mg, ml, tablet" required>
+            </div>
 
-        <label>Unit</label>
-        <input type="text" name="dose_unit" placeholder="mg, ml, tablet..." required>
-
-        <button class="btn btn-accept" type="submit">Continue</button>
-    </form>
-</div>
-
+            <button class="btn btn-accept" type="submit">Continue to Schedule</button>
+        </form>
+    </div>
 </body>
 </html>

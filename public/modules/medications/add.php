@@ -2,51 +2,72 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Medication</title>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="centered-page">
+    <div class="page-card">
+        <div class="page-header">
+            <h2>Add Medication</h2>
+            <p>Search and select your medication</p>
+        </div>
 
-<div style="padding:16px;">
-    <h2>Add Medication</h2>
+        <form method="POST" action="/modules/medications/add_handler.php">
+            <div class="form-group">
+                <label>Medication Name</label>
+                <input type="text" name="med_name" id="med_name" onkeyup="searchMed()" autocomplete="off" placeholder="Start typing to search..." required>
+                
+                <div id="results" class="autocomplete-results" style="display: none;"></div>
+            </div>
 
-    <form method="POST" action="/modules/medications/add_handler.php">
-        <label>Medication Name</label>
-        <input type="text" name="med_name" id="med_name" onkeyup="searchMed()" autocomplete="off" required>
+            <input type="hidden" name="nhs_med_id" id="selected_med_id">
 
-        <div id="results" style="background:#fff; border:1px solid #ccc; margin-top:5px;"></div>
+            <button class="btn btn-accept" type="submit">Continue to Dose</button>
+        </form>
 
-        <input type="hidden" name="nhs_med_id" id="selected_med_id">
+        <div class="page-footer">
+            <p><a href="/modules/medications/list.php">Back to Medications</a></p>
+        </div>
+    </div>
 
-        <button class="btn btn-accept" type="submit">Continue</button>
-    </form>
-</div>
+    <script>
+    function searchMed() {
+        let q = document.getElementById("med_name").value;
+        let resultsDiv = document.getElementById("results");
+        
+        if (q.length < 2) {
+            resultsDiv.style.display = "none";
+            return;
+        }
 
-<script>
-function searchMed() {
-    let q = document.getElementById("med_name").value;
-    if (q.length < 2) return;
-
-    fetch("/modules/medications/search.php?q=" + encodeURIComponent(q))
-        .then(r => r.json())
-        .then(data => {
-            let html = "";
-            data.forEach(item => {
-                html += `<div style="padding:8px; border-bottom:1px solid #eee; cursor:pointer;"
-                            onclick="selectMed('${item.id}', '${item.name}')">
-                            ${item.name}
-                         </div>`;
+        fetch("/modules/medications/search.php?q=" + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                let html = "";
+                if (data.length === 0) {
+                    html = '<div class="autocomplete-item" style="color: #999;">No results found</div>';
+                } else {
+                    data.forEach(item => {
+                        html += `<div class="autocomplete-item" onclick="selectMed('${item.id}', '${item.name.replace(/'/g, "&apos;")}')">${item.name}</div>`;
+                    });
+                }
+                resultsDiv.innerHTML = html;
+                resultsDiv.style.display = "block";
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                resultsDiv.innerHTML = '<div class="autocomplete-item" style="color: #dc3545;">Error searching medications</div>';
+                resultsDiv.style.display = "block";
             });
-            document.getElementById("results").innerHTML = html;
-        });
-}
+    }
 
-function selectMed(id, name) {
-    document.getElementById("med_name").value = name;
-    document.getElementById("selected_med_id").value = id;
-    document.getElementById("results").innerHTML = "";
-}
-</script>
-
+    function selectMed(id, name) {
+        document.getElementById("med_name").value = name;
+        document.getElementById("selected_med_id").value = id;
+        document.getElementById("results").style.display = "none";
+    }
+    </script>
 </body>
 </html>

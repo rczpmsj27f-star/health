@@ -70,7 +70,7 @@
 │   │   └── verify_handler.php
 │   │
 │   ├── core/
-│   │   ├── Auth.php
+│   │   ├── auth.php
 │   │   ├── Session.php          (optional future)
 │   │   └── Router.php           (optional future)
 │   │

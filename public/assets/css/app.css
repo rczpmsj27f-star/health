@@ -228,11 +228,11 @@ body {
 }
 
 .btn-primary { 
-    background: #5b21b6 !important; 
+    background: #2563eb !important; 
     color: #ffffff !important;
 }
 .btn-primary:hover { 
-    background: #4c1d95 !important; 
+    background: #1d4ed8 !important; 
 }
 
 .btn-secondary { 

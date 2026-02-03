@@ -49,7 +49,7 @@ $isAdmin = Auth::isAdmin();
     font-weight: 500;
     min-height: 48px;
 }
-.btn-primary { background: #5b21b6; color: #fff; }
+.btn-primary { background: #2563eb; color: #fff; }
 .btn-secondary { background: #6c757d; color: #fff; }
 .btn-danger { background: #dc3545; color: #fff; }
 .btn-info { background: #007bff; color: #fff; }

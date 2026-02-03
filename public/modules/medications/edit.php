@@ -89,7 +89,7 @@ foreach ($existingDoseTimes as $dt) {
 
         <div id="weekly" style="<?= $schedule['frequency_type'] === 'per_week' ? '' : 'display:none;' ?>">
             <label>Times per week</label>
-            <input type="number" name="times_per_week" min="1" max="7" value="<?= $schedule['times_per_week'] ?: 1 ?>">
+            <input type="number" name="times_per_week" min="1" max="100" value="<?= $schedule['times_per_week'] ?: 1 ?>">
 
             <label>Days</label>
             <input type="text" name="days_of_week" value="<?= htmlspecialchars($schedule['days_of_week']) ?>" placeholder="Mon,Wed,Fri">

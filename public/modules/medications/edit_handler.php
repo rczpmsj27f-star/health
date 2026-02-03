@@ -135,6 +135,10 @@ if (!empty($_POST['other_instructions'])) {
     foreach ($otherInstructions as $instruction) {
         $instruction = trim($instruction);
         if (!empty($instruction)) {
+            // Validate length (same as form instructions)
+            if (strlen($instruction) > 500) {
+                continue; // Skip too long instructions
+            }
             $stmt = $pdo->prepare("
                 INSERT INTO medication_instructions (medication_id, instruction_text)
                 VALUES (?, ?)

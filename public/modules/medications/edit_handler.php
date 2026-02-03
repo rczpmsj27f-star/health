@@ -75,9 +75,11 @@ if ($frequencyType === 'per_day') {
 }
 
 // Validate days of week if provided
-$daysOfWeek = $_POST['days_of_week'] ?? null;
-if ($daysOfWeek !== null) {
-    $daysOfWeek = trim($daysOfWeek);
+$daysOfWeek = null;
+if (!empty($_POST['days_of_week']) && is_array($_POST['days_of_week'])) {
+    $daysOfWeek = implode(', ', $_POST['days_of_week']);
+} elseif (!empty($_POST['days_of_week'])) {
+    $daysOfWeek = trim($_POST['days_of_week']);
     if (strlen($daysOfWeek) > 100) {
         $daysOfWeek = null;
     }

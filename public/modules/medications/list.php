@@ -12,12 +12,24 @@ $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
 // Get active medications (no end_date or end_date in future)
-$stmt = $pdo->prepare("SELECT * FROM medications WHERE user_id = ? AND (end_date IS NULL OR end_date >= CURDATE()) ORDER BY created_at DESC");
+$stmt = $pdo->prepare("
+    SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week 
+    FROM medications m 
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id 
+    WHERE m.user_id = ? AND (m.end_date IS NULL OR m.end_date >= CURDATE()) 
+    ORDER BY m.created_at DESC
+");
 $stmt->execute([$userId]);
 $activeMeds = $stmt->fetchAll();
 
 // Get archived medications (end_date in past)
-$stmt = $pdo->prepare("SELECT * FROM medications WHERE user_id = ? AND end_date IS NOT NULL AND end_date < CURDATE() ORDER BY end_date DESC");
+$stmt = $pdo->prepare("
+    SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week 
+    FROM medications m 
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id 
+    WHERE m.user_id = ? AND m.end_date IS NOT NULL AND m.end_date < CURDATE() 
+    ORDER BY m.end_date DESC
+");
 $stmt->execute([$userId]);
 $archivedMeds = $stmt->fetchAll();
 ?>
@@ -52,6 +64,26 @@ $archivedMeds = $stmt->fetchAll();
             margin: 0;
             color: var(--color-text-secondary);
         }
+        
+        /* Compact tiles for medication list */
+        .medications-list .tile {
+            min-height: 80px !important;
+            padding: 16px !important;
+        }
+        
+        .medications-list .tile .tile-icon {
+            font-size: 30px !important;
+            margin-bottom: 8px !important;
+        }
+        
+        .medications-list .tile .tile-title {
+            font-size: 16px !important;
+            margin-bottom: 4px !important;
+        }
+        
+        .medications-list .tile .tile-desc {
+            font-size: 12px !important;
+        }
     </style>
 </head>
 <body>
@@ -76,11 +108,6 @@ $archivedMeds = $stmt->fetchAll();
             <p>Track and manage your medications</p>
         </div>
 
-        <div class="action-buttons">
-            <a class="btn btn-primary" href="/modules/medications/add.php">➕ Add Medication</a>
-            <a class="btn btn-secondary" href="/dashboard.php">🏠 Back to Dashboard</a>
-        </div>
-
         <?php if (empty($activeMeds) && empty($archivedMeds)): ?>
             <div class="content-card" style="text-align: center;">
                 <p style="color: var(--color-text-secondary); margin: 0;">No medications added yet. Click "Add Medication" to get started.</p>
@@ -88,13 +115,25 @@ $archivedMeds = $stmt->fetchAll();
         <?php else: ?>
             <?php if (!empty($activeMeds)): ?>
                 <div class="section-header">Your Current Medications</div>
-                <div class="dashboard-grid">
+                <div class="dashboard-grid medications-list">
                     <?php foreach ($activeMeds as $m): ?>
                         <a class="tile tile-green" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
                             <div>
                                 <span class="tile-icon">💊</span>
                                 <div class="tile-title"><?= htmlspecialchars($m['name']) ?></div>
                                 <div class="tile-desc">View details</div>
+                                <?php if ($m['frequency_type']): ?>
+                                    <div class="tile-schedule">
+                                        <?php if ($m['frequency_type'] === 'per_day'): ?>
+                                            <?= htmlspecialchars($m['times_per_day']) ?>x daily
+                                        <?php else: ?>
+                                            <?= htmlspecialchars($m['times_per_week']) ?>x weekly
+                                            <?php if ($m['days_of_week']): ?>
+                                                (<?= htmlspecialchars($m['days_of_week']) ?>)
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </a>
                     <?php endforeach; ?>
@@ -103,19 +142,36 @@ $archivedMeds = $stmt->fetchAll();
 
             <?php if (!empty($archivedMeds)): ?>
                 <div class="section-header" style="margin-top: 32px;">Archived Medications</div>
-                <div class="dashboard-grid">
+                <div class="dashboard-grid medications-list">
                     <?php foreach ($archivedMeds as $m): ?>
                         <a class="tile tile-red" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
                             <div>
                                 <span class="tile-icon">📦</span>
                                 <div class="tile-title"><?= htmlspecialchars($m['name']) ?></div>
                                 <div class="tile-desc">Archived</div>
+                                <?php if ($m['frequency_type']): ?>
+                                    <div class="tile-schedule">
+                                        <?php if ($m['frequency_type'] === 'per_day'): ?>
+                                            <?= htmlspecialchars($m['times_per_day']) ?>x daily
+                                        <?php else: ?>
+                                            <?= htmlspecialchars($m['times_per_week']) ?>x weekly
+                                            <?php if ($m['days_of_week']): ?>
+                                                (<?= htmlspecialchars($m['days_of_week']) ?>)
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </a>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         <?php endif; ?>
+        
+        <div class="action-buttons" style="margin-top: 32px;">
+            <a class="btn btn-primary" href="/modules/medications/add.php">➕ Add Medication</a>
+            <a class="btn btn-secondary" href="/dashboard.php">🏠 Back to Dashboard</a>
+        </div>
     </div>
 </body>
 </html>

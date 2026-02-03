@@ -72,8 +72,7 @@ $isAdmin = Auth::isAdmin();
                 
                 <div class="form-group">
                     <label>Medication Name *</label>
-                    <input type="text" name="med_name" id="med_name" onkeyup="searchMed()" autocomplete="off" placeholder="Start typing to search..." required>
-                    <div id="results" class="autocomplete-results" style="display: none;"></div>
+                    <input type="text" name="med_name" id="med_name" autocomplete="off" placeholder="Enter medication name" required>
                 </div>
 
                 <input type="hidden" name="nhs_med_id" id="selected_med_id">
@@ -119,7 +118,11 @@ $isAdmin = Auth::isAdmin();
                 <div id="daily">
                     <div class="form-group">
                         <label>Times per day *</label>
-                        <input type="number" name="times_per_day" min="1" max="6" value="1">
+                        <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" onchange="updateTimeInputs()">
+                    </div>
+                    
+                    <div id="time_inputs_container">
+                        <!-- Time inputs will be dynamically generated here -->
                     </div>
                 </div>
 
@@ -131,9 +134,38 @@ $isAdmin = Auth::isAdmin();
 
                     <div class="form-group">
                         <label>Days of Week</label>
-                        <input type="text" name="days_of_week" placeholder="e.g., Mon, Wed, Fri">
+                        <div class="day-toggle-container">
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Mon">
+                                <span class="day-toggle-btn">Mon</span>
+                            </label>
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Tue">
+                                <span class="day-toggle-btn">Tue</span>
+                            </label>
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Wed">
+                                <span class="day-toggle-btn">Wed</span>
+                            </label>
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Thu">
+                                <span class="day-toggle-btn">Thu</span>
+                            </label>
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Fri">
+                                <span class="day-toggle-btn">Fri</span>
+                            </label>
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Sat">
+                                <span class="day-toggle-btn">Sat</span>
+                            </label>
+                            <label class="day-toggle">
+                                <input type="checkbox" name="days_of_week[]" value="Sun">
+                                <span class="day-toggle-btn">Sun</span>
+                            </label>
+                        </div>
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                            Enter days separated by commas
+                            Select the days when this medication should be taken
                         </small>
                     </div>
                 </div>
@@ -174,8 +206,7 @@ $isAdmin = Auth::isAdmin();
                 
                 <div class="form-group">
                     <label>Condition Name *</label>
-                    <input type="text" name="condition_name" id="condition_name" onkeyup="searchCondition()" autocomplete="off" placeholder="e.g., High blood pressure" required>
-                    <div id="condition_results" class="autocomplete-results" style="display: none;"></div>
+                    <input type="text" name="condition_name" id="condition_name" autocomplete="off" placeholder="e.g., High blood pressure" required>
                 </div>
             </div>
 
@@ -188,85 +219,60 @@ $isAdmin = Auth::isAdmin();
     </div>
 
     <script>
-    // Medication search
-    function searchMed() {
-        let q = document.getElementById("med_name").value;
-        let resultsDiv = document.getElementById("results");
+    // Update time inputs based on times per day
+    function updateTimeInputs() {
+        let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
+        let container = document.getElementById("time_inputs_container");
         
-        if (q.length < 2) {
-            resultsDiv.style.display = "none";
-            return;
+        if (timesPerDay > 1) {
+            let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
+            for (let i = 1; i <= timesPerDay; i++) {
+                html += `<label>Time ${i}:</label>`;
+                html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}">`;
+            }
+            
+            // Add evenly split button
+            html += '<button type="button" class="btn btn-secondary" onclick="evenlySpitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+            
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '';
         }
-
-        fetch("/modules/medications/search.php?q=" + encodeURIComponent(q))
-            .then(r => r.json())
-            .then(data => {
-                resultsDiv.innerHTML = '';
-                if (data.length === 0) {
-                    const div = document.createElement('div');
-                    div.className = 'autocomplete-item';
-                    div.style.color = '#999';
-                    div.textContent = 'No results found';
-                    resultsDiv.appendChild(div);
-                } else {
-                    data.forEach(item => {
-                        const itemName = item.name && item.name !== "Unknown" ? item.name : 'No name available';
-                        const itemId = item.id || '';
-                        
-                        const div = document.createElement('div');
-                        div.className = 'autocomplete-item';
-                        div.textContent = itemName;
-                        div.addEventListener('click', function() {
-                            selectMed(itemId, itemName);
-                        });
-                        resultsDiv.appendChild(div);
-                    });
-                }
-                resultsDiv.style.display = "block";
-            })
-            .catch(err => {
-                console.error('Search error:', err);
-                resultsDiv.innerHTML = '';
-                const div = document.createElement('div');
-                div.className = 'autocomplete-item';
-                div.style.color = '#dc3545';
-                div.textContent = 'Error searching medications';
-                resultsDiv.appendChild(div);
-                resultsDiv.style.display = "block";
-            });
     }
-
-    function selectMed(id, name) {
-        document.getElementById("med_name").value = name;
-        document.getElementById("selected_med_id").value = id;
-        document.getElementById("results").style.display = "none";
-    }
-
-    // Condition search
-    function searchCondition() {
-        let q = document.getElementById("condition_name").value;
-        let resultsDiv = document.getElementById("condition_results");
+    
+    // Evenly split times throughout the day (7am - 10pm)
+    function evenlySpitTimes() {
+        let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
         
-        if (q.length < 2) {
-            resultsDiv.style.display = "none";
-            return;
+        if (timesPerDay < 2) return;
+        
+        // Start at 7:00 (420 minutes from midnight)
+        // End at 22:00 (1320 minutes from midnight)
+        const startMinutes = 7 * 60; // 7:00 AM = 420 minutes
+        const endMinutes = 22 * 60;  // 10:00 PM = 1320 minutes
+        
+        // Calculate interval
+        let interval;
+        if (timesPerDay === 2) {
+            interval = endMinutes - startMinutes;
+        } else {
+            interval = (endMinutes - startMinutes) / (timesPerDay - 1);
         }
-
-        // Mock condition search - in production this would call an API
-        resultsDiv.innerHTML = '';
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.textContent = q;
-        div.addEventListener('click', function() {
-            selectCondition(q);
-        });
-        resultsDiv.appendChild(div);
-        resultsDiv.style.display = "block";
-    }
-
-    function selectCondition(name) {
-        document.getElementById("condition_name").value = name;
-        document.getElementById("condition_results").style.display = "none";
+        
+        // Set each time input
+        for (let i = 1; i <= timesPerDay; i++) {
+            let totalMinutes = startMinutes + (interval * (i - 1));
+            let hours = Math.floor(totalMinutes / 60);
+            let minutes = Math.round(totalMinutes % 60);
+            
+            // Format as HH:MM
+            let timeString = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+            
+            let input = document.getElementById(`dose_time_${i}`);
+            if (input) {
+                input.value = timeString;
+            }
+        }
     }
 
     // Schedule UI toggle
@@ -275,22 +281,19 @@ $isAdmin = Auth::isAdmin();
         
         if (f === "per_day") {
             document.querySelector('[name="times_per_week"]').value = "";
-            document.querySelector('[name="days_of_week"]').value = "";
             document.getElementById("daily").style.display = "block";
             document.getElementById("weekly").style.display = "none";
+            updateTimeInputs();
         } else {
             document.querySelector('[name="times_per_day"]').value = "";
             document.getElementById("daily").style.display = "none";
             document.getElementById("weekly").style.display = "block";
         }
     }
-
-    // Close autocomplete when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.form-group')) {
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('condition_results').style.display = 'none';
-        }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTimeInputs();
     });
     </script>
 </body>

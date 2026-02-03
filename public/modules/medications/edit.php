@@ -104,8 +104,23 @@ foreach ($existingDoseTimes as $dt) {
             <label>Times per week</label>
             <input type="number" name="times_per_week" min="1" max="100" value="<?= htmlspecialchars($schedule['times_per_week'] ?: 1) ?>">
 
-            <label>Days</label>
-            <input type="text" name="days_of_week" value="<?= htmlspecialchars($schedule['days_of_week']) ?>" placeholder="Mon,Wed,Fri">
+            <label>Days of Week</label>
+            <div class="day-toggle-container">
+                <?php
+                $selectedDays = [];
+                if (!empty($schedule['days_of_week'])) {
+                    $selectedDays = array_map('trim', explode(',', $schedule['days_of_week']));
+                }
+                $allDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                foreach ($allDays as $day):
+                    $checked = in_array($day, $selectedDays) ? 'checked' : '';
+                ?>
+                <label class="day-toggle">
+                    <input type="checkbox" name="days_of_week[]" value="<?= $day ?>" <?= $checked ?>>
+                    <span class="day-toggle-btn"><?= $day ?></span>
+                </label>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <h3>Special Instructions</h3>
@@ -159,11 +174,50 @@ function updateTimeInputs() {
         for (let i = 1; i <= timesPerDay; i++) {
             html += `<label>Time ${i}:</label>`;
             let timeValue = existingTimes[i] || '';
-            html += `<input type="time" name="dose_time_${i}" value="${timeValue}">`;
+            html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}" value="${timeValue}">`;
         }
+        
+        // Add evenly split button
+        html += '<button type="button" class="btn btn-secondary" onclick="evenlySpitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+        
         container.innerHTML = html;
     } else {
         container.innerHTML = '';
+    }
+}
+
+// Evenly split times throughout the day (7am - 10pm)
+function evenlySpitTimes() {
+    let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
+    
+    if (timesPerDay < 2) return;
+    
+    // Start at 7:00 (420 minutes from midnight)
+    // End at 22:00 (1320 minutes from midnight)
+    const startMinutes = 7 * 60; // 7:00 AM = 420 minutes
+    const endMinutes = 22 * 60;  // 10:00 PM = 1320 minutes
+    
+    // Calculate interval
+    let interval;
+    if (timesPerDay === 2) {
+        interval = endMinutes - startMinutes;
+    } else {
+        interval = (endMinutes - startMinutes) / (timesPerDay - 1);
+    }
+    
+    // Set each time input
+    for (let i = 1; i <= timesPerDay; i++) {
+        let totalMinutes = startMinutes + (interval * (i - 1));
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = Math.round(totalMinutes % 60);
+        
+        // Format as HH:MM
+        let timeString = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+        
+        let input = document.getElementById(`dose_time_${i}`);
+        if (input) {
+            input.value = timeString;
+        }
     }
 }
 

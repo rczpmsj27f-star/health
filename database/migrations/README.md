@@ -13,6 +13,11 @@ Migration files follow the naming convention: `migration_<description>.sql`
    - Adds dose times tracking to medication_schedules table
    - Creates performance indexes for archive and dose time queries
 
+2. **migration_create_dose_times_table.sql**
+   - Creates the medication_dose_times table for storing specific dose times
+   - Tracks individual dose times for medications taken multiple times per day
+   - Foreign key relationship with medications table (CASCADE on delete)
+
 ## How to Apply Migrations
 
 Since this project doesn't use an automated migration framework, migrations must be applied manually:

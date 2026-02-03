@@ -31,10 +31,20 @@ if ($action === 'archive') {
     // Archive the medication
     $stmt = $pdo->prepare("UPDATE medications SET archived = 1, end_date = NOW() WHERE id = ?");
     $stmt->execute([$medId]);
+    
+    // Redirect back to the medication view page with success message
+    $_SESSION['success'] = 'Medication archived successfully.';
+    header("Location: /modules/medications/view.php?id=$medId");
+    exit;
 } elseif ($action === 'unarchive') {
     // Unarchive the medication
     $stmt = $pdo->prepare("UPDATE medications SET archived = 0, end_date = NULL WHERE id = ?");
     $stmt->execute([$medId]);
+    
+    // Redirect back to the medication view page with success message
+    $_SESSION['success'] = 'Medication unarchived successfully.';
+    header("Location: /modules/medications/view.php?id=$medId");
+    exit;
 }
 
 header("Location: /modules/medications/list.php");

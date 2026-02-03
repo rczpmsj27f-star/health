@@ -1,8 +1,15 @@
 <?php
 session_start();
 require_once "../../../app/config/database.php";
+require_once "../../../app/core/Auth.php";
+
+if (empty($_SESSION['user_id'])) {
+    header("Location: /login.php");
+    exit;
+}
 
 $medId = $_GET['id'];
+$isAdmin = Auth::isAdmin();
 
 $stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ?");
 $stmt->execute([$medId]);
@@ -12,6 +19,13 @@ $dose = $pdo->query("SELECT * FROM medication_doses WHERE medication_id = $medId
 $schedule = $pdo->query("SELECT * FROM medication_schedules WHERE medication_id = $medId")->fetch();
 $instructions = $pdo->query("SELECT * FROM medication_instructions WHERE medication_id = $medId")->fetchAll();
 $alerts = $pdo->query("SELECT * FROM medication_alerts WHERE medication_id = $medId")->fetchAll();
+
+// Days of week for visualizer
+$daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+$activeDays = [];
+if ($schedule && $schedule['days_of_week']) {
+    $activeDays = array_map('trim', explode(',', $schedule['days_of_week']));
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -20,106 +34,99 @@ $alerts = $pdo->query("SELECT * FROM medication_alerts WHERE medication_id = $me
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($med['name']) ?></title>
     <link rel="stylesheet" href="/assets/css/app.css">
-    <style>
-        .alerts-header {
-            cursor: pointer;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            transition: background-color 0.2s;
-        }
-        
-        .alerts-header:hover {
-            background: #e9ecef;
-        }
-        
-        .alert-item {
-            padding: 16px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            background: #fff;
-        }
-        
-        .alert-item strong {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-        }
-    </style>
+    <script src="/assets/js/menu.js" defer></script>
 </head>
-<body class="centered-page">
-    <div class="page-card">
-        <div class="page-header">
-            <h2><?= htmlspecialchars($med['name']) ?></h2>
-            <p>Medication Details</p>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">Dose</div>
-            <div class="info-value"><?= htmlspecialchars($dose['dose_amount']) ?> <?= htmlspecialchars($dose['dose_unit']) ?></div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">Schedule</div>
-            <div class="info-value">
-                <?php if ($schedule['frequency_type'] === 'per_day'): ?>
-                    <?= htmlspecialchars($schedule['times_per_day']) ?> time(s) per day
-                <?php else: ?>
-                    <?= htmlspecialchars($schedule['times_per_week']) ?> time(s) per week
-                    <?php if ($schedule['days_of_week']): ?>
-                        on <?= htmlspecialchars($schedule['days_of_week']) ?>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <?php if (!empty($instructions)): ?>
-        <div class="info-item">
-            <div class="info-label">Instructions</div>
-            <div class="info-value">
-                <ul style="margin: 8px 0; padding-left: 20px;">
-                    <?php foreach ($instructions as $i): ?>
-                        <li><?= htmlspecialchars($i['instruction_text']) ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <?php if (!empty($alerts)): ?>
-        <div class="alerts-header" onclick="toggleAlerts()">
-            <strong>NHS Alerts (<?= count($alerts) ?>)</strong>
-            <span id="arrow">▼</span>
-        </div>
-        <div id="alerts" style="display:none;">
-            <?php foreach ($alerts as $a): ?>
-                <div class="alert-item">
-                    <strong><?= htmlspecialchars($a['alert_title']) ?></strong>
-                    <?= nl2br(htmlspecialchars($a['alert_body'])) ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-
-        <div style="margin-top: 24px;">
-            <a class="btn btn-info" href="/modules/medications/list.php">Back to Medications</a>
-        </div>
+<body>
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div><div></div><div></div>
     </div>
 
-    <script>
-    function toggleAlerts() {
-        let alertsDiv = document.getElementById("alerts");
-        let arrow = document.getElementById("arrow");
-        if (alertsDiv.style.display === "none") {
-            alertsDiv.style.display = "block";
-            arrow.textContent = "▲";
-        } else {
-            alertsDiv.style.display = "none";
-            arrow.textContent = "▼";
-        }
-    }
-    </script>
+    <div class="menu" id="menu">
+        <h3>Menu</h3>
+        <a href="/dashboard.php">🏠 Dashboard</a>
+        <a href="/modules/profile/view.php">👤 My Profile</a>
+        <a href="/modules/medications/list.php">💊 Medications</a>
+        <?php if ($isAdmin): ?>
+        <a href="/modules/admin/users.php">⚙️ User Management</a>
+        <?php endif; ?>
+        <a href="/logout.php">🚪 Logout</a>
+    </div>
+
+    <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
+        <div class="page-card">
+            <div class="page-header">
+                <h2>💊 <?= htmlspecialchars($med['name']) ?></h2>
+                <p>Medication Details</p>
+            </div>
+
+            <div class="section-header">Dosage Information</div>
+            <div class="info-item">
+                <div class="info-label">Dose Amount</div>
+                <div class="info-value"><?= number_format($dose['dose_amount'], 2) ?> <?= htmlspecialchars($dose['dose_unit']) ?></div>
+            </div>
+
+            <div class="section-header">Schedule</div>
+            <div class="schedule-grid">
+                <?php if ($schedule['frequency_type'] === 'per_day'): ?>
+                    <div class="schedule-time">
+                        <div class="schedule-time-label">⏰ Daily Schedule</div>
+                        <div class="schedule-time-value">
+                            <?= htmlspecialchars($schedule['times_per_day']) ?> time(s) per day
+                        </div>
+                    </div>
+                    
+                    <!-- Daily visualizer -->
+                    <div class="day-visualizer">
+                        <?php foreach ($daysOfWeek as $day): ?>
+                            <div class="day-badge active"><?= $day ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="schedule-time">
+                        <div class="schedule-time-label">📅 Weekly Schedule</div>
+                        <div class="schedule-time-value">
+                            <?= htmlspecialchars($schedule['times_per_week']) ?> time(s) per week
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly visualizer -->
+                    <div class="day-visualizer">
+                        <?php foreach ($daysOfWeek as $day): ?>
+                            <div class="day-badge <?= in_array($day, $activeDays) ? 'active' : '' ?>">
+                                <?= $day ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($instructions)): ?>
+            <div class="section-header">Special Instructions</div>
+            <div class="schedule-grid">
+                <?php foreach ($instructions as $i): ?>
+                    <div class="schedule-time">
+                        <div class="schedule-time-value">
+                            📋 <?= htmlspecialchars($i['instruction_text']) ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($alerts)): ?>
+            <div class="section-header">NHS System Alerts</div>
+            <?php foreach ($alerts as $a): ?>
+                <div class="nhs-alert">
+                    <div class="nhs-alert-title"><?= htmlspecialchars($a['alert_title']) ?></div>
+                    <div class="nhs-alert-body"><?= nl2br(htmlspecialchars($a['alert_body'])) ?></div>
+                </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+
+            <div style="margin-top: 32px;">
+                <a class="btn btn-info" href="/modules/medications/list.php">⬅️ Back to Medications</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

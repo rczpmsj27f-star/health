@@ -49,12 +49,13 @@ $isAdmin = Auth::isAdmin();
 
     <div class="menu" id="menu">
         <h3>Menu</h3>
-        <a href="/modules/profile/view.php">Profile</a>
-        <a href="/modules/medications/list.php">Medication Management</a>
+        <a href="/dashboard.php">🏠 Dashboard</a>
+        <a href="/modules/profile/view.php">👤 My Profile</a>
+        <a href="/modules/medications/list.php">💊 Medications</a>
         <?php if ($isAdmin): ?>
-        <a href="/modules/admin/users.php">User Management</a>
+        <a href="/modules/admin/users.php">⚙️ User Management</a>
         <?php endif; ?>
-        <a href="/logout.php">Logout</a>
+        <a href="/logout.php">🚪 Logout</a>
     </div>
 
     <div class="dashboard-container">
@@ -64,25 +65,20 @@ $isAdmin = Auth::isAdmin();
         </div>
         
         <div class="dashboard-grid">
-            <a class="tile" href="/modules/medications/list.php">
+            <a class="tile tile-purple" href="/modules/medications/list.php">
                 <div>
-                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">Medication Management</div>
-                    <div style="font-size: 13px; color: #666;">Track your medications</div>
-                </div>
-            </a>
-            
-            <a class="tile" href="/modules/profile/view.php">
-                <div>
-                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">My Profile</div>
-                    <div style="font-size: 13px; color: #666;">View and edit profile</div>
+                    <span class="tile-icon">💊</span>
+                    <div class="tile-title">Medication Management</div>
+                    <div class="tile-desc">Track your medications</div>
                 </div>
             </a>
             
             <?php if ($isAdmin): ?>
-            <a class="tile" href="/modules/admin/users.php">
+            <a class="tile tile-orange" href="/modules/admin/users.php">
                 <div>
-                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 4px;">User Management</div>
-                    <div style="font-size: 13px; color: #666;">Manage system users</div>
+                    <span class="tile-icon">⚙️</span>
+                    <div class="tile-title">User Management</div>
+                    <div class="tile-desc">Manage system users</div>
                 </div>
             </a>
             <?php endif; ?>

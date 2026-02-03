@@ -1,7 +1,7 @@
 <?php
+require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
-require_once "../../../app/config/database.php";
 
 // Validate ID parameter
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {

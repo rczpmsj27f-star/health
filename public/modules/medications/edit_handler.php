@@ -64,6 +64,15 @@ if ($timesPerWeek !== false && $timesPerWeek !== null && ($timesPerWeek < 1 || $
     exit;
 }
 
+// Validate days of week if provided
+$daysOfWeek = $_POST['days_of_week'] ?? null;
+if ($daysOfWeek !== null) {
+    $daysOfWeek = trim($daysOfWeek);
+    if (strlen($daysOfWeek) > 100) {
+        $daysOfWeek = null;
+    }
+}
+
 $stmt = $pdo->prepare("
     UPDATE medication_schedules 
     SET frequency_type = ?, times_per_day = ?, times_per_week = ?, days_of_week = ?
@@ -73,7 +82,7 @@ $stmt->execute([
     $frequencyType,
     $timesPerDay ?: null,
     $timesPerWeek ?: null,
-    $_POST['days_of_week'] ?: null,
+    $daysOfWeek,
     $medId
 ]);
 
@@ -86,11 +95,17 @@ if ($_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) &&
     for ($i = 1; $i <= $_POST['times_per_day']; $i++) {
         $timeKey = "dose_time_$i";
         if (!empty($_POST[$timeKey])) {
+            // Validate time format (HH:MM)
+            $doseTime = trim($_POST[$timeKey]);
+            if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $doseTime)) {
+                continue; // Skip invalid time formats
+            }
+            
             $stmt = $pdo->prepare("
                 INSERT INTO medication_dose_times (medication_id, dose_number, dose_time)
                 VALUES (?, ?, ?)
             ");
-            $stmt->execute([$medId, $i, $_POST[$timeKey]]);
+            $stmt->execute([$medId, $i, $doseTime]);
         }
     }
 } else {
@@ -102,12 +117,16 @@ if ($_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) &&
 $pdo->prepare("DELETE FROM medication_instructions WHERE medication_id = ?")->execute([$medId]);
 
 if (!empty($_POST['instructions'])) {
-    foreach ($_POST['instructions'] as $i) {
+    foreach ($_POST['instructions'] as $instruction) {
+        $instruction = trim($instruction);
+        if (empty($instruction) || strlen($instruction) > 500) {
+            continue; // Skip empty or too long instructions
+        }
         $stmt = $pdo->prepare("
             INSERT INTO medication_instructions (medication_id, instruction_text)
             VALUES (?, ?)
         ");
-        $stmt->execute([$medId, $i]);
+        $stmt->execute([$medId, $instruction]);
     }
 }
 

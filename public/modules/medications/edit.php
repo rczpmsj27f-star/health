@@ -80,7 +80,7 @@ foreach ($existingDoseTimes as $dt) {
 
         <div id="daily" style="<?= $schedule['frequency_type'] === 'per_day' ? '' : 'display:none;' ?>">
             <label>Times per day</label>
-            <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="<?= $schedule['times_per_day'] ?: 1 ?>" onchange="updateTimeInputs()">
+            <input type="number" name="times_per_day" id="times_per_day" min="1" max="24" value="<?= $schedule['times_per_day'] ?: 1 ?>" onchange="updateTimeInputs()">
             
             <div id="time_inputs_container">
                 <!-- Time inputs will be dynamically generated here -->

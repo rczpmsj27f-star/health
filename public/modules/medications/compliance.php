@@ -11,6 +11,13 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
+// Get current medication type (scheduled or prn)
+$medType = $_GET['type'] ?? 'scheduled';
+$validTypes = ['scheduled', 'prn'];
+if (!in_array($medType, $validTypes)) {
+    $medType = 'scheduled';
+}
+
 // Get current view from query parameter (default: daily)
 $view = $_GET['view'] ?? 'daily';
 $validViews = ['daily', 'weekly', 'monthly', 'annual'];
@@ -143,6 +150,104 @@ foreach ($medications as $med) {
         'taken_logs' => $takenLogs,
         'skipped_logs' => $skippedLogs
     ];
+}
+
+// Get PRN medications and their data
+$prnMedications = [];
+$prnData = [];
+
+if ($medType === 'prn') {
+    // Get all active PRN medications
+    $stmt = $pdo->prepare("
+        SELECT m.id, m.name, m.end_date, m.created_at, md.dose_amount, md.dose_unit
+        FROM medications m
+        LEFT JOIN medication_doses md ON m.id = md.medication_id
+        LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+        WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL) AND ms.is_prn = 1
+        ORDER BY m.name
+    ");
+    $stmt->execute([$userId]);
+    $prnMedications = $stmt->fetchAll();
+    
+    // Get PRN data for each medication based on view
+    foreach ($prnMedications as $med) {
+        $medId = $med['id'];
+        
+        // Set date range based on view
+        if ($view === 'daily') {
+            $dateFilter = "DATE(taken_at) = CURDATE()";
+            $intervalStart = date('Y-m-d 00:00:00');
+        } elseif ($view === 'weekly') {
+            $dateFilter = "DATE(taken_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)";
+            $intervalStart = date('Y-m-d 00:00:00', strtotime('-6 days'));
+        } elseif ($view === 'monthly') {
+            $dateFilter = "YEAR(taken_at) = ? AND MONTH(taken_at) = ?";
+            $intervalStart = "$currentYear-" . str_pad($currentMonth, 2, '0', STR_PAD_LEFT) . "-01 00:00:00";
+        } else { // annual
+            $dateFilter = "YEAR(taken_at) = YEAR(CURDATE())";
+            $intervalStart = date('Y') . "-01-01 00:00:00";
+        }
+        
+        // Get dose logs
+        if ($view === 'monthly') {
+            $stmt = $pdo->prepare("
+                SELECT DATE(taken_at) as log_date, TIME(taken_at) as log_time, 
+                       COUNT(*) as dose_count, SUM(quantity_taken) as total_quantity
+                FROM medication_logs 
+                WHERE medication_id = ? AND user_id = ? AND status = 'taken' AND $dateFilter
+                GROUP BY DATE(taken_at)
+                ORDER BY taken_at
+            ");
+            $stmt->execute([$medId, $userId, $currentYear, $currentMonth]);
+        } else {
+            $stmt = $pdo->prepare("
+                SELECT DATE(taken_at) as log_date, TIME(taken_at) as log_time, 
+                       COUNT(*) as dose_count, SUM(quantity_taken) as total_quantity
+                FROM medication_logs 
+                WHERE medication_id = ? AND user_id = ? AND status = 'taken' AND $dateFilter
+                GROUP BY DATE(taken_at)
+                ORDER BY taken_at
+            ");
+            $stmt->execute([$medId, $userId]);
+        }
+        $doseLogs = $stmt->fetchAll();
+        
+        // Get detailed times for daily view
+        $detailedTimes = [];
+        if ($view === 'daily') {
+            $stmt = $pdo->prepare("
+                SELECT TIME(taken_at) as time_taken, quantity_taken
+                FROM medication_logs 
+                WHERE medication_id = ? AND user_id = ? AND status = 'taken' AND DATE(taken_at) = CURDATE()
+                ORDER BY taken_at
+            ");
+            $stmt->execute([$medId, $userId]);
+            $detailedTimes = $stmt->fetchAll();
+        }
+        
+        // Calculate summary statistics
+        $totalDoses = 0;
+        $totalQuantity = 0;
+        $dailyBreakdown = [];
+        
+        foreach ($doseLogs as $log) {
+            $totalDoses += $log['dose_count'];
+            $totalQuantity += $log['total_quantity'];
+            $dailyBreakdown[$log['log_date']] = [
+                'doses' => $log['dose_count'],
+                'quantity' => $log['total_quantity']
+            ];
+        }
+        
+        $prnData[$medId] = [
+            'medication' => $med,
+            'total_doses' => $totalDoses,
+            'total_quantity' => $totalQuantity,
+            'daily_breakdown' => $dailyBreakdown,
+            'detailed_times' => $detailedTimes,
+            'dose_logs' => $doseLogs
+        ];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -300,6 +405,78 @@ foreach ($medications as $med) {
         }
         
         /* Tab Navigation */
+        .compliance-controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .med-type-toggle {
+            display: flex;
+            background: var(--color-bg-gray);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+        }
+        
+        .toggle-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--color-text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .toggle-btn:hover {
+            color: var(--color-primary);
+        }
+        
+        .toggle-btn.active {
+            background: var(--color-primary);
+            color: white;
+        }
+        
+        .view-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .view-selector label {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+        
+        .view-dropdown {
+            padding: 10px 16px;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 140px;
+        }
+        
+        .view-dropdown:hover {
+            border-color: var(--color-primary);
+        }
+        
+        .view-dropdown:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.1);
+        }
+        
         .compliance-tabs {
             display: flex;
             gap: 8px;
@@ -515,6 +692,109 @@ foreach ($medications as $med) {
             margin-bottom: 3px;
         }
         
+        /* PRN Summary Styles */
+        .prn-summary-card {
+            background: var(--color-bg-white);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .prn-card-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--color-border);
+        }
+        
+        .prn-med-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+        
+        .prn-med-dose {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+        
+        .prn-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .prn-stat-box {
+            text-align: center;
+            padding: 16px;
+            background: var(--color-bg-gray);
+            border-radius: var(--radius-sm);
+        }
+        
+        .prn-stat-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .prn-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+        
+        .prn-time-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .prn-time-item {
+            padding: 8px 12px;
+            background: var(--color-bg-gray);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--color-text);
+        }
+        
+        .prn-daily-breakdown {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .prn-breakdown-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 12px;
+        }
+        
+        .prn-breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .prn-breakdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .prn-breakdown-date {
+            font-size: 14px;
+            color: var(--color-text);
+        }
+        
+        .prn-breakdown-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+        
         @media (max-width: 768px) {
             .compliance-circle {
                 width: 36px;
@@ -565,14 +845,29 @@ foreach ($medications as $med) {
             <p>Track your medication adherence</p>
         </div>
         
-        <!-- Tab Navigation -->
-        <div class="compliance-tabs">
-            <a href="?view=daily" class="tab-button <?= $view === 'daily' ? 'active' : '' ?>">Daily</a>
-            <a href="?view=weekly" class="tab-button <?= $view === 'weekly' ? 'active' : '' ?>">Weekly</a>
-            <a href="?view=monthly" class="tab-button <?= $view === 'monthly' ? 'active' : '' ?>">Monthly</a>
-            <a href="?view=annual" class="tab-button <?= $view === 'annual' ? 'active' : '' ?>">Annual</a>
+        <!-- Medication Type Toggle and View Selector -->
+        <div class="compliance-controls">
+            <div class="med-type-toggle">
+                <a href="?type=scheduled&view=<?= $view ?>" class="toggle-btn <?= $medType === 'scheduled' ? 'active' : '' ?>">
+                    📅 Scheduled
+                </a>
+                <a href="?type=prn&view=<?= $view ?>" class="toggle-btn <?= $medType === 'prn' ? 'active' : '' ?>">
+                    💊 PRN
+                </a>
+            </div>
+            
+            <div class="view-selector">
+                <label for="viewSelect">View:</label>
+                <select id="viewSelect" class="view-dropdown" onchange="window.location.href='?type=<?= $medType ?>&view=' + this.value<?= $view === 'monthly' ? " + '&month=<?= $currentMonth ?>&year=<?= $currentYear ?>'" : '' ?>">
+                    <option value="daily" <?= $view === 'daily' ? 'selected' : '' ?>>Daily</option>
+                    <option value="weekly" <?= $view === 'weekly' ? 'selected' : '' ?>>Weekly</option>
+                    <option value="monthly" <?= $view === 'monthly' ? 'selected' : '' ?>>Monthly</option>
+                    <option value="annual" <?= $view === 'annual' ? 'selected' : '' ?>>Annual</option>
+                </select>
+            </div>
         </div>
         
+        <?php if ($medType === 'scheduled'): ?>
         <?php if (empty($medications)): ?>
             <div class="no-meds">
                 <p>You don't have any active medications yet.</p>
@@ -1319,6 +1614,274 @@ foreach ($medications as $med) {
             
             <?php endif; ?>
             
+        <?php endif; ?>
+        <?php endif; ?>
+        
+        <?php if ($medType === 'prn'): ?>
+        <?php if (empty($prnMedications)): ?>
+            <div class="no-meds">
+                <p>You don't have any PRN medications yet.</p>
+                <p>PRN medications are taken as and when needed, not on a regular schedule.</p>
+                <a class="btn btn-primary" href="/modules/medications/add_unified.php">➕ Add PRN Medication</a>
+            </div>
+        <?php else: ?>
+            
+            <?php if ($view === 'daily'): ?>
+                <!-- PRN DAILY VIEW -->
+                <?php foreach ($prnData as $medId => $data): ?>
+                    <?php 
+                    $med = $data['medication'];
+                    $totalDoses = $data['total_doses'];
+                    $totalQuantity = $data['total_quantity'];
+                    $detailedTimes = $data['detailed_times'];
+                    ?>
+                    <div class="prn-summary-card">
+                        <div class="prn-card-header">
+                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                            <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
+                                <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="prn-stats-grid">
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Doses Taken Today</div>
+                                <div class="prn-stat-value"><?= $totalDoses ?></div>
+                            </div>
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Total Quantity (tablets)</div>
+                                <div class="prn-stat-value"><?= $totalQuantity ?></div>
+                            </div>
+                        </div>
+                        
+                        <?php if (!empty($detailedTimes)): ?>
+                            <div class="prn-daily-breakdown">
+                                <div class="prn-breakdown-title">⏰ Times Taken</div>
+                                <ul class="prn-time-list">
+                                    <?php foreach ($detailedTimes as $time): ?>
+                                        <li class="prn-time-item">
+                                            <?= date('h:i A', strtotime($time['time_taken'])) ?> 
+                                            (<?= $time['quantity_taken'] ?> tablet<?= $time['quantity_taken'] > 1 ? 's' : '' ?>)
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php else: ?>
+                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                No doses taken today
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            
+            <?php elseif ($view === 'weekly'): ?>
+                <!-- PRN WEEKLY VIEW -->
+                <?php foreach ($prnData as $medId => $data): ?>
+                    <?php 
+                    $med = $data['medication'];
+                    $totalDoses = $data['total_doses'];
+                    $dailyBreakdown = $data['daily_breakdown'];
+                    
+                    // Calculate average per day
+                    $avgPerDay = $totalDoses > 0 ? round($totalDoses / 7, 1) : 0;
+                    ?>
+                    <div class="prn-summary-card">
+                        <div class="prn-card-header">
+                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                            <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
+                                <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="prn-stats-grid">
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Total Doses (7 days)</div>
+                                <div class="prn-stat-value"><?= $totalDoses ?></div>
+                            </div>
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Average per Day</div>
+                                <div class="prn-stat-value"><?= $avgPerDay ?></div>
+                            </div>
+                        </div>
+                        
+                        <?php if (!empty($dailyBreakdown)): ?>
+                            <div class="prn-daily-breakdown">
+                                <div class="prn-breakdown-title">📊 Daily Breakdown</div>
+                                <?php
+                                // Show last 7 days
+                                for ($i = 6; $i >= 0; $i--) {
+                                    $date = date('Y-m-d', strtotime("-$i days"));
+                                    $dayLabel = date('D, M j', strtotime($date));
+                                    $doses = $dailyBreakdown[$date]['doses'] ?? 0;
+                                    $quantity = $dailyBreakdown[$date]['quantity'] ?? 0;
+                                ?>
+                                    <div class="prn-breakdown-item">
+                                        <span class="prn-breakdown-date"><?= $dayLabel ?></span>
+                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> tablets)</span>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        <?php else: ?>
+                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                No doses taken in the last 7 days
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            
+            <?php elseif ($view === 'monthly'): ?>
+                <!-- PRN MONTHLY VIEW -->
+                <?php foreach ($prnData as $medId => $data): ?>
+                    <?php 
+                    $med = $data['medication'];
+                    $totalDoses = $data['total_doses'];
+                    $totalQuantity = $data['total_quantity'];
+                    $dailyBreakdown = $data['daily_breakdown'];
+                    
+                    // Calculate weekly trends
+                    $weeklyTrends = [];
+                    $weekNum = 1;
+                    $weekStart = 1;
+                    
+                    while ($weekStart <= 31) {
+                        $weekEnd = min($weekStart + 6, 31);
+                        $weekDoses = 0;
+                        
+                        for ($day = $weekStart; $day <= $weekEnd; $day++) {
+                            $date = sprintf('%04d-%02d-%02d', $currentYear, $currentMonth, $day);
+                            if (isset($dailyBreakdown[$date])) {
+                                $weekDoses += $dailyBreakdown[$date]['doses'];
+                            }
+                        }
+                        
+                        if ($weekDoses > 0 || $weekNum <= 4) {
+                            $weeklyTrends["Week $weekNum"] = $weekDoses;
+                        }
+                        
+                        $weekStart += 7;
+                        $weekNum++;
+                    }
+                    ?>
+                    <div class="prn-summary-card">
+                        <div class="prn-card-header">
+                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                            <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
+                                <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="prn-stats-grid">
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Total Doses This Month</div>
+                                <div class="prn-stat-value"><?= $totalDoses ?></div>
+                            </div>
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Total Quantity</div>
+                                <div class="prn-stat-value"><?= $totalQuantity ?></div>
+                            </div>
+                        </div>
+                        
+                        <?php if (!empty($weeklyTrends)): ?>
+                            <div class="prn-daily-breakdown">
+                                <div class="prn-breakdown-title">📈 Weekly Trends</div>
+                                <?php foreach ($weeklyTrends as $week => $doses): ?>
+                                    <div class="prn-breakdown-item">
+                                        <span class="prn-breakdown-date"><?= $week ?></span>
+                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                No doses taken this month
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            
+            <?php elseif ($view === 'annual'): ?>
+                <!-- PRN ANNUAL VIEW -->
+                <?php foreach ($prnData as $medId => $data): ?>
+                    <?php 
+                    $med = $data['medication'];
+                    
+                    // Get monthly breakdown for the year
+                    $stmt = $pdo->prepare("
+                        SELECT MONTH(taken_at) as month, 
+                               COUNT(*) as dose_count, 
+                               SUM(quantity_taken) as total_quantity
+                        FROM medication_logs 
+                        WHERE medication_id = ? AND user_id = ? AND status = 'taken' 
+                        AND YEAR(taken_at) = YEAR(CURDATE())
+                        GROUP BY MONTH(taken_at)
+                        ORDER BY month
+                    ");
+                    $stmt->execute([$medId, $userId]);
+                    $monthlyData = $stmt->fetchAll();
+                    
+                    $totalDosesYear = 0;
+                    $totalQuantityYear = 0;
+                    $monthlyBreakdown = [];
+                    
+                    foreach ($monthlyData as $row) {
+                        $totalDosesYear += $row['dose_count'];
+                        $totalQuantityYear += $row['total_quantity'];
+                        $monthlyBreakdown[$row['month']] = [
+                            'doses' => $row['dose_count'],
+                            'quantity' => $row['total_quantity']
+                        ];
+                    }
+                    ?>
+                    <div class="prn-summary-card">
+                        <div class="prn-card-header">
+                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                            <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
+                                <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="prn-stats-grid">
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Total Doses This Year</div>
+                                <div class="prn-stat-value"><?= $totalDosesYear ?></div>
+                            </div>
+                            <div class="prn-stat-box">
+                                <div class="prn-stat-label">Total Quantity</div>
+                                <div class="prn-stat-value"><?= $totalQuantityYear ?></div>
+                            </div>
+                        </div>
+                        
+                        <?php if (!empty($monthlyBreakdown)): ?>
+                            <div class="prn-daily-breakdown">
+                                <div class="prn-breakdown-title">📅 Monthly Breakdown</div>
+                                <?php
+                                $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                                             'July', 'August', 'September', 'October', 'November', 'December'];
+                                for ($m = 1; $m <= 12; $m++) {
+                                    if (isset($monthlyBreakdown[$m])) {
+                                        $doses = $monthlyBreakdown[$m]['doses'];
+                                        $quantity = $monthlyBreakdown[$m]['quantity'];
+                                ?>
+                                    <div class="prn-breakdown-item">
+                                        <span class="prn-breakdown-date"><?= $monthNames[$m] ?></span>
+                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> tablets)</span>
+                                    </div>
+                                <?php 
+                                    }
+                                } 
+                                ?>
+                            </div>
+                        <?php else: ?>
+                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                No doses taken this year
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            
+            <?php endif; ?>
+            
+        <?php endif; ?>
         <?php endif; ?>
     </div>
     

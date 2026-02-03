@@ -85,7 +85,7 @@ $users = $stmt->fetchAll();
         </form>
 
         <?php if (empty($users)): ?>
-            <div class="content-card" style="text-align: center; max-width: 600px;">
+            <div class="content-card" style="text-align: center;">
                 <p style="color: #666; margin: 0;">No users found.</p>
             </div>
         <?php else: ?>
@@ -101,8 +101,8 @@ $users = $stmt->fetchAll();
             </div>
         <?php endif; ?>
 
-        <div style="text-align: center; margin-top: 24px;">
-            <a class="btn btn-info" href="/dashboard.php" style="max-width: 300px; margin: 0 auto;">Back to Dashboard</a>
+        <div class="page-footer">
+            <p><a class="btn btn-info" href="/dashboard.php" style="max-width: 300px; display: inline-block;">Back to Dashboard</a></p>
         </div>
     </div>
 </body>

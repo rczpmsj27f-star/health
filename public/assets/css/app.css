@@ -1118,6 +1118,23 @@ body {
     color: var(--color-primary);
 }
 
+.menu-toggle-icon {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+/* Nested menu sections (Admin Panel inside Settings) */
+.menu-section.nested {
+    margin-left: 0;
+    padding-left: 0;
+    margin-bottom: 4px;
+}
+
+.menu-section-header.nested-header {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
 /* Time group styling for dashboard */
 .time-group {
     margin-bottom: 24px;

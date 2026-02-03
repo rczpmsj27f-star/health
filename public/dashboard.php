@@ -15,8 +15,45 @@ $isAdmin = Auth::isAdmin();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Health Tracker</title>
-    <link rel="stylesheet" href="/assets/css/app.css">
-    <script src="/assets/js/menu.js" defer></script>
+    <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <style>
+/* Critical inline styles - fallback if external CSS doesn't load */
+.tile {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 24px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: #ffffff;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.tile .tile-title, .tile .tile-desc, .tile .tile-icon {
+    color: #ffffff;
+}
+.btn {
+    padding: 14px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+    color: #ffffff;
+    display: block;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+    min-height: 48px;
+}
+.btn-primary { background: #5b21b6; color: #fff; }
+.btn-secondary { background: #6c757d; color: #fff; }
+.btn-danger { background: #dc3545; color: #fff; }
+.btn-info { background: #007bff; color: #fff; }
+    </style>
     <style>
         .dashboard-container {
             max-width: 1200px;

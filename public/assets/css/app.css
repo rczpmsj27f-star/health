@@ -411,7 +411,8 @@ body {
 }
 
 .menu.open {
-    max-height: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
     opacity: 1;
     padding: 16px;
 }

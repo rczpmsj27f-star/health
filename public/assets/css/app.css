@@ -823,3 +823,209 @@ body {
     opacity: 0.85;
     margin-top: 4px;
 }
+
+/* Success/Confirmation Modal */
+.success-modal,
+.error-modal,
+.confirmation-modal,
+.info-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.7);
+    background: var(--color-bg-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 10001;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 400px;
+    width: 90%;
+}
+
+.success-modal.show,
+.error-modal.show,
+.confirmation-modal.show,
+.info-modal.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-content {
+    padding: 32px 24px 0 24px;
+    text-align: center;
+}
+
+.modal-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.success-modal .modal-icon,
+.confirmation-modal .modal-icon {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.error-modal .modal-icon {
+    background: #f8d7da;
+    color: #dc3545;
+}
+
+.info-modal .modal-icon {
+    background: #d1ecf1;
+    color: #007bff;
+}
+
+.modal-message {
+    font-size: 18px;
+    color: var(--color-text-primary);
+    margin-bottom: 24px;
+    font-weight: 500;
+}
+
+.modal-countdown-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--color-bg-light);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    overflow: hidden;
+}
+
+.countdown-fill {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+}
+
+.success-modal .countdown-fill,
+.confirmation-modal .countdown-fill {
+    background: var(--color-success);
+}
+
+.error-modal .countdown-fill {
+    background: var(--color-danger);
+}
+
+.info-modal .countdown-fill {
+    background: var(--color-info);
+}
+
+@keyframes countdown {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+}
+
+/* Expandable Section for Archived Medications */
+.expandable-section {
+    margin-top: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.section-header-toggle {
+    background: var(--color-bg-light);
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-text-primary);
+    transition: var(--transition);
+    user-select: none;
+}
+
+.section-header-toggle:hover {
+    background: var(--color-border);
+}
+
+.toggle-icon {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.expandable-section.expanded .toggle-icon {
+    transform: rotate(90deg);
+}
+
+.section-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.expandable-section.expanded .section-content {
+    max-height: 5000px;
+}
+
+/* Full-width medication tiles */
+.medication-tile-fullwidth {
+    background: #e8f5e9;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    text-decoration: none;
+    display: block;
+    border-left: 4px solid #66bb6a;
+}
+
+.medication-tile-fullwidth:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.medication-tile-line1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.medication-tile-line2 {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.medication-tile-line3 {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+

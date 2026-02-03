@@ -29,21 +29,21 @@ if (!$med || $med['user_id'] != $_SESSION['user_id']) {
 
 if ($action === 'archive') {
     // Archive the medication
-    $stmt = $pdo->prepare("UPDATE medications SET archived = 1, end_date = NOW() WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE medications SET archived = 1, archived_at = NOW(), end_date = NOW() WHERE id = ?");
     $stmt->execute([$medId]);
     
-    // Redirect back to the medication view page with success message
+    // Redirect to list page with success message for modal
     $_SESSION['success'] = 'Medication archived successfully.';
-    header("Location: /modules/medications/view.php?id=$medId");
+    header("Location: /modules/medications/list.php");
     exit;
 } elseif ($action === 'unarchive') {
     // Unarchive the medication
-    $stmt = $pdo->prepare("UPDATE medications SET archived = 0, end_date = NULL WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE medications SET archived = 0, archived_at = NULL, end_date = NULL WHERE id = ?");
     $stmt->execute([$medId]);
     
-    // Redirect back to the medication view page with success message
+    // Redirect to list page with success message for modal
     $_SESSION['success'] = 'Medication unarchived successfully.';
-    header("Location: /modules/medications/view.php?id=$medId");
+    header("Location: /modules/medications/list.php");
     exit;
 }
 

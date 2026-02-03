@@ -108,14 +108,25 @@ $isAdmin = Auth::isAdmin();
                 <div class="form-section-title">3. Medication Schedule</div>
                 
                 <div class="form-group">
-                    <label>Frequency *</label>
-                    <select name="frequency_type" id="freq" onchange="updateScheduleUI()" required>
-                        <option value="per_day">Times per day</option>
-                        <option value="per_week">Times per week</option>
-                    </select>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="is_prn" id="is_prn" value="1" onchange="togglePRN()" style="width: auto; margin: 0;">
+                        <span>💊 As and when needed (PRN)</span>
+                    </label>
+                    <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                        Check this if you take this medication only when needed, not on a regular schedule
+                    </small>
                 </div>
 
-                <div id="daily">
+                <div id="regular-schedule">
+                    <div class="form-group">
+                        <label>Frequency *</label>
+                        <select name="frequency_type" id="freq" onchange="updateScheduleUI()" required>
+                            <option value="per_day">Times per day</option>
+                            <option value="per_week">Times per week</option>
+                        </select>
+                    </div>
+
+                    <div id="daily">
                     <div class="form-group">
                         <label>Times per day *</label>
                         <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" onchange="updateTimeInputs()">
@@ -169,11 +180,35 @@ $isAdmin = Auth::isAdmin();
                         </small>
                     </div>
                 </div>
+                </div>
             </div>
 
-            <!-- Section 4: Instructions -->
+            <!-- Section 4: Stock & Expiry -->
             <div class="form-section">
-                <div class="form-section-title">4. Special Instructions</div>
+                <div class="form-section-title">4. Stock & Expiry Information</div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Current Stock (optional)</label>
+                        <input type="number" name="current_stock" min="0" placeholder="e.g., 30 tablets">
+                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                            How many tablets/doses do you currently have?
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expiry Date (optional)</label>
+                        <input type="date" name="end_date">
+                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                            When does this medication expire?
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Instructions -->
+            <div class="form-section">
+                <div class="form-section-title">5. Special Instructions</div>
                 
                 <div class="checkbox-group">
                     <label>
@@ -200,9 +235,9 @@ $isAdmin = Auth::isAdmin();
                 </div>
             </div>
 
-            <!-- Section 5: Condition -->
+            <!-- Section 6: Condition -->
             <div class="form-section">
-                <div class="form-section-title">5. Condition Being Treated</div>
+                <div class="form-section-title">6. Condition Being Treated</div>
                 
                 <div class="form-group">
                     <label>Condition Name *</label>
@@ -290,6 +325,23 @@ $isAdmin = Auth::isAdmin();
             document.querySelector('[name="times_per_day"]').value = "";
             document.getElementById("daily").style.display = "none";
             document.getElementById("weekly").style.display = "block";
+        }
+    }
+    
+    // PRN toggle - show/hide regular schedule
+    function togglePRN() {
+        let isPrn = document.getElementById("is_prn").checked;
+        let regularSchedule = document.getElementById("regular-schedule");
+        let freqSelect = document.getElementById("freq");
+        
+        if (isPrn) {
+            regularSchedule.style.display = "none";
+            // Remove required attribute from schedule fields
+            freqSelect.removeAttribute("required");
+        } else {
+            regularSchedule.style.display = "block";
+            // Add back required attribute
+            freqSelect.setAttribute("required", "required");
         }
     }
     

@@ -108,8 +108,8 @@ if ($_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) &&
             $stmt->execute([$medId, $i, $doseTime]);
         }
     }
-} else {
-    // Clear dose times if not applicable
+} elseif ($_POST['frequency_type'] !== 'per_day') {
+    // Clear dose times if frequency changed from daily
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
 }
 

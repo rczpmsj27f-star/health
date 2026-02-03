@@ -66,7 +66,7 @@ foreach ($existingDoseTimes as $dt) {
 
         <h3>Dose</h3>
         <label>Dose Amount</label>
-        <input type="number" step="0.01" name="dose_amount" value="<?= $dose['dose_amount'] ?>" required>
+        <input type="number" step="0.01" name="dose_amount" value="<?= htmlspecialchars($dose['dose_amount']) ?>" required>
         
         <label>Unit</label>
         <input type="text" name="dose_unit" value="<?= htmlspecialchars($dose['dose_unit']) ?>" placeholder="mg, ml, tablet..." required>
@@ -80,7 +80,7 @@ foreach ($existingDoseTimes as $dt) {
 
         <div id="daily" style="<?= $schedule['frequency_type'] === 'per_day' ? '' : 'display:none;' ?>">
             <label>Times per day</label>
-            <input type="number" name="times_per_day" id="times_per_day" min="1" max="24" value="<?= $schedule['times_per_day'] ?: 1 ?>" onchange="updateTimeInputs()">
+            <input type="number" name="times_per_day" id="times_per_day" min="1" max="24" value="<?= htmlspecialchars($schedule['times_per_day'] ?: 1) ?>" onchange="updateTimeInputs()">
             
             <div id="time_inputs_container">
                 <!-- Time inputs will be dynamically generated here -->
@@ -89,7 +89,7 @@ foreach ($existingDoseTimes as $dt) {
 
         <div id="weekly" style="<?= $schedule['frequency_type'] === 'per_week' ? '' : 'display:none;' ?>">
             <label>Times per week</label>
-            <input type="number" name="times_per_week" min="1" max="100" value="<?= $schedule['times_per_week'] ?: 1 ?>">
+            <input type="number" name="times_per_week" min="1" max="100" value="<?= htmlspecialchars($schedule['times_per_week'] ?: 1) ?>">
 
             <label>Days</label>
             <input type="text" name="days_of_week" value="<?= htmlspecialchars($schedule['days_of_week']) ?>" placeholder="Mon,Wed,Fri">

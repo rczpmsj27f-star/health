@@ -24,7 +24,11 @@ $medId = $_GET['med'];
 
         <div id="daily">
             <label>Times per day</label>
-            <input type="number" name="times_per_day" min="1" max="6" value="1">
+            <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" onchange="updateTimeInputs()">
+            
+            <div id="time_inputs_container" style="margin-top:10px;">
+                <!-- Time inputs will be dynamically generated here -->
+            </div>
         </div>
 
         <div id="weekly" style="display:none;">
@@ -44,6 +48,26 @@ function updateUI() {
     let f = document.getElementById("freq").value;
     document.getElementById("daily").style.display = f === "per_day" ? "block" : "none";
     document.getElementById("weekly").style.display = f === "per_week" ? "block" : "none";
+    
+    if (f === "per_day") {
+        updateTimeInputs();
+    }
+}
+
+function updateTimeInputs() {
+    let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
+    let container = document.getElementById("time_inputs_container");
+    
+    if (timesPerDay > 1) {
+        let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
+        for (let i = 1; i <= timesPerDay; i++) {
+            html += `<label>Time ${i}:</label>`;
+            html += `<input type="time" name="dose_time_${i}" style="width:100%; padding:8px; margin-bottom:10px;">`;
+        }
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = '';
+    }
 }
 </script>
 

@@ -785,6 +785,43 @@ foreach ($prnMedications as $med) {
         </div>
     </div>
     
+    <!-- Generic Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="confirmModalTitle">Confirm Action</h3>
+            <p id="confirmModalMessage">Are you sure?</p>
+            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirmModalAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    /* Generic modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background: var(--color-bg-white);
+        padding: 32px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        max-width: 500px;
+        width: 90%;
+    }
+    </style>
+    
     <script>
     function markAsTaken(medId, scheduledDateTime) {
         fetch('/modules/medications/take_medication_handler.php', {
@@ -815,35 +852,58 @@ foreach ($prnMedications as $med) {
     }
     
     function untakeMedication(medId, scheduledDateTime) {
-        if (!confirm('Are you sure you want to undo taking this medication? This will remove the log entry and restore 1 unit to your stock.')) {
-            return;
-        }
-        
-        fetch('/modules/medications/untake_medication_handler.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                'medication_id': medId,
-                'scheduled_date_time': scheduledDateTime,
-                'ajax': '1'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessModal(data.message, 2000, () => {
-                    window.location.reload();
+        showConfirmModal(
+            'Undo Medication',
+            'Are you sure you want to undo taking this medication? This will remove the log entry and restore 1 unit to your stock.',
+            function() {
+                fetch('/modules/medications/untake_medication_handler.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'medication_id': medId,
+                        'scheduled_date_time': scheduledDateTime,
+                        'ajax': '1'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessModal(data.message, 2000, () => {
+                            window.location.reload();
+                        });
+                    } else {
+                        showErrorModal(data.message || 'Failed to untake medication');
+                    }
+                })
+                .catch(error => {
+                    showErrorModal('An error occurred. Please try again.');
+                    console.error('Error:', error);
                 });
-            } else {
-                showErrorModal(data.message || 'Failed to untake medication');
             }
-        })
-        .catch(error => {
-            showErrorModal('An error occurred. Please try again.');
-            console.error('Error:', error);
-        });
+        );
+    }
+    
+    function showConfirmModal(title, message, onConfirm) {
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalMessage').textContent = message;
+        document.getElementById('confirmModalAction').onclick = function() {
+            closeConfirmModal();
+            onConfirm();
+        };
+        document.getElementById('confirmModal').style.display = 'flex';
+        
+        // Close on outside click
+        document.getElementById('confirmModal').onclick = function(e) {
+            if (e.target === this) {
+                closeConfirmModal();
+            }
+        };
+    }
+    
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').style.display = 'none';
     }
     
     function showSkipModal(medId, medName, scheduledDateTime) {

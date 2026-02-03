@@ -99,18 +99,20 @@ try {
         $stmt->execute([$medId, $_POST['other_instruction']]);
     }
 
-    // 5. Insert condition
-    $name = trim($_POST['condition_name']);
-    $stmt = $pdo->prepare("INSERT INTO conditions (name) VALUES (?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)");
-    $stmt->execute([$name]);
-    
-    $condId = $pdo->lastInsertId();
-    
-    $link = $pdo->prepare("
-        INSERT INTO medication_conditions (medication_id, condition_id)
-        VALUES (?, ?)
-    ");
-    $link->execute([$medId, $condId]);
+    // 5. Insert condition (optional)
+    if (!empty($_POST['condition_name'])) {
+        $name = trim($_POST['condition_name']);
+        $stmt = $pdo->prepare("INSERT INTO conditions (name) VALUES (?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)");
+        $stmt->execute([$name]);
+        
+        $condId = $pdo->lastInsertId();
+        
+        $link = $pdo->prepare("
+            INSERT INTO medication_conditions (medication_id, condition_id)
+            VALUES (?, ?)
+        ");
+        $link->execute([$medId, $condId]);
+    }
 
     // Commit transaction
     $pdo->commit();

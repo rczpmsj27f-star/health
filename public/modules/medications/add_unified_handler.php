@@ -15,14 +15,16 @@ try {
 
     // 1. Insert medication
     $stmt = $pdo->prepare("
-        INSERT INTO medications (user_id, nhs_medication_id, name)
-        VALUES (?, ?, ?)
+        INSERT INTO medications (user_id, nhs_medication_id, name, current_stock, end_date)
+        VALUES (?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
         $userId,
         $_POST['nhs_med_id'] ?: null,
-        $_POST['med_name']
+        $_POST['med_name'],
+        !empty($_POST['current_stock']) ? $_POST['current_stock'] : null,
+        !empty($_POST['end_date']) ? $_POST['end_date'] : null
     ]);
     
     $medId = $pdo->lastInsertId();
@@ -45,17 +47,20 @@ try {
         $daysOfWeek = implode(', ', $_POST['days_of_week']);
     }
     
+    $isPrn = !empty($_POST['is_prn']) ? 1 : 0;
+    
     $stmt = $pdo->prepare("
-        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
         $medId,
-        $_POST['frequency_type'],
-        $_POST['times_per_day'] ?: null,
-        $_POST['times_per_week'] ?: null,
-        $daysOfWeek
+        $isPrn ? null : $_POST['frequency_type'],
+        $isPrn ? null : ($_POST['times_per_day'] ?: null),
+        $isPrn ? null : ($_POST['times_per_week'] ?: null),
+        $isPrn ? null : $daysOfWeek,
+        $isPrn
     ]);
     
     // 3b. Insert dose times if times_per_day > 1
@@ -107,8 +112,9 @@ try {
     // Commit transaction
     $pdo->commit();
 
-    // Redirect to view the medication
-    header("Location: /modules/medications/view.php?id=$medId");
+    // Redirect to list with success modal
+    $_SESSION['success'] = 'Medication added successfully!';
+    header("Location: /modules/medications/list.php");
     exit;
 
 } catch (Exception $e) {

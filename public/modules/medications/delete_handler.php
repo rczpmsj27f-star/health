@@ -40,5 +40,6 @@ $pdo->prepare("DELETE FROM medication_doses WHERE medication_id = ?")->execute([
 $stmt = $pdo->prepare("DELETE FROM medications WHERE id = ?");
 $stmt->execute([$medId]);
 
+$_SESSION['success'] = 'Medication deleted successfully.';
 header("Location: /modules/medications/list.php");
 exit;

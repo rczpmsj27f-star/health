@@ -13,7 +13,7 @@ $isAdmin = Auth::isAdmin();
 
 // Get active medications (not archived)
 $stmt = $pdo->prepare("
-    SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week 
+    SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week, ms.is_prn 
     FROM medications m 
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id 
     WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL) 
@@ -24,7 +24,7 @@ $activeMeds = $stmt->fetchAll();
 
 // Get archived medications
 $stmt = $pdo->prepare("
-    SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week 
+    SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week, ms.is_prn 
     FROM medications m 
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id 
     WHERE m.user_id = ? AND m.archived = 1 
@@ -109,34 +109,49 @@ $archivedMeds = $stmt->fetchAll();
             </div>
         <?php else: ?>
             <?php if (!empty($activeMeds)): ?>
-                <div class="section-header">Your Current Medications</div>
-                <div style="padding: 0 16px;">
-                    <?php foreach ($activeMeds as $m): ?>
-                        <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
-                            <div class="medication-tile-line1">
-                                <span>💊</span>
-                                <span><?= htmlspecialchars($m['name']) ?></span>
-                            </div>
-                            <div class="medication-tile-line2">
-                                <strong>Schedule:</strong> 
-                                <?php if ($m['frequency_type']): ?>
-                                    <?php if ($m['frequency_type'] === 'per_day'): ?>
-                                        <?= htmlspecialchars($m['times_per_day']) ?> time<?= $m['times_per_day'] > 1 ? 's' : '' ?> per day
-                                    <?php else: ?>
-                                        <?= htmlspecialchars($m['times_per_week']) ?> time<?= $m['times_per_week'] > 1 ? 's' : '' ?> per week
-                                        <?php if ($m['days_of_week']): ?>
-                                            on <?= htmlspecialchars($m['days_of_week']) ?>
+                <div class="expandable-section expanded" id="currentSection">
+                    <div class="section-header-toggle" onclick="toggleSection('currentSection')">
+                        <span class="toggle-icon">▶</span>
+                        <span>Your Current Medications (<?= count($activeMeds) ?>)</span>
+                    </div>
+                    <div class="section-content">
+                        <div style="padding: 0 16px;">
+                            <?php foreach ($activeMeds as $m): ?>
+                                <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
+                                    <div class="medication-tile-line1">
+                                        <span>💊</span>
+                                        <span><?= htmlspecialchars($m['name']) ?></span>
+                                    </div>
+                                    <div class="medication-tile-line2">
+                                        <strong>Schedule:</strong> 
+                                        <?php if (!empty($m['is_prn'])): ?>
+                                            As and when needed (PRN)
+                                        <?php elseif ($m['frequency_type']): ?>
+                                            <?php if ($m['frequency_type'] === 'per_day'): ?>
+                                                <?= htmlspecialchars($m['times_per_day']) ?> time<?= $m['times_per_day'] > 1 ? 's' : '' ?> per day
+                                            <?php else: ?>
+                                                <?= htmlspecialchars($m['times_per_week']) ?> time<?= $m['times_per_week'] > 1 ? 's' : '' ?> per week
+                                                <?php if ($m['days_of_week']): ?>
+                                                    on <?= htmlspecialchars($m['days_of_week']) ?>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            Not scheduled
                                         <?php endif; ?>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    Not scheduled
-                                <?php endif; ?>
-                            </div>
-                            <div class="medication-tile-line3">
-                                <strong>Status:</strong> Active
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
+                                    </div>
+                                    <div class="medication-tile-line3">
+                                        <strong>Added:</strong> <?= date('M d, Y', strtotime($m['created_at'])) ?>
+                                        <?php if ($m['end_date']): ?>
+                                            | <strong>Expiry:</strong> <?= date('M d, Y', strtotime($m['end_date'])) ?>
+                                        <?php endif; ?>
+                                        <?php if ($m['current_stock']): ?>
+                                            | <strong>Stock:</strong> <?= htmlspecialchars($m['current_stock']) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -156,7 +171,9 @@ $archivedMeds = $stmt->fetchAll();
                                     </div>
                                     <div class="medication-tile-line2">
                                         <strong>Schedule:</strong> 
-                                        <?php if ($m['frequency_type']): ?>
+                                        <?php if (!empty($m['is_prn'])): ?>
+                                            As and when needed (PRN)
+                                        <?php elseif ($m['frequency_type']): ?>
                                             <?php if ($m['frequency_type'] === 'per_day'): ?>
                                                 <?= htmlspecialchars($m['times_per_day']) ?> time<?= $m['times_per_day'] > 1 ? 's' : '' ?> per day
                                             <?php else: ?>
@@ -170,9 +187,15 @@ $archivedMeds = $stmt->fetchAll();
                                         <?php endif; ?>
                                     </div>
                                     <div class="medication-tile-line3">
-                                        <strong>Status:</strong> Archived
+                                        <strong>Added:</strong> <?= date('M d, Y', strtotime($m['created_at'])) ?>
+                                        <?php if ($m['end_date']): ?>
+                                            | <strong>Expiry:</strong> <?= date('M d, Y', strtotime($m['end_date'])) ?>
+                                        <?php endif; ?>
+                                        <?php if ($m['current_stock']): ?>
+                                            | <strong>Stock:</strong> <?= htmlspecialchars($m['current_stock']) ?>
+                                        <?php endif; ?>
                                         <?php if ($m['archived_at']): ?>
-                                            on <?= date('M d, Y', strtotime($m['archived_at'])) ?>
+                                            | <strong>Archived:</strong> <?= date('M d, Y', strtotime($m['archived_at'])) ?>
                                         <?php endif; ?>
                                     </div>
                                 </a>

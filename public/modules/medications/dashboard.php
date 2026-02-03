@@ -212,14 +212,14 @@ foreach ($prnMedications as $med) {
             background: var(--color-bg-white);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
-            padding: 24px;
-            margin-bottom: 32px;
+            padding: 16px;
+            margin-bottom: 20px;
         }
         
         .schedule-section h3 {
             color: var(--color-primary);
-            margin: 0 0 20px 0;
-            font-size: 24px;
+            margin: 0 0 12px 0;
+            font-size: 22px;
             font-weight: 600;
         }
         
@@ -269,26 +269,26 @@ foreach ($prnMedications as $med) {
         
         /* Compact schedule display */
         .time-group-compact {
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             background: var(--color-bg-gray);
             border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            padding: 8px 12px;
         }
         
         .time-header-compact {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--color-primary);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         
         .med-item-compact {
-            padding: 8px 12px;
+            padding: 6px 10px;
             color: var(--color-text);
-            font-size: 15px;
+            font-size: 14px;
             background: white;
             border-radius: var(--radius-sm);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -463,9 +463,15 @@ foreach ($prnMedications as $med) {
             color: white;
         }
         
+        .schedule-date {
+            margin: 0 0 12px 0;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+        
         .no-meds {
             text-align: center;
-            padding: 40px 20px;
+            padding: 20px;
             color: var(--color-text-secondary);
         }
         

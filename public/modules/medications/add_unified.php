@@ -201,23 +201,37 @@ $isAdmin = Auth::isAdmin();
         fetch("/modules/medications/search.php?q=" + encodeURIComponent(q))
             .then(r => r.json())
             .then(data => {
-                let html = "";
+                resultsDiv.innerHTML = '';
                 if (data.length === 0) {
-                    html = '<div class="autocomplete-item" style="color: #999;">No results found</div>';
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item';
+                    div.style.color = '#999';
+                    div.textContent = 'No results found';
+                    resultsDiv.appendChild(div);
                 } else {
                     data.forEach(item => {
-                        // Fix: Properly handle the name to avoid "Unknown"
-                        const itemName = item.name && item.name !== "Unknown" ? item.name : 'Custom medication';
+                        const itemName = item.name && item.name !== "Unknown" ? item.name : 'No name available';
                         const itemId = item.id || '';
-                        html += `<div class="autocomplete-item" onclick="selectMed('${itemId}', '${itemName.replace(/'/g, "&apos;")}')">${itemName}</div>`;
+                        
+                        const div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.textContent = itemName;
+                        div.addEventListener('click', function() {
+                            selectMed(itemId, itemName);
+                        });
+                        resultsDiv.appendChild(div);
                     });
                 }
-                resultsDiv.innerHTML = html;
                 resultsDiv.style.display = "block";
             })
             .catch(err => {
                 console.error('Search error:', err);
-                resultsDiv.innerHTML = '<div class="autocomplete-item" style="color: #dc3545;">Error searching medications</div>';
+                resultsDiv.innerHTML = '';
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                div.style.color = '#dc3545';
+                div.textContent = 'Error searching medications';
+                resultsDiv.appendChild(div);
                 resultsDiv.style.display = "block";
             });
     }
@@ -239,9 +253,14 @@ $isAdmin = Auth::isAdmin();
         }
 
         // Mock condition search - in production this would call an API
-        // For now, just show the entered value as a suggestion
-        let html = `<div class="autocomplete-item" onclick="selectCondition('${q.replace(/'/g, "&apos;")}')">${q}</div>`;
-        resultsDiv.innerHTML = html;
+        resultsDiv.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.textContent = q;
+        div.addEventListener('click', function() {
+            selectCondition(q);
+        });
+        resultsDiv.appendChild(div);
         resultsDiv.style.display = "block";
     }
 

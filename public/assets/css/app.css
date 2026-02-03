@@ -602,9 +602,10 @@ body {
     border-radius: var(--radius-sm);
     font-size: 12px;
     font-weight: 600;
-    background: var(--color-bg-light);
-    color: var(--color-text-secondary);
+    background: #e0e0e0;
+    color: #4a4a4a;
     transition: var(--transition);
+    border: 1px solid #ccc;
 }
 
 .day-badge.active {

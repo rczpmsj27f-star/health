@@ -123,7 +123,13 @@ if ($schedule && $schedule['days_of_week']) {
             <?php endforeach; ?>
             <?php endif; ?>
 
-            <div style="margin-top: 32px;">
+            <div class="action-buttons three-col" style="margin-top: 32px;">
+                <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
+                <a class="btn btn-secondary" href="/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive">📦 Archive</a>
+                <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
+            </div>
+            
+            <div style="margin-top: 16px;">
                 <a class="btn btn-info" href="/modules/medications/list.php">⬅️ Back to Medications</a>
             </div>
         </div>

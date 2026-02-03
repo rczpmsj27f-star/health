@@ -7,9 +7,9 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-// Validate inputs
-$medId = filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
-$action = $_POST['action'] ?? '';
+// Validate inputs - support both GET and POST
+$medId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
 $allowedActions = ['archive', 'unarchive'];
 
 if (!$medId || !in_array($action, $allowedActions)) {

@@ -294,7 +294,7 @@ $medications = $stmt->fetchAll();
                             </div>
                         </div>
                         
-                        <button class="btn-add-stock" onclick="showAddStockModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>')">
+                        <button class="btn-add-stock" data-med-id="<?= $med['id'] ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">
                             ➕ Add Stock
                         </button>
                     </div>
@@ -336,26 +336,30 @@ $medications = $stmt->fetchAll();
     </div>
     
     <script>
-    function showAddStockModal(medId, medName) {
-        document.getElementById('medication_id').value = medId;
-        document.getElementById('medication_name').value = medName;
-        document.getElementById('quantity').value = '';
-        document.getElementById('addStockModal').classList.add('active');
-    }
-    
-    function closeAddStockModal() {
-        document.getElementById('addStockModal').classList.remove('active');
-    }
-    
-    // Close modal when clicking outside
-    document.getElementById('addStockModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeAddStockModal();
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all Add Stock buttons
+        var addStockButtons = document.querySelectorAll('.btn-add-stock');
+        addStockButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                var medId = this.getAttribute('data-med-id');
+                var medName = this.getAttribute('data-med-name');
+                showAddStockModal(medId, medName);
+            });
+        });
+        
+        // Close modal when clicking outside
+        var modal = document.getElementById('addStockModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddStockModal();
+                }
+            });
         }
-    });
-    
-    // Check for success messages from session
-    window.addEventListener('DOMContentLoaded', function() {
+        
+        // Check for success messages from session
         <?php if (isset($_SESSION['success'])): ?>
             showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
             <?php unset($_SESSION['success']); ?>
@@ -366,6 +370,17 @@ $medications = $stmt->fetchAll();
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
     });
+    
+    function showAddStockModal(medId, medName) {
+        document.getElementById('medication_id').value = medId;
+        document.getElementById('medication_name').value = medName;
+        document.getElementById('quantity').value = '';
+        document.getElementById('addStockModal').classList.add('active');
+    }
+    
+    function closeAddStockModal() {
+        document.getElementById('addStockModal').classList.remove('active');
+    }
     </script>
 </body>
 </html>

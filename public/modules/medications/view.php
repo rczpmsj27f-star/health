@@ -163,7 +163,7 @@ if ($schedule && $schedule['days_of_week']) {
 
             <div class="action-buttons three-col" style="margin-top: 32px;">
                 <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
-                <a class="btn btn-success" href="#" onclick="event.preventDefault(); showAddStockModal(<?= $medId ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>')">📦 Add Stock</a>
+                <button class="btn btn-success" id="addStockBtn" data-med-id="<?= $medId ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">📦 Add Stock</button>
                 <a class="btn btn-secondary" href="/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive">📦 Archive</a>
             </div>
             
@@ -273,6 +273,30 @@ if ($schedule && $schedule['days_of_week']) {
     </style>
     
     <script>
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Stock button handler
+        var addStockBtn = document.getElementById('addStockBtn');
+        if (addStockBtn) {
+            addStockBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var medId = this.getAttribute('data-med-id');
+                var medName = this.getAttribute('data-med-name');
+                showAddStockModal(medId, medName);
+            });
+        }
+        
+        // Close modal when clicking outside
+        var modal = document.getElementById('addStockModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddStockModal();
+                }
+            });
+        }
+    });
+    
     function showAddStockModal(medId, medName) {
         document.getElementById('medication_id').value = medId;
         document.getElementById('medication_name').value = medName;
@@ -283,13 +307,6 @@ if ($schedule && $schedule['days_of_week']) {
     function closeAddStockModal() {
         document.getElementById('addStockModal').classList.remove('active');
     }
-    
-    // Close modal when clicking outside
-    document.getElementById('addStockModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeAddStockModal();
-        }
-    });
     </script>
 </body>
 </html>

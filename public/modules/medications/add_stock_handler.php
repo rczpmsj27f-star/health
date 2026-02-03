@@ -33,14 +33,15 @@ try {
     // Update stock
     $currentStock = $medication['current_stock'] ?? 0;
     $newStock = $currentStock + $quantity;
+    $timestamp = date('Y-m-d H:i:s');
     
     $stmt = $pdo->prepare("
         UPDATE medications 
-        SET current_stock = ?, stock_updated_at = NOW() 
+        SET current_stock = ?, stock_updated_at = ? 
         WHERE id = ? AND user_id = ?
     ");
     
-    $stmt->execute([$newStock, $medId, $userId]);
+    $stmt->execute([$newStock, $timestamp, $medId, $userId]);
     
     $_SESSION['success'] = "Stock updated successfully! Added $quantity units.";
     header("Location: /modules/medications/stock.php");

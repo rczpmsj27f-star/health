@@ -20,16 +20,24 @@ if (!$med) {
 }
 
 // Get dose information
-$dose = $pdo->query("SELECT * FROM medication_doses WHERE medication_id = $medId")->fetch();
+$stmt = $pdo->prepare("SELECT * FROM medication_doses WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$dose = $stmt->fetch();
 
 // Get schedule information
-$schedule = $pdo->query("SELECT * FROM medication_schedules WHERE medication_id = $medId")->fetch();
+$stmt = $pdo->prepare("SELECT * FROM medication_schedules WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$schedule = $stmt->fetch();
 
 // Get instructions
-$instructions = $pdo->query("SELECT * FROM medication_instructions WHERE medication_id = $medId")->fetchAll();
+$stmt = $pdo->prepare("SELECT * FROM medication_instructions WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$instructions = $stmt->fetchAll();
 
 // Get existing dose times
-$existingDoseTimes = $pdo->query("SELECT * FROM medication_dose_times WHERE medication_id = $medId ORDER BY dose_number")->fetchAll();
+$stmt = $pdo->prepare("SELECT * FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_number");
+$stmt->execute([$medId]);
+$existingDoseTimes = $stmt->fetchAll();
 $doseTimesArray = [];
 foreach ($existingDoseTimes as $dt) {
     $doseTimesArray[$dt['dose_number']] = $dt['dose_time'];

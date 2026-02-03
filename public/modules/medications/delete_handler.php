@@ -20,6 +20,7 @@ if (!$med || $med['user_id'] != $_SESSION['user_id']) {
 }
 
 // Delete related records first (foreign key constraints)
+$pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
 $pdo->prepare("DELETE FROM medication_alerts WHERE medication_id = ?")->execute([$medId]);
 $pdo->prepare("DELETE FROM medication_instructions WHERE medication_id = ?")->execute([$medId]);
 $pdo->prepare("DELETE FROM medication_schedules WHERE medication_id = ?")->execute([$medId]);

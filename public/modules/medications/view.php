@@ -8,11 +8,25 @@ $stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ?");
 $stmt->execute([$medId]);
 $med = $stmt->fetch();
 
-$dose = $pdo->query("SELECT * FROM medication_doses WHERE medication_id = $medId")->fetch();
-$schedule = $pdo->query("SELECT * FROM medication_schedules WHERE medication_id = $medId")->fetch();
-$doseTimes = $pdo->query("SELECT * FROM medication_dose_times WHERE medication_id = $medId ORDER BY dose_number")->fetchAll();
-$instructions = $pdo->query("SELECT * FROM medication_instructions WHERE medication_id = $medId")->fetchAll();
-$alerts = $pdo->query("SELECT * FROM medication_alerts WHERE medication_id = $medId")->fetchAll();
+$stmt = $pdo->prepare("SELECT * FROM medication_doses WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$dose = $stmt->fetch();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_schedules WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$schedule = $stmt->fetch();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_number");
+$stmt->execute([$medId]);
+$doseTimes = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_instructions WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$instructions = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_alerts WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$alerts = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html>

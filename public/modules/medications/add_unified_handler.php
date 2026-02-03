@@ -64,7 +64,7 @@ try {
     ]);
     
     // 3b. Insert dose times if times_per_day > 1
-    if ($_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) && $_POST['times_per_day'] > 1) {
+    if (!$isPrn && !empty($_POST['frequency_type']) && $_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) && $_POST['times_per_day'] > 1) {
         for ($i = 1; $i <= $_POST['times_per_day']; $i++) {
             $timeKey = "dose_time_$i";
             if (!empty($_POST[$timeKey])) {

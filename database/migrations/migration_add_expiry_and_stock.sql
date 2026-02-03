@@ -7,3 +7,6 @@
 ALTER TABLE medications
 ADD COLUMN IF NOT EXISTS current_stock INT DEFAULT NULL COMMENT 'Current quantity/stock on hand';
 
+ALTER TABLE medications
+ADD COLUMN IF NOT EXISTS stock_updated_at DATETIME DEFAULT NULL COMMENT 'Last time stock was updated';
+

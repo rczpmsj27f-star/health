@@ -41,6 +41,45 @@ $isAdmin = Auth::isAdmin();
             font-weight: 600;
             font-size: 18px;
         }
+        
+        .number-stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 200px;
+        }
+        
+        .number-stepper input {
+            flex: 1;
+            text-align: center;
+            background: var(--color-bg-gray);
+        }
+        
+        .stepper-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--color-primary);
+            background: var(--color-bg-white);
+            color: var(--color-primary);
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .stepper-btn:hover {
+            background: var(--color-primary);
+            color: var(--color-bg-white);
+        }
+        
+        .stepper-btn:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -52,7 +91,8 @@ $isAdmin = Auth::isAdmin();
         <h3>Menu</h3>
         <a href="/dashboard.php">🏠 Dashboard</a>
         <a href="/modules/profile/view.php">👤 My Profile</a>
-        <a href="/modules/medications/list.php">💊 Medications</a>
+        <a href="/modules/medications/dashboard.php">💊 Medication Dashboard</a>
+        <a href="/modules/medications/list.php">📋 My Medications</a>
         <?php if ($isAdmin): ?>
         <a href="/modules/admin/users.php">⚙️ User Management</a>
         <?php endif; ?>
@@ -64,6 +104,13 @@ $isAdmin = Auth::isAdmin();
             <h2 style="color: var(--color-primary); font-size: 32px; margin: 0 0 8px 0;">💊 Add New Medication</h2>
             <p style="color: var(--color-text-secondary); margin: 0;">Complete all fields to add your medication</p>
         </div>
+        
+        <?php if (isset($_SESSION['error'])): ?>
+            <div style="background: #f8d7da; color: #721c24; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #f5c6cb;">
+                <strong>Error:</strong> <?= htmlspecialchars($_SESSION['error']) ?>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
 
         <form method="POST" action="/modules/medications/add_unified_handler.php" id="medForm">
             <!-- Section 1: Medication Search -->
@@ -129,7 +176,11 @@ $isAdmin = Auth::isAdmin();
                     <div id="daily">
                     <div class="form-group">
                         <label>Times per day *</label>
-                        <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" onchange="updateTimeInputs()">
+                        <div class="number-stepper">
+                            <button type="button" class="stepper-btn" onclick="decrementTimesPerDay()">−</button>
+                            <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" readonly onchange="updateTimeInputs()">
+                            <button type="button" class="stepper-btn" onclick="incrementTimesPerDay()">+</button>
+                        </div>
                     </div>
                     
                     <div id="time_inputs_container">
@@ -197,10 +248,10 @@ $isAdmin = Auth::isAdmin();
                     </div>
 
                     <div class="form-group">
-                        <label>Expiry Date (optional)</label>
+                        <label>End Date (optional)</label>
                         <input type="date" name="end_date">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                            When does this medication expire?
+                            When will you stop taking this medication?
                         </small>
                     </div>
                 </div>
@@ -254,6 +305,25 @@ $isAdmin = Auth::isAdmin();
     </div>
 
     <script>
+    // Increment/Decrement times per day
+    function incrementTimesPerDay() {
+        let input = document.getElementById("times_per_day");
+        let current = parseInt(input.value) || 1;
+        if (current < 6) {
+            input.value = current + 1;
+            updateTimeInputs();
+        }
+    }
+    
+    function decrementTimesPerDay() {
+        let input = document.getElementById("times_per_day");
+        let current = parseInt(input.value) || 1;
+        if (current > 1) {
+            input.value = current - 1;
+            updateTimeInputs();
+        }
+    }
+    
     // Update time inputs based on times per day
     function updateTimeInputs() {
         let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;

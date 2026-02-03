@@ -102,7 +102,7 @@ $isAdmin = Auth::isAdmin();
         </div>
         
         <div class="dashboard-grid">
-            <a class="tile tile-purple" href="/modules/medications/list.php">
+            <a class="tile tile-purple" href="/modules/medications/dashboard.php">
                 <div>
                     <span class="tile-icon">💊</span>
                     <div class="tile-title">Medication Management</div>

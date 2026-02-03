@@ -82,7 +82,8 @@ if ($schedule && $schedule['days_of_week']) {
         <h3>Menu</h3>
         <a href="/dashboard.php">🏠 Dashboard</a>
         <a href="/modules/profile/view.php">👤 My Profile</a>
-        <a href="/modules/medications/list.php">💊 Medications</a>
+        <a href="/modules/medications/dashboard.php">💊 Medication Dashboard</a>
+        <a href="/modules/medications/list.php">📋 My Medications</a>
         <?php if ($isAdmin): ?>
         <a href="/modules/admin/users.php">⚙️ User Management</a>
         <?php endif; ?>
@@ -162,7 +163,11 @@ if ($schedule && $schedule['days_of_week']) {
 
             <div class="action-buttons three-col" style="margin-top: 32px;">
                 <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
+                <a class="btn btn-success" href="#" onclick="event.preventDefault(); showAddStockModal(<?= $medId ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>')">📦 Add Stock</a>
                 <a class="btn btn-secondary" href="/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive">📦 Archive</a>
+            </div>
+            
+            <div class="action-buttons" style="margin-top: 16px;">
                 <a class="btn btn-danger" href="/modules/medications/delete_handler.php?id=<?= $medId ?>" onclick="return confirm('Are you sure you want to delete this medication? This action cannot be undone.');">🗑️ Delete</a>
             </div>
             
@@ -171,5 +176,120 @@ if ($schedule && $schedule['days_of_week']) {
             </div>
         </div>
     </div>
+    
+    <!-- Add Stock Modal -->
+    <div id="addStockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📦 Add Stock</h3>
+            </div>
+            <form method="POST" action="/modules/medications/add_stock_handler.php" id="addStockForm">
+                <div class="modal-body">
+                    <input type="hidden" name="medication_id" id="medication_id">
+                    
+                    <div class="form-group">
+                        <label>Medication</label>
+                        <input type="text" id="medication_name" readonly style="background: var(--color-bg-gray); padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; width: 100%;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Quantity to Add *</label>
+                        <input type="number" name="quantity" id="quantity" min="1" required placeholder="e.g., 30" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; width: 100%;">
+                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                            Enter the number of tablets/doses to add to current stock
+                        </small>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddStockModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">✅ Add Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--color-bg-white);
+        border-radius: var(--radius-md);
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .modal-header {
+        margin-bottom: 24px;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 24px;
+        color: var(--color-primary);
+    }
+    
+    .modal-body {
+        margin-bottom: 24px;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--color-text);
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: #ffffff;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+    }
+    </style>
+    
+    <script>
+    function showAddStockModal(medId, medName) {
+        document.getElementById('medication_id').value = medId;
+        document.getElementById('medication_name').value = medName;
+        document.getElementById('quantity').value = '';
+        document.getElementById('addStockModal').classList.add('active');
+    }
+    
+    function closeAddStockModal() {
+        document.getElementById('addStockModal').classList.remove('active');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('addStockModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddStockModal();
+        }
+    });
+    </script>
 </body>
 </html>

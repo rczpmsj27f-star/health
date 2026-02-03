@@ -91,7 +91,8 @@ $isAdmin = Auth::isAdmin();
         <h3>Menu</h3>
         <a href="/dashboard.php">🏠 Dashboard</a>
         <a href="/modules/profile/view.php">👤 My Profile</a>
-        <a href="/modules/medications/list.php">💊 Medications</a>
+        <a href="/modules/medications/dashboard.php">💊 Medication Dashboard</a>
+        <a href="/modules/medications/list.php">📋 My Medications</a>
         <?php if ($isAdmin): ?>
         <a href="/modules/admin/users.php">⚙️ User Management</a>
         <?php endif; ?>

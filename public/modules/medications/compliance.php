@@ -1051,20 +1051,36 @@ if ($medType === 'prn') {
                         }
                         // Ensure at least 1 dose per day for daily medications
                         $expectedDosesPerDay = max(1, $expectedDosesPerDay);
+                        
+                        // Calculate total taken in the week
+                        $weekTotalTaken = 0;
+                        foreach ($daysOfWeek as $day) {
+                            $weekTotalTaken += $takenLogs[$day['date']] ?? 0;
+                        }
+                        
+                        $isExpanded = in_array($medId, $expandedMeds);
                         ?>
                         <div class="compliance-section">
-                            <div class="med-header">
-                                <div class="med-name">
-                                    💊 <?= htmlspecialchars($med['name']) ?>
+                            <!-- Expandable Header -->
+                            <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'weekly')">
+                                <div class="expandable-med-title">
+                                    <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
                                 </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span class="expandable-med-total">[Total: <?= $weekTotalTaken ?>]</span>
+                                    <span class="expand-indicator <?= $isExpanded ? 'expanded' : '' ?>" id="expand-indicator-weekly-<?= $medId ?>">▶</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Expandable Content -->
+                            <div class="expandable-med-content <?= $isExpanded ? 'expanded' : 'collapsed' ?>" id="expandable-content-weekly-<?= $medId ?>">
                                 <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
-                                    <div class="med-dose">
+                                    <div style="margin-bottom: 12px; color: var(--color-text-secondary); font-size: 14px;">
                                         <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                     </div>
                                 <?php endif; ?>
-                            </div>
-                            
-                            <div class="week-view">
+                                
+                                <div class="week-view">
                                 <?php foreach ($daysOfWeek as $day): ?>
                                     <?php
                                     $date = $day['date'];
@@ -1138,8 +1154,9 @@ if ($medType === 'prn') {
                                         </a>
                                     </div>
                                 <?php endforeach; ?>
-                            </div>
-                        </div>
+                            </div><!-- /.week-view -->
+                        </div><!-- /.expandable-med-content -->
+                    </div><!-- /.compliance-section -->
                     <?php endforeach; ?>
                 </div>
                 

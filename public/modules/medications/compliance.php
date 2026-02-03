@@ -162,7 +162,7 @@ if ($medType === 'prn') {
         SELECT m.id, m.name, m.end_date, m.created_at, md.dose_amount, md.dose_unit
         FROM medications m
         LEFT JOIN medication_doses md ON m.id = md.medication_id
-        LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+        INNER JOIN medication_schedules ms ON m.id = ms.medication_id
         WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL) AND ms.is_prn = 1
         ORDER BY m.name
     ");
@@ -858,7 +858,7 @@ if ($medType === 'prn') {
             
             <div class="view-selector">
                 <label for="viewSelect">View:</label>
-                <select id="viewSelect" class="view-dropdown" onchange="window.location.href='?type=<?= $medType ?>&view=' + this.value<?= $view === 'monthly' ? " + '&month=<?= $currentMonth ?>&year=<?= $currentYear ?>'" : '' ?>">
+                <select id="viewSelect" class="view-dropdown" onchange="window.location.href='?type=<?= htmlspecialchars($medType, ENT_QUOTES) ?>&view=' + this.value<?= $view === 'monthly' ? " + '&month=<?= htmlspecialchars($currentMonth, ENT_QUOTES) ?>&year=<?= htmlspecialchars($currentYear, ENT_QUOTES) ?>'" : '' ?>">
                     <option value="daily" <?= $view === 'daily' ? 'selected' : '' ?>>Daily</option>
                     <option value="weekly" <?= $view === 'weekly' ? 'selected' : '' ?>>Weekly</option>
                     <option value="monthly" <?= $view === 'monthly' ? 'selected' : '' ?>>Monthly</option>
@@ -1649,8 +1649,8 @@ if ($medType === 'prn') {
                                 <div class="prn-stat-value"><?= $totalDoses ?></div>
                             </div>
                             <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Quantity (tablets)</div>
-                                <div class="prn-stat-value"><?= $totalQuantity ?></div>
+                                <div class="prn-stat-label">Total Quantity</div>
+                                <div class="prn-stat-value"><?= $totalQuantity ?><?= $med['dose_unit'] ? ' ' . htmlspecialchars($med['dose_unit']) : '' ?></div>
                             </div>
                         </div>
                         
@@ -1661,7 +1661,7 @@ if ($medType === 'prn') {
                                     <?php foreach ($detailedTimes as $time): ?>
                                         <li class="prn-time-item">
                                             <?= date('h:i A', strtotime($time['time_taken'])) ?> 
-                                            (<?= $time['quantity_taken'] ?> tablet<?= $time['quantity_taken'] > 1 ? 's' : '' ?>)
+                                            (<?= $time['quantity_taken'] ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'unit' ?><?= $time['quantity_taken'] > 1 ? 's' : '' ?>)
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -1717,7 +1717,7 @@ if ($medType === 'prn') {
                                 ?>
                                     <div class="prn-breakdown-item">
                                         <span class="prn-breakdown-date"><?= $dayLabel ?></span>
-                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> tablets)</span>
+                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
                                     </div>
                                 <?php } ?>
                             </div>
@@ -1742,9 +1742,10 @@ if ($medType === 'prn') {
                     $weeklyTrends = [];
                     $weekNum = 1;
                     $weekStart = 1;
+                    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $currentMonth, $currentYear);
                     
-                    while ($weekStart <= 31) {
-                        $weekEnd = min($weekStart + 6, 31);
+                    while ($weekStart <= $daysInMonth) {
+                        $weekEnd = min($weekStart + 6, $daysInMonth);
                         $weekDoses = 0;
                         
                         for ($day = $weekStart; $day <= $weekEnd; $day++) {
@@ -1864,7 +1865,7 @@ if ($medType === 'prn') {
                                 ?>
                                     <div class="prn-breakdown-item">
                                         <span class="prn-breakdown-date"><?= $monthNames[$m] ?></span>
-                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> tablets)</span>
+                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
                                     </div>
                                 <?php 
                                     }

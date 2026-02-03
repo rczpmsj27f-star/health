@@ -42,7 +42,7 @@ if ($action === 'archive') {
     $stmt->execute([$medId]);
     
     // Redirect to view page with success message reminding to check dose and stock
-    $_SESSION['success'] = 'Medication unarchived! Please check the dose and stock levels are still correct.';
+    $_SESSION['success'] = 'Medication unarchived. Please check the dose and stock levels are still correct.';
     header("Location: /modules/medications/view.php?id=" . $medId);
     exit;
 }

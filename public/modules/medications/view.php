@@ -18,10 +18,21 @@ $med = $stmt->fetch();
 // Check if medication is archived
 $isArchived = !empty($med['archived']) && $med['archived'] == 1;
 
-$dose = $pdo->query("SELECT * FROM medication_doses WHERE medication_id = $medId")->fetch();
-$schedule = $pdo->query("SELECT * FROM medication_schedules WHERE medication_id = $medId")->fetch();
-$instructions = $pdo->query("SELECT * FROM medication_instructions WHERE medication_id = $medId")->fetchAll();
-$alerts = $pdo->query("SELECT * FROM medication_alerts WHERE medication_id = $medId")->fetchAll();
+$stmt = $pdo->prepare("SELECT * FROM medication_doses WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$dose = $stmt->fetch();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_schedules WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$schedule = $stmt->fetch();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_instructions WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$instructions = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT * FROM medication_alerts WHERE medication_id = ?");
+$stmt->execute([$medId]);
+$alerts = $stmt->fetchAll();
 
 // Days of week for visualizer
 $daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

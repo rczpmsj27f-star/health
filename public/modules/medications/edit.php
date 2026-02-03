@@ -138,7 +138,7 @@ function updateTimeInputs() {
     let container = document.getElementById("time_inputs_container");
     
     // Get existing dose times from PHP
-    let existingTimes = <?= json_encode($doseTimesArray) ?>;
+    let existingTimes = <?= json_encode($doseTimesArray, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     
     if (timesPerDay > 1) {
         let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';

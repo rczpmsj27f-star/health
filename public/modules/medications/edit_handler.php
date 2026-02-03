@@ -64,6 +64,16 @@ if ($timesPerWeek !== false && $timesPerWeek !== null && ($timesPerWeek < 1 || $
     exit;
 }
 
+// Set appropriate values based on frequency type
+if ($frequencyType === 'per_day') {
+    $timesPerWeek = null;
+} elseif ($frequencyType === 'per_week') {
+    $timesPerDay = null;
+} else {
+    $timesPerDay = null;
+    $timesPerWeek = null;
+}
+
 // Validate days of week if provided
 $daysOfWeek = $_POST['days_of_week'] ?? null;
 if ($daysOfWeek !== null) {
@@ -80,19 +90,19 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([
     $frequencyType,
-    $timesPerDay ?: null,
-    $timesPerWeek ?: null,
+    $timesPerDay,
+    $timesPerWeek,
     $daysOfWeek,
     $medId
 ]);
 
 // Handle dose times for daily medications
-if ($_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) && $_POST['times_per_day'] > 1) {
+if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay > 1) {
     // First, delete existing dose times
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
     
     // Then insert new dose times
-    for ($i = 1; $i <= $_POST['times_per_day']; $i++) {
+    for ($i = 1; $i <= $timesPerDay; $i++) {
         $timeKey = "dose_time_$i";
         if (!empty($_POST[$timeKey])) {
             // Validate time format (HH:MM)
@@ -108,7 +118,7 @@ if ($_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) &&
             $stmt->execute([$medId, $i, $doseTime]);
         }
     }
-} elseif ($_POST['frequency_type'] !== 'per_day') {
+} elseif ($frequencyType !== 'per_day') {
     // Clear dose times if frequency changed from daily
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
 }

@@ -1,28 +1,53 @@
-<?php session_start(); ?>
+<?php 
+session_start();
+$err = $_SESSION['error'] ?? null;
+$ok  = $_SESSION['success'] ?? null;
+unset($_SESSION['error'], $_SESSION['success']);
+?>
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password</title>
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="centered-page">
+    <div class="page-card">
+        <div class="page-header">
+            <h2>Change Password</h2>
+            <p>Update your account password</p>
+        </div>
 
-<div style="padding:16px;">
-    <h2>Change Password</h2>
+        <?php if ($err): ?>
+            <div class="alert alert-error"><?= htmlspecialchars($err) ?></div>
+        <?php endif; ?>
+        <?php if ($ok): ?>
+            <div class="alert alert-success"><?= htmlspecialchars($ok) ?></div>
+        <?php endif; ?>
 
-    <form method="POST" action="/modules/profile/change_password_handler.php">
-        <label>Current Password</label>
-        <input type="password" name="current_password" required>
+        <form method="POST" action="/modules/profile/change_password_handler.php">
+            <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" name="current_password" required>
+            </div>
 
-        <label>New Password</label>
-        <input type="password" name="new_password" required>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" name="new_password" required>
+            </div>
 
-        <label>Confirm New Password</label>
-        <input type="password" name="confirm_password" required>
+            <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" name="confirm_password" required>
+            </div>
 
-        <button class="btn btn-accept" type="submit">Update Password</button>
-    </form>
-</div>
+            <button class="btn btn-accept" type="submit">Update Password</button>
+        </form>
 
+        <div class="page-footer">
+            <p><a href="/modules/profile/view.php">Cancel</a></p>
+        </div>
+    </div>
 </body>
 </html>

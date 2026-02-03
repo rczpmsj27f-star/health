@@ -349,6 +349,12 @@ $medications = $stmt->fetchAll();
             });
         });
         
+        // Cancel button handler
+        var cancelBtn = document.querySelector('.cancel-stock-modal');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeAddStockModal);
+        }
+        
         // Close modal when clicking outside
         var modal = document.getElementById('addStockModal');
         if (modal) {

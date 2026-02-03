@@ -202,7 +202,7 @@ if ($schedule && $schedule['days_of_week']) {
                 </div>
                 
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddStockModal()">Cancel</button>
+                    <button type="button" class="btn btn-secondary cancel-stock-modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">✅ Add Stock</button>
                 </div>
             </form>
@@ -284,6 +284,12 @@ if ($schedule && $schedule['days_of_week']) {
                 var medName = this.getAttribute('data-med-name');
                 showAddStockModal(medId, medName);
             });
+        }
+        
+        // Cancel button handler
+        var cancelBtn = document.querySelector('.cancel-stock-modal');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeAddStockModal);
         }
         
         // Close modal when clicking outside

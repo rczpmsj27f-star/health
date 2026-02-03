@@ -789,3 +789,37 @@ body {
         grid-template-columns: 1fr 1fr 1fr;
     }
 }
+
+/* Day Toggle Buttons for Medication Schedule */
+.day-toggle-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.day-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.day-toggle-btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border: 2px solid var(--color-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.day-toggle input[type="checkbox"]:checked + .day-toggle-btn {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Medication Schedule Display on Tiles */
+.tile-schedule {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-top: 4px;
+}

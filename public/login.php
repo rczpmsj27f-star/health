@@ -100,10 +100,6 @@ unset($_SESSION['error'], $_SESSION['success']);
         .login-footer a:hover {
             text-decoration: underline;
         }
-        .btn {
-            margin-top: 10px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -131,7 +127,7 @@ unset($_SESSION['error'], $_SESSION['success']);
                 <input type="password" name="password" required>
             </div>
 
-            <button class="btn btn-accept" type="submit">Login</button>
+            <button class="btn btn-accept" type="submit" style="margin-top: 10px; cursor: pointer;">Login</button>
         </form>
 
         <div class="login-footer">

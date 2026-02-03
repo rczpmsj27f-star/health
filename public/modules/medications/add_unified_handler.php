@@ -50,8 +50,8 @@ try {
     $isPrn = !empty($_POST['is_prn']) ? 1 : 0;
     
     $stmt = $pdo->prepare("
-        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn, max_doses_per_day, min_hours_between_doses)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn, doses_per_administration, max_doses_per_day, min_hours_between_doses)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -61,6 +61,7 @@ try {
         $isPrn ? null : ($_POST['times_per_week'] ?: null),
         $isPrn ? null : $daysOfWeek,
         $isPrn,
+        $isPrn && !empty($_POST['doses_per_administration']) ? $_POST['doses_per_administration'] : 1,
         $isPrn && !empty($_POST['max_doses_per_day']) ? $_POST['max_doses_per_day'] : null,
         $isPrn && !empty($_POST['min_hours_between_doses']) ? $_POST['min_hours_between_doses'] : null
     ]);

@@ -23,7 +23,7 @@ try {
     
     // 1. Verify user owns this medication and it's a PRN medication
     $stmt = $pdo->prepare("
-        SELECT m.id, m.name, m.current_stock, ms.max_doses_per_day, ms.min_hours_between_doses
+        SELECT m.id, m.name, m.current_stock, ms.doses_per_administration, ms.max_doses_per_day, ms.min_hours_between_doses
         FROM medications m
         LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
         WHERE m.id = ? AND m.user_id = ? AND ms.is_prn = 1
@@ -34,6 +34,8 @@ try {
     if (!$medication) {
         throw new Exception("Medication not found or is not a PRN medication.");
     }
+    
+    $dosesPerAdmin = $medication['doses_per_administration'] ?? 1;
     
     // 2. Check if max doses reached in last 24 hours
     $stmt = $pdo->prepare("
@@ -78,21 +80,24 @@ try {
     ");
     $stmt->execute([$medicationId, $userId, $now, $now]);
     
-    // 5. Decrement stock if stock tracking is enabled
+    // 5. Decrement stock if stock tracking is enabled (by doses_per_administration)
     if ($medication['current_stock'] !== null && $medication['current_stock'] > 0) {
+        $stockToRemove = min($dosesPerAdmin, $medication['current_stock']); // Don't go below 0
+        
         $stmt = $pdo->prepare("
             UPDATE medications 
-            SET current_stock = current_stock - 1, stock_updated_at = NOW()
+            SET current_stock = GREATEST(0, current_stock - ?), stock_updated_at = NOW()
             WHERE id = ? AND user_id = ?
         ");
-        $stmt->execute([$medicationId, $userId]);
+        $stmt->execute([$stockToRemove, $medicationId, $userId]);
         
         // Log stock change
         $stmt = $pdo->prepare("
             INSERT INTO medication_stock_log (medication_id, user_id, quantity_change, change_type, reason)
-            VALUES (?, ?, -1, 'remove', 'PRN dose taken')
+            VALUES (?, ?, ?, 'remove', ?)
         ");
-        $stmt->execute([$medicationId, $userId]);
+        $reason = $dosesPerAdmin > 1 ? "PRN dose taken ({$dosesPerAdmin} tablets)" : 'PRN dose taken';
+        $stmt->execute([$medicationId, $userId, -$stockToRemove, $reason]);
     }
     
     // Commit transaction

@@ -176,10 +176,18 @@ $isAdmin = Auth::isAdmin();
                 <div id="prn-schedule" style="display: none;">
                     <div class="form-grid">
                         <div class="form-group">
+                            <label>Doses per administration</label>
+                            <input type="number" name="doses_per_administration" id="doses_per_administration" min="1" max="10" value="1" placeholder="e.g., 2">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Number of tablets/doses to take each time (e.g., 2 for paracetamol)
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
                             <label>Maximum doses per day</label>
                             <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" max="24" placeholder="e.g., 4">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Maximum number of doses allowed in 24 hours
+                                Maximum number of times you can take this per day
                             </small>
                         </div>
                         

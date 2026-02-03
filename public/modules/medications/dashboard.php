@@ -109,7 +109,7 @@ ksort($scheduleByTime);
 // Get PRN medications
 $stmt = $pdo->prepare("
     SELECT m.id, m.name, m.current_stock, md.dose_amount, md.dose_unit, 
-           ms.max_doses_per_day, ms.min_hours_between_doses
+           ms.doses_per_administration, ms.max_doses_per_day, ms.min_hours_between_doses
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -137,11 +137,14 @@ foreach ($prnMedications as $med) {
     
     $doseCount = $logData['dose_count'] ?? 0;
     $lastTaken = $logData['last_taken'];
+    $dosesPerAdmin = $med['doses_per_administration'] ?? 1;
     $maxDoses = $med['max_doses_per_day'] ?? 999;
     $minHours = $med['min_hours_between_doses'] ?? 0;
     
-    // Calculate if can take now
+    // Calculate if can take now and next available time
     $canTakeNow = true;
+    $nextAvailableTime = null;
+    $timeRemaining = 0;
     
     // Check max doses
     if ($doseCount >= $maxDoses) {
@@ -157,14 +160,18 @@ foreach ($prnMedications as $med) {
         
         if ($timeRemaining > 0) {
             $canTakeNow = false;
+            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
         }
     }
     
     $prnData[] = [
         'medication' => $med,
         'dose_count' => $doseCount,
+        'doses_per_admin' => $dosesPerAdmin,
         'max_doses' => $maxDoses,
-        'can_take_now' => $canTakeNow
+        'can_take_now' => $canTakeNow,
+        'next_available_time' => $nextAvailableTime,
+        'time_remaining_seconds' => max(0, $timeRemaining)
     ];
 }
 ?>
@@ -176,6 +183,7 @@ foreach ($prnMedications as $med) {
     <title>Medication Dashboard</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
     <style>
         .page-content {
             max-width: 1200px;
@@ -614,7 +622,6 @@ foreach ($prnMedications as $med) {
                             <div class="med-item-compact">
                                 <div class="med-info">
                                     💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
-                                    <?php if ($med['is_prn']): ?> <span class="prn-badge">PRN</span><?php endif; ?>
                                 </div>
                                 
                                 <div class="med-actions">
@@ -630,11 +637,10 @@ foreach ($prnMedications as $med) {
                                         <?php if ($isOverdue): ?>
                                             <span class="status-overdue">⚠ Overdue</span>
                                         <?php endif; ?>
-                                        <form method="POST" action="/modules/medications/take_medication_handler.php" style="display: inline;">
-                                            <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                                            <input type="hidden" name="scheduled_date_time" value="<?= $med['scheduled_date_time'] ?>">
-                                            <button type="submit" class="btn-taken">✓ Taken</button>
-                                        </form>
+                                        <button type="button" class="btn-taken" 
+                                            onclick="markAsTaken(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                            ✓ Taken
+                                        </button>
                                         <button type="button" class="btn-skipped" 
                                             onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
                                             ⊘ Skipped
@@ -655,23 +661,31 @@ foreach ($prnMedications as $med) {
             <h3>Take PRN Medication</h3>
             <p style="color: var(--color-text-secondary); margin: 0 0 20px 0;">As-needed medications available to take</p>
             
-            <?php foreach ($prnData as $data): ?>
+            <?php foreach ($prnData as $idx => $data): ?>
                 <?php 
                 $med = $data['medication'];
                 $doseCount = $data['dose_count'];
+                $dosesPerAdmin = $data['doses_per_admin'];
                 $maxDoses = $data['max_doses'];
                 $canTake = $data['can_take_now'];
                 $remainingDoses = max(0, $maxDoses - $doseCount);
+                $nextTime = $data['next_available_time'];
+                $timeRemaining = $data['time_remaining_seconds'];
                 ?>
                 <div class="med-item-compact" style="margin-bottom: 12px;">
                     <div class="med-info">
                         💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
-                        <span class="prn-badge">PRN</span>
+                        <?php if ($dosesPerAdmin > 1): ?>
+                            <span style="color: var(--color-primary); font-weight: 600;">(Take <?= $dosesPerAdmin ?>)</span>
+                        <?php endif; ?>
                         <br>
                         <small style="color: var(--color-text-secondary);">
                             <?= $doseCount ?> of <?= $maxDoses ?> doses taken today
                             <?php if ($canTake && $remainingDoses > 0): ?>
                                 • <?= $remainingDoses ?> remaining
+                            <?php elseif (!$canTake && $nextTime): ?>
+                                • Next dose at <?= $nextTime ?> 
+                                <span id="countdown-<?= $idx ?>" data-seconds="<?= $timeRemaining ?>"></span>
                             <?php endif; ?>
                         </small>
                     </div>
@@ -747,6 +761,34 @@ foreach ($prnMedications as $med) {
     </div>
     
     <script>
+    function markAsTaken(medId, scheduledDateTime) {
+        fetch('/modules/medications/take_medication_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'medication_id': medId,
+                'scheduled_date_time': scheduledDateTime,
+                'ajax': '1'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal(data.message, 2000, () => {
+                    window.location.reload();
+                });
+            } else {
+                showErrorModal(data.message || 'Failed to mark medication as taken');
+            }
+        })
+        .catch(error => {
+            showErrorModal('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+    
     function showSkipModal(medId, medName, scheduledDateTime) {
         document.getElementById('skip_medication_id').value = medId;
         document.getElementById('skip_medication_name').textContent = medName;
@@ -759,6 +801,36 @@ foreach ($prnMedications as $med) {
         document.getElementById('skipModal').classList.remove('active');
     }
     
+    // Handle skip form submission with AJAX
+    document.getElementById('skipForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        formData.append('ajax', '1');
+        
+        fetch('/modules/medications/skip_medication_handler.php', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeSkipModal();
+                showSuccessModal(data.message, 2000, () => {
+                    window.location.reload();
+                });
+            } else {
+                closeSkipModal();
+                showErrorModal(data.message || 'Failed to skip medication');
+            }
+        })
+        .catch(error => {
+            closeSkipModal();
+            showErrorModal('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    });
+    
     // Close modal when clicking outside
     document.getElementById('skipModal').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -766,16 +838,51 @@ foreach ($prnMedications as $med) {
         }
     });
     
-    // Show success/error messages if present
+    // Show success/error messages if present using modal.js
     <?php if (isset($_SESSION['success'])): ?>
-        alert('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
+        showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
     
     <?php if (isset($_SESSION['error'])): ?>
-        alert('<?= htmlspecialchars($_SESSION['error'], ENT_QUOTES) ?>');
+        showErrorModal('<?= htmlspecialchars($_SESSION['error'], ENT_QUOTES) ?>');
         <?php unset($_SESSION['error']); ?>
     <?php endif; ?>
+    
+    // Countdown timers for PRN next dose time
+    function updateCountdowns() {
+        document.querySelectorAll('[id^="countdown-"]').forEach(function(elem) {
+            let seconds = parseInt(elem.getAttribute('data-seconds'));
+            
+            if (seconds > 0) {
+                // Calculate hours and minutes
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor((seconds % 3600) / 60);
+                let secs = seconds % 60;
+                
+                let display = '(';
+                if (hours > 0) {
+                    display += hours + 'h ';
+                }
+                if (minutes > 0 || hours > 0) {
+                    display += minutes + 'm ';
+                }
+                display += secs + 's)';
+                
+                elem.textContent = display;
+                elem.setAttribute('data-seconds', seconds - 1);
+            } else {
+                // Time is up, reload page to update availability
+                window.location.reload();
+            }
+        });
+    }
+    
+    // Update countdowns every second
+    if (document.querySelectorAll('[id^="countdown-"]').length > 0) {
+        setInterval(updateCountdowns, 1000);
+        updateCountdowns(); // Initial call
+    }
     </script>
 </body>
 </html>

@@ -30,8 +30,13 @@ $expandedMeds = !empty($expandedParam) ? explode(',', $expandedParam) : [];
 if ($currentMonth < 1 || $currentMonth > 12) {
     $currentMonth = (int)date('m');
 }
-if ($currentYear < 2020 || $currentYear > 2100) {
+if ($currentYear < 2026 || $currentYear > 2100) {
     $currentYear = (int)date('Y');
+    $currentMonth = (int)date('m');
+}
+// Don't allow months before Feb 2026
+if ($currentYear == 2026 && $currentMonth < 2) {
+    $currentMonth = 2; // February
 }
 
 // Get all active medications (exclude PRN medications from compliance)
@@ -157,12 +162,12 @@ foreach ($medications as $med) {
         
         .page-title {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
         
         .page-title h2 {
-            margin: 0 0 8px 0;
-            font-size: 32px;
+            margin: 0 0 6px 0;
+            font-size: 28px;
             color: var(--color-primary);
             font-weight: 600;
         }
@@ -176,23 +181,23 @@ foreach ($medications as $med) {
             background: var(--color-bg-white);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
-            padding: 12px 16px;
-            margin-bottom: 12px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
         }
         
         .med-header {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         
         .med-name {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--color-text);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         
         .med-dose {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--color-text-secondary);
         }
         
@@ -243,11 +248,11 @@ foreach ($medications as $med) {
         }
         
         .day-label {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--color-text-secondary);
-            margin-bottom: 12px;
-            padding: 8px 4px;
+            margin-bottom: 10px;
+            padding: 6px 3px;
             border-radius: var(--radius-sm);
         }
         
@@ -332,8 +337,8 @@ foreach ($medications as $med) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 16px;
+            margin-bottom: 16px;
+            padding: 12px;
             background: var(--color-bg-gray);
             border-radius: var(--radius-sm);
         }
@@ -342,10 +347,10 @@ foreach ($medications as $med) {
             background: var(--color-primary);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
         }
         
@@ -357,28 +362,28 @@ foreach ($medications as $med) {
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 16px;
         }
         
         .calendar-day-header {
             text-align: center;
             font-weight: 600;
-            padding: 8px;
+            padding: 6px;
             color: var(--color-text-secondary);
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .calendar-day {
             aspect-ratio: 1;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-sm);
-            padding: 8px;
+            padding: 6px;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
             background: white;
-            min-height: 60px;
+            min-height: 55px;
         }
         
         .calendar-day:hover:not(.empty) {
@@ -429,14 +434,14 @@ foreach ($medications as $med) {
             background: var(--color-bg-white);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
-            padding: 24px;
+            padding: 16px;
         }
         
         .annual-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--color-border);
         }
         
@@ -445,13 +450,13 @@ foreach ($medications as $med) {
         }
         
         .annual-med-name {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--color-text);
         }
         
         .annual-compliance {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
         }
         
@@ -469,10 +474,10 @@ foreach ($medications as $med) {
         
         /* Weekly View */
         .week-item {
-            padding: 12px;
+            padding: 10px;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-sm);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -489,15 +494,15 @@ foreach ($medications as $med) {
         
         .week-details {
             display: none;
-            margin-top: 12px;
-            padding-top: 12px;
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 1px solid var(--color-border);
         }
         
         .week-day-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
         
         .week-day-item {
@@ -505,9 +510,9 @@ foreach ($medications as $med) {
         }
         
         .week-day-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--color-text-secondary);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         
         @media (max-width: 768px) {
@@ -955,6 +960,9 @@ foreach ($medications as $med) {
                     $prevYear--;
                 }
                 
+                // Check if previous month is before Feb 2026
+                $isPrevBeforeFeb2026 = ($prevYear < 2026) || ($prevYear == 2026 && $prevMonth < 2);
+                
                 $nextMonth = $currentMonth + 1;
                 $nextYear = $currentYear;
                 if ($nextMonth > 12) {
@@ -973,9 +981,13 @@ foreach ($medications as $med) {
                 ?>
                 
                 <div class="calendar-nav">
-                    <a href="?view=monthly&month=<?= $prevMonth ?>&year=<?= $prevYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
-                        <button>← Previous</button>
-                    </a>
+                    <?php if (!$isPrevBeforeFeb2026): ?>
+                        <a href="?view=monthly&month=<?= $prevMonth ?>&year=<?= $prevYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
+                            <button>← Previous</button>
+                        </a>
+                    <?php else: ?>
+                        <button disabled style="opacity: 0.3; cursor: not-allowed;">← Previous</button>
+                    <?php endif; ?>
                     <h3><?= htmlspecialchars($monthName) ?></h3>
                     <a href="?view=monthly&month=<?= $nextMonth ?>&year=<?= $nextYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
                         <button>Next →</button>
@@ -1058,6 +1070,11 @@ foreach ($medications as $med) {
                                 $medEndDate = $med['end_date'];
                                 $isMedActive = true;
                                 
+                                // Don't show compliance for dates before Feb 2026
+                                if (strtotime($dateStr) < strtotime('2026-02-01')) {
+                                    $isMedActive = false;
+                                }
+                                
                                 // Use date comparison only (ignore time)
                                 if ($medStartDate && date('Y-m-d', strtotime($medStartDate)) > $dateStr) {
                                     $isMedActive = false;
@@ -1094,24 +1111,29 @@ foreach ($medications as $med) {
                 <?php
                 // Get selected year from query parameter (default: current year)
                 $selectedYear = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
-                if ($selectedYear < 2020 || $selectedYear > 2100) {
+                if ($selectedYear < 2026 || $selectedYear > 2100) {
                     $selectedYear = (int)date('Y');
                 }
                 
+                // Set year boundaries - no data before Feb 2026
                 $yearStart = "$selectedYear-01-01";
+                // Enforce February 2026 minimum
+                if ($selectedYear == 2026) {
+                    $yearStart = "2026-02-01";
+                }
                 $yearEnd = "$selectedYear-12-31";
                 ?>
                 
                 <!-- Year Picker -->
-                <div style="text-align: center; margin-bottom: 32px;">
-                    <div style="display: inline-flex; align-items: center; gap: 16px; background: var(--color-bg-white); padding: 12px 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
-                        <a href="?view=annual&year=<?= $selectedYear - 1 ?>" style="text-decoration: none; font-size: 24px; color: var(--color-primary);">←</a>
-                        <select onchange="window.location.href='?view=annual&year=' + this.value" style="font-size: 18px; font-weight: 600; border: none; background: transparent; cursor: pointer; color: var(--color-primary);">
-                            <?php for ($y = date('Y'); $y >= 2020; $y--): ?>
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="display: inline-flex; align-items: center; gap: 12px; background: var(--color-bg-white); padding: 8px 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+                        <a href="?view=annual&year=<?= $selectedYear - 1 ?>" style="text-decoration: none; font-size: 20px; color: var(--color-primary);">←</a>
+                        <select onchange="window.location.href='?view=annual&year=' + this.value" style="font-size: 16px; font-weight: 600; border: none; background: transparent; cursor: pointer; color: var(--color-primary);">
+                            <?php for ($y = date('Y'); $y >= 2026; $y--): ?>
                                 <option value="<?= $y ?>" <?= $y == $selectedYear ? 'selected' : '' ?>><?= $y ?></option>
                             <?php endfor; ?>
                         </select>
-                        <a href="?view=annual&year=<?= $selectedYear + 1 ?>" style="text-decoration: none; font-size: 24px; color: var(--color-primary); <?= $selectedYear >= date('Y') ? 'opacity: 0.3; pointer-events: none;' : '' ?>">→</a>
+                        <a href="?view=annual&year=<?= $selectedYear + 1 ?>" style="text-decoration: none; font-size: 20px; color: var(--color-primary); <?= $selectedYear >= date('Y') ? 'opacity: 0.3; pointer-events: none;' : '' ?>">→</a>
                     </div>
                 </div>
                 
@@ -1150,6 +1172,10 @@ foreach ($medications as $med) {
                         $countStartDate = $yearStart;
                         if ($medStartDate && strtotime($medStartDate) > strtotime($yearStart)) {
                             $countStartDate = date('Y-m-d', strtotime($medStartDate));
+                        }
+                        // Enforce Feb 2026 minimum
+                        if (strtotime($countStartDate) < strtotime('2026-02-01')) {
+                            $countStartDate = '2026-02-01';
                         }
                         
                         // Determine the actual end date for counting
@@ -1208,6 +1234,10 @@ foreach ($medications as $med) {
                                 
                                 $isMedActive = true;
                                 
+                                // Don't count dates before Feb 2026
+                                if (strtotime($dayDate) < strtotime('2026-02-01')) {
+                                    $isMedActive = false;
+                                }
                                 if ($medStartDate && strtotime($medStartDate) > strtotime($dayDate)) {
                                     $isMedActive = false;
                                 }
@@ -1241,27 +1271,27 @@ foreach ($medications as $med) {
                             ];
                         }
                         ?>
-                        <div class="annual-item" style="display: block; padding: 20px; cursor: pointer;" onclick="toggleMedicationWeeks('med-<?= $medId ?>')">
+                        <div class="annual-item" style="display: block; padding: 16px; cursor: pointer;" onclick="toggleMedicationWeeks('med-<?= $medId ?>')">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
-                                    <div class="annual-med-name" style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="annual-med-name" style="display: flex; align-items: center; gap: 6px;">
                                         <span id="toggle-med-<?= $medId ?>" style="font-weight: bold; color: var(--color-primary);">+</span>
                                         💊 <?= htmlspecialchars($med['name']) ?>
                                     </div>
                                     <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
-                                        <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px; margin-left: 28px;">
+                                        <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; margin-left: 24px;">
                                             <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                <div class="annual-compliance <?= $complianceClass ?>" style="font-size: 24px; font-weight: bold;">
+                                <div class="annual-compliance <?= $complianceClass ?>" style="font-size: 20px; font-weight: bold;">
                                     <?= htmlspecialchars($complianceText) ?>
                                 </div>
                             </div>
                             
                             <!-- Expandable weeks section -->
-                            <div id="med-<?= $medId ?>-weeks" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border);">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+                            <div id="med-<?= $medId ?>-weeks" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--color-border);">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px;">
                                     <?php foreach ($weeks as $week): ?>
                                         <?php
                                         $weekClass = 'low';
@@ -1272,10 +1302,10 @@ foreach ($medications as $med) {
                                         }
                                         ?>
                                         <a href="?view=weekly&week_start=<?= $week['start'] ?>" style="text-decoration: none; color: inherit;" onclick="event.stopPropagation();">
-                                            <div style="padding: 12px; background: var(--color-bg-gray); border-radius: var(--radius-sm); text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px;">Week <?= $week['number'] ?></div>
-                                                <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 8px;"><?= $week['label'] ?></div>
-                                                <div class="annual-compliance <?= $weekClass ?>" style="font-size: 20px; font-weight: bold;">
+                                            <div style="padding: 10px; background: var(--color-bg-gray); border-radius: var(--radius-sm); text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 2px;">Week <?= $week['number'] ?></div>
+                                                <div style="font-size: 10px; color: var(--color-text-secondary); margin-bottom: 6px;"><?= $week['label'] ?></div>
+                                                <div class="annual-compliance <?= $weekClass ?>" style="font-size: 18px; font-weight: bold;">
                                                     <?= $week['percent'] ?>%
                                                 </div>
                                             </div>

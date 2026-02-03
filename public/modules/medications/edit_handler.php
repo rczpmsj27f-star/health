@@ -46,10 +46,19 @@ $stmt->execute([$doseAmount, $doseUnit, $medId]);
 // Validate and update schedule
 $isPrn = isset($_POST['is_prn']) && $_POST['is_prn'] == '1' ? 1 : 0;
 $frequencyType = $_POST['frequency_type'] ?? '';
-$allowedFrequencies = ['per_day', 'per_week', 'as_needed'];
-if (!$isPrn && !in_array($frequencyType, $allowedFrequencies)) {
-    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_frequency");
-    exit;
+
+// Validate frequency type
+if ($isPrn) {
+    // PRN should not have a frequency type
+    if (!empty($frequencyType)) {
+        $frequencyType = null;
+    }
+} else {
+    $allowedFrequencies = ['per_day', 'per_week', 'as_needed'];
+    if (!in_array($frequencyType, $allowedFrequencies)) {
+        header("Location: /modules/medications/edit.php?id=$medId&error=invalid_frequency");
+        exit;
+    }
 }
 
 $timesPerDay = filter_input(INPUT_POST, 'times_per_day', FILTER_VALIDATE_INT);

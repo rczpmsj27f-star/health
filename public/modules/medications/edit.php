@@ -254,7 +254,7 @@ foreach ($instructions as $i) {
                 <div id="prn-limits" style="<?= !empty($schedule['is_prn']) ? '' : 'display:none;' ?>">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Max doses per day (optional)</label>
+                            <label for="max_doses_per_day">Max doses per day (optional)</label>
                             <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" value="<?= htmlspecialchars($schedule['max_doses_per_day'] ?? '') ?>">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Maximum doses allowed in 24 hours
@@ -262,7 +262,7 @@ foreach ($instructions as $i) {
                         </div>
 
                         <div class="form-group">
-                            <label>Min hours between doses (optional)</label>
+                            <label for="min_hours_between_doses">Min hours between doses (optional)</label>
                             <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0" value="<?= htmlspecialchars($schedule['min_hours_between_doses'] ?? '') ?>">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Minimum time required between doses

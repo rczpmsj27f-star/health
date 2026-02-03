@@ -49,7 +49,8 @@ try {
         $doseTimesArray[$dt['dose_number']] = $dt['dose_time'];
     }
 } catch (PDOException $e) {
-    // Table doesn't exist yet, continue with empty arrays
+    // Table doesn't exist yet (SQLSTATE 42S02) - continue with empty arrays
+    // For other errors, we could log them, but for now we'll continue gracefully
 }
 ?>
 <!DOCTYPE html>

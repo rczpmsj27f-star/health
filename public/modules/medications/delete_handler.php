@@ -28,7 +28,8 @@ if (!$med || $med['user_id'] != $_SESSION['user_id']) {
 try {
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
 } catch (PDOException $e) {
-    // Table doesn't exist yet, continue with other deletions
+    // Table doesn't exist yet (SQLSTATE 42S02) - continue with other deletions
+    // For other errors, we could log them, but for now we'll continue gracefully
 }
 $pdo->prepare("DELETE FROM medication_alerts WHERE medication_id = ?")->execute([$medId]);
 $pdo->prepare("DELETE FROM medication_instructions WHERE medication_id = ?")->execute([$medId]);

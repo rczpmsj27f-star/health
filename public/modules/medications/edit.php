@@ -263,7 +263,7 @@ foreach ($instructions as $i) {
                             <label>Times per day *</label>
                             <div class="number-stepper">
                                 <button type="button" class="stepper-btn" onclick="decrementTimesPerDay()">−</button>
-                                <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="<?= htmlspecialchars($schedule['times_per_day'] ?: 1) ?>" readonly onchange="updateTimeInputs()">
+                                <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="<?= htmlspecialchars($schedule['times_per_day'] ?: 1) ?>" readonly>
                                 <button type="button" class="stepper-btn" onclick="incrementTimesPerDay()">+</button>
                             </div>
                         </div>
@@ -460,14 +460,20 @@ foreach ($instructions as $i) {
         let f = document.getElementById("freq").value;
         
         if (f === "per_day") {
-            document.querySelector('[name="times_per_week"]').value = "";
+            let timesPerWeekInput = document.querySelector('[name="times_per_week"]');
+            if (timesPerWeekInput) {
+                timesPerWeekInput.value = "";
+            }
             // Uncheck all days_of_week checkboxes
             document.querySelectorAll('[name="days_of_week[]"]').forEach(cb => cb.checked = false);
             document.getElementById("daily").style.display = "block";
             document.getElementById("weekly").style.display = "none";
             updateTimeInputs();
         } else {
-            document.querySelector('[name="times_per_day"]').value = "";
+            let timesPerDayInput = document.querySelector('[name="times_per_day"]');
+            if (timesPerDayInput) {
+                timesPerDayInput.value = "";
+            }
             document.getElementById("daily").style.display = "none";
             document.getElementById("weekly").style.display = "block";
         }

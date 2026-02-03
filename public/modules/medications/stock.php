@@ -235,6 +235,10 @@ $medications = $stmt->fetchAll();
     </style>
 </head>
 <body>
+    <a href="/modules/medications/dashboard.php" class="back-to-dashboard" title="Back to Medication Dashboard">
+        ← Back to Dashboard
+    </a>
+    
     <div class="hamburger" onclick="toggleMenu()">
         <div></div><div></div><div></div>
     </div>
@@ -243,8 +247,15 @@ $medications = $stmt->fetchAll();
         <h3>Menu</h3>
         <a href="/dashboard.php">🏠 Dashboard</a>
         <a href="/modules/profile/view.php">👤 My Profile</a>
-        <a href="/modules/medications/dashboard.php">💊 Medication Dashboard</a>
-        <a href="/modules/medications/list.php">📋 My Medications</a>
+        
+        <div class="menu-parent">
+            <a href="/modules/medications/dashboard.php" class="menu-parent-link">💊 Medications</a>
+            <div class="menu-children">
+                <a href="/modules/medications/list.php">My Medications</a>
+                <a href="/modules/medications/stock.php">Medication Stock</a>
+            </div>
+        </div>
+        
         <?php if ($isAdmin): ?>
         <a href="/modules/admin/users.php">⚙️ User Management</a>
         <?php endif; ?>
@@ -269,7 +280,7 @@ $medications = $stmt->fetchAll();
                         <div class="stock-info">
                             <h3>💊 <?= htmlspecialchars($med['name']) ?></h3>
                             <?php if ($med['stock_updated_at']): ?>
-                                <p class="stock-updated">Last updated: <?= date('M j, Y g:i A', strtotime($med['stock_updated_at'])) ?></p>
+                                <p class="stock-updated">Last updated: <?= date('M j, Y H:i', strtotime($med['stock_updated_at'])) ?></p>
                             <?php endif; ?>
                         </div>
                         

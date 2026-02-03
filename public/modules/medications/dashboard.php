@@ -31,8 +31,10 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId, "%$today%"]);
 $todaysMeds = $stmt->fetchAll();
 
-// Get dose times for each medication
+// Get dose times for each medication and build schedule by time
 $medDoseTimes = [];
+$scheduleByTime = [];
+
 foreach ($todaysMeds as $med) {
     $stmt = $pdo->prepare("
         SELECT dose_number, dose_time 
@@ -41,8 +43,23 @@ foreach ($todaysMeds as $med) {
         ORDER BY dose_time
     ");
     $stmt->execute([$med['id']]);
-    $medDoseTimes[$med['id']] = $stmt->fetchAll();
+    $doseTimes = $stmt->fetchAll();
+    $medDoseTimes[$med['id']] = $doseTimes;
+    
+    // Group medications by time slot
+    if (!empty($doseTimes)) {
+        foreach ($doseTimes as $doseTime) {
+            $timeKey = date('H:i', strtotime($doseTime['dose_time']));
+            if (!isset($scheduleByTime[$timeKey])) {
+                $scheduleByTime[$timeKey] = [];
+            }
+            $scheduleByTime[$timeKey][] = $med;
+        }
+    }
 }
+
+// Sort by time (earliest first)
+ksort($scheduleByTime);
 ?>
 <!DOCTYPE html>
 <html>
@@ -204,8 +221,15 @@ foreach ($todaysMeds as $med) {
         <h3>Menu</h3>
         <a href="/dashboard.php">🏠 Dashboard</a>
         <a href="/modules/profile/view.php">👤 My Profile</a>
-        <a href="/modules/medications/dashboard.php">💊 Medication Dashboard</a>
-        <a href="/modules/medications/list.php">📋 My Medications</a>
+        
+        <div class="menu-parent">
+            <a href="/modules/medications/dashboard.php" class="menu-parent-link">💊 Medications</a>
+            <div class="menu-children">
+                <a href="/modules/medications/list.php">My Medications</a>
+                <a href="/modules/medications/stock.php">Medication Stock</a>
+            </div>
+        </div>
+        
         <?php if ($isAdmin): ?>
         <a href="/modules/admin/users.php">⚙️ User Management</a>
         <?php endif; ?>
@@ -220,13 +244,39 @@ foreach ($todaysMeds as $med) {
         
         <!-- Today's Schedule Section -->
         <div class="schedule-section">
-            <h3>📅 Today's Schedule (<?= date('l, F j, Y') ?>)</h3>
+            <h3>Today's Schedule</h3>
+            <p class="schedule-date"><?= date('l j F Y') ?></p>
             
             <?php if (empty($todaysMeds)): ?>
                 <div class="no-meds">
                     <p>No medications scheduled for today</p>
                 </div>
+            <?php elseif (!empty($scheduleByTime)): ?>
+                <!-- Display medications grouped by time -->
+                <?php foreach ($scheduleByTime as $time => $meds): ?>
+                    <div class="time-group">
+                        <div class="time-group-header">
+                            ⏰ <?= $time ?>
+                        </div>
+                        <div class="time-group-medications">
+                            <?php foreach ($meds as $med): ?>
+                                <div class="schedule-card">
+                                    <div class="med-name">
+                                        💊 <?= htmlspecialchars($med['name']) ?>
+                                        <?php if ($med['is_prn']): ?>
+                                            <span class="prn-badge">PRN</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="dose-time">
+                                        <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             <?php else: ?>
+                <!-- Fallback for PRN or medications without specific times -->
                 <?php foreach ($todaysMeds as $med): ?>
                     <div class="schedule-card">
                         <div class="med-name">
@@ -241,13 +291,6 @@ foreach ($todaysMeds as $med) {
                                 <span class="time">As needed</span>
                                 <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>
                             </div>
-                        <?php elseif (!empty($medDoseTimes[$med['id']])): ?>
-                            <?php foreach ($medDoseTimes[$med['id']] as $doseTime): ?>
-                                <div class="dose-time">
-                                    <span class="time">⏰ <?= date('g:i A', strtotime($doseTime['dose_time'])) ?></span>
-                                    <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>
-                                </div>
-                            <?php endforeach; ?>
                         <?php else: ?>
                             <div class="dose-time">
                                 <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>

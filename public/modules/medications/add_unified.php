@@ -104,6 +104,13 @@ $isAdmin = Auth::isAdmin();
             <h2 style="color: var(--color-primary); font-size: 32px; margin: 0 0 8px 0;">💊 Add New Medication</h2>
             <p style="color: var(--color-text-secondary); margin: 0;">Complete all fields to add your medication</p>
         </div>
+        
+        <?php if (isset($_SESSION['error'])): ?>
+            <div style="background: #f8d7da; color: #721c24; padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #f5c6cb;">
+                <strong>Error:</strong> <?= htmlspecialchars($_SESSION['error']) ?>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
 
         <form method="POST" action="/modules/medications/add_unified_handler.php" id="medForm">
             <!-- Section 1: Medication Search -->

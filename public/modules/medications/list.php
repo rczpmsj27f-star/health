@@ -9,9 +9,13 @@ if (empty($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
-$stmt = $pdo->prepare("SELECT * FROM medications WHERE user_id = ?");
+$stmt = $pdo->prepare("SELECT * FROM medications WHERE user_id = ? AND (archived IS NULL OR archived = 0)");
 $stmt->execute([$userId]);
 $meds = $stmt->fetchAll();
+
+$stmtArchived = $pdo->prepare("SELECT * FROM medications WHERE user_id = ? AND archived = 1");
+$stmtArchived->execute([$userId]);
+$archivedMeds = $stmtArchived->fetchAll();
 ?>
 <!DOCTYPE html>
 <html>
@@ -29,12 +33,29 @@ $meds = $stmt->fetchAll();
 </div>
 
 <div class="dashboard-grid">
-<?php foreach ($meds as $m): ?>
-    <a class="tile" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
+<?php if (empty($meds)): ?>
+    <div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">
+        <p>No active medications found. Click "Add Medication" to get started.</p>
+    </div>
+<?php else: ?>
+    <?php foreach ($meds as $m): ?>
+        <a class="tile" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
+            <?= htmlspecialchars($m['name']) ?>
+        </a>
+    <?php endforeach; ?>
+<?php endif; ?>
+</div>
+
+<?php if (!empty($archivedMeds)): ?>
+<h2 style="padding:16px; margin-top:20px;">Archived Medications</h2>
+<div class="dashboard-grid">
+<?php foreach ($archivedMeds as $m): ?>
+    <a class="tile archived" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
         <?= htmlspecialchars($m['name']) ?>
     </a>
 <?php endforeach; ?>
 </div>
+<?php endif; ?>
 
 </body>
 </html>

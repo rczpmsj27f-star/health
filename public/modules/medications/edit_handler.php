@@ -133,7 +133,7 @@ $stmt->execute([
 ]);
 
 // Handle dose times for daily medications
-if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay > 1) {
+if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay >= 1) {
     // First, delete existing dose times
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
     

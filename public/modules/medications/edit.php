@@ -433,7 +433,7 @@ foreach ($instructions as $i) {
         // Get existing dose times from PHP
         let existingTimes = <?= json_encode($doseTimesArray, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
         
-        if (timesPerDay > 1) {
+        if (timesPerDay >= 1) {
             let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
             for (let i = 1; i <= timesPerDay; i++) {
                 html += `<label>Time ${i}:</label>`;
@@ -441,8 +441,10 @@ foreach ($instructions as $i) {
                 html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}" value="${timeValue}">`;
             }
             
-            // Add evenly split button
-            html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+            // Add evenly split button only if more than 1 dose per day
+            if (timesPerDay > 1) {
+                html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+            }
             
             container.innerHTML = html;
         } else {

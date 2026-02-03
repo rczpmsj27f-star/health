@@ -152,6 +152,24 @@ ksort($scheduleByTime);
             margin-left: 8px;
         }
         
+        /* Compact schedule display */
+        .time-group-compact {
+            margin-bottom: 16px;
+        }
+        
+        .time-header-compact {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+        
+        .med-item-compact {
+            padding: 6px 0;
+            color: var(--color-text);
+            font-size: 15px;
+        }
+        
         .no-meds {
             text-align: center;
             padding: 40px 20px;
@@ -163,6 +181,27 @@ ksort($scheduleByTime);
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin-top: 32px;
+        }
+        
+        /* Half-screen tiles for My Medications and Medication Stock */
+        .dashboard-tiles-half {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 32px;
+        }
+        
+        .dashboard-tiles-half .tile {
+            flex: 1 1 48%;
+            max-width: 48%;
+            min-width: 280px;
+        }
+        
+        @media (max-width: 600px) {
+            .dashboard-tiles-half .tile {
+                flex: 1 1 100%;
+                max-width: 100%;
+            }
         }
         
         .tile {
@@ -252,27 +291,15 @@ ksort($scheduleByTime);
                     <p>No medications scheduled for today</p>
                 </div>
             <?php elseif (!empty($scheduleByTime)): ?>
-                <!-- Display medications grouped by time -->
+                <!-- Display medications grouped by time in compact format -->
                 <?php foreach ($scheduleByTime as $time => $meds): ?>
-                    <div class="time-group">
-                        <div class="time-group-header">
-                            ⏰ <?= $time ?>
-                        </div>
-                        <div class="time-group-medications">
-                            <?php foreach ($meds as $med): ?>
-                                <div class="schedule-card">
-                                    <div class="med-name">
-                                        💊 <?= htmlspecialchars($med['name']) ?>
-                                        <?php if ($med['is_prn']): ?>
-                                            <span class="prn-badge">PRN</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="dose-time">
-                                        <span><?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?></span>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+                    <div class="time-group-compact">
+                        <div class="time-header-compact"><?= $time ?></div>
+                        <?php foreach ($meds as $med): ?>
+                            <div class="med-item-compact">
+                                💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit']) ?><?php if ($med['is_prn']): ?> <span class="prn-badge">PRN</span><?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -305,21 +332,17 @@ ksort($scheduleByTime);
         </div>
         
         <!-- Dashboard Tiles -->
-        <div class="dashboard-tiles">
-            <a class="tile tile-blue" href="/modules/medications/list.php">
-                <div>
-                    <span class="tile-icon">📋</span>
-                    <div class="tile-title">My Medications</div>
-                    <div class="tile-desc">View and manage your medications</div>
-                </div>
+        <div class="dashboard-tiles-half">
+            <a class="tile tile-purple" href="/modules/medications/list.php">
+                <span class="tile-icon">💊</span>
+                <div class="tile-title">My Medications</div>
+                <div class="tile-desc">View current & archived</div>
             </a>
             
             <a class="tile tile-green" href="/modules/medications/stock.php">
-                <div>
-                    <span class="tile-icon">📦</span>
-                    <div class="tile-title">Medication Stock</div>
-                    <div class="tile-desc">Track and update stock levels</div>
-                </div>
+                <span class="tile-icon">📦</span>
+                <div class="tile-title">Medication Stock</div>
+                <div class="tile-desc">Manage your stock levels</div>
             </a>
         </div>
     </div>

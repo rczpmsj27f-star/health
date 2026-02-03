@@ -38,12 +38,12 @@ if ($action === 'archive') {
     exit;
 } elseif ($action === 'unarchive') {
     // Unarchive the medication
-    $stmt = $pdo->prepare("UPDATE medications SET archived = 0, archived_at = NULL, end_date = NULL WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE medications SET archived = 0, archived_at = NULL WHERE id = ?");
     $stmt->execute([$medId]);
     
-    // Redirect to list page with success message for modal
-    $_SESSION['success'] = 'Medication unarchived successfully.';
-    header("Location: /modules/medications/list.php");
+    // Redirect to view page with success message reminding to check dose and stock
+    $_SESSION['success'] = 'Medication unarchived! Please check the dose and stock levels are still correct.';
+    header("Location: /modules/medications/view.php?id=" . $medId);
     exit;
 }
 

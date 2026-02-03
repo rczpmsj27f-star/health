@@ -176,6 +176,7 @@ foreach ($prnMedications as $med) {
     <title>Medication Dashboard</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
     <style>
         .page-content {
             max-width: 1200px;
@@ -614,7 +615,6 @@ foreach ($prnMedications as $med) {
                             <div class="med-item-compact">
                                 <div class="med-info">
                                     💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
-                                    <?php if ($med['is_prn']): ?> <span class="prn-badge">PRN</span><?php endif; ?>
                                 </div>
                                 
                                 <div class="med-actions">
@@ -630,11 +630,10 @@ foreach ($prnMedications as $med) {
                                         <?php if ($isOverdue): ?>
                                             <span class="status-overdue">⚠ Overdue</span>
                                         <?php endif; ?>
-                                        <form method="POST" action="/modules/medications/take_medication_handler.php" style="display: inline;">
-                                            <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                                            <input type="hidden" name="scheduled_date_time" value="<?= $med['scheduled_date_time'] ?>">
-                                            <button type="submit" class="btn-taken">✓ Taken</button>
-                                        </form>
+                                        <button type="button" class="btn-taken" 
+                                            onclick="markAsTaken(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                            ✓ Taken
+                                        </button>
                                         <button type="button" class="btn-skipped" 
                                             onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
                                             ⊘ Skipped
@@ -747,6 +746,34 @@ foreach ($prnMedications as $med) {
     </div>
     
     <script>
+    function markAsTaken(medId, scheduledDateTime) {
+        fetch('/modules/medications/take_medication_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'medication_id': medId,
+                'scheduled_date_time': scheduledDateTime,
+                'ajax': '1'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal(data.message, 2000, () => {
+                    window.location.reload();
+                });
+            } else {
+                showErrorModal(data.message || 'Failed to mark medication as taken');
+            }
+        })
+        .catch(error => {
+            showErrorModal('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+    
     function showSkipModal(medId, medName, scheduledDateTime) {
         document.getElementById('skip_medication_id').value = medId;
         document.getElementById('skip_medication_name').textContent = medName;
@@ -759,6 +786,36 @@ foreach ($prnMedications as $med) {
         document.getElementById('skipModal').classList.remove('active');
     }
     
+    // Handle skip form submission with AJAX
+    document.getElementById('skipForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        formData.append('ajax', '1');
+        
+        fetch('/modules/medications/skip_medication_handler.php', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeSkipModal();
+                showSuccessModal(data.message, 2000, () => {
+                    window.location.reload();
+                });
+            } else {
+                closeSkipModal();
+                showErrorModal(data.message || 'Failed to skip medication');
+            }
+        })
+        .catch(error => {
+            closeSkipModal();
+            showErrorModal('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    });
+    
     // Close modal when clicking outside
     document.getElementById('skipModal').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -766,14 +823,14 @@ foreach ($prnMedications as $med) {
         }
     });
     
-    // Show success/error messages if present
+    // Show success/error messages if present using modal.js
     <?php if (isset($_SESSION['success'])): ?>
-        alert('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
+        showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
     
     <?php if (isset($_SESSION['error'])): ?>
-        alert('<?= htmlspecialchars($_SESSION['error'], ENT_QUOTES) ?>');
+        showErrorModal('<?= htmlspecialchars($_SESSION['error'], ENT_QUOTES) ?>');
         <?php unset($_SESSION['error']); ?>
     <?php endif; ?>
     </script>

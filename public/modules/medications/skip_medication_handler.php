@@ -3,12 +3,25 @@ session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 
+// Check if this is an AJAX request
+$isAjax = isset($_POST['ajax']) && $_POST['ajax'] == '1';
+
 if (empty($_SESSION['user_id'])) {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+        exit;
+    }
     header("Location: /login.php");
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit;
+    }
     header("Location: /modules/medications/dashboard.php");
     exit;
 }
@@ -19,7 +32,13 @@ $scheduledDateTime = $_POST['scheduled_date_time'] ?? null;
 $skippedReason = $_POST['skipped_reason'] ?? null;
 
 if (!$medicationId || !$scheduledDateTime || !$skippedReason) {
-    $_SESSION['error'] = "Invalid medication, schedule, or reason information.";
+    $errorMsg = "Invalid medication, schedule, or reason information.";
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $errorMsg]);
+        exit;
+    }
+    $_SESSION['error'] = $errorMsg;
     header("Location: /modules/medications/dashboard.php");
     exit;
 }
@@ -28,7 +47,7 @@ try {
     $pdo->beginTransaction();
     
     // Verify the medication belongs to the user
-    $stmt = $pdo->prepare("SELECT id FROM medications WHERE id = ? AND user_id = ?");
+    $stmt = $pdo->prepare("SELECT id, name FROM medications WHERE id = ? AND user_id = ?");
     $stmt->execute([$medicationId, $userId]);
     $medication = $stmt->fetch();
     
@@ -62,11 +81,28 @@ try {
     }
     
     $pdo->commit();
-    $_SESSION['success'] = "Medication marked as skipped.";
+    
+    $successMsg = htmlspecialchars($medication['name']) . " marked as skipped";
+    
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => $successMsg]);
+        exit;
+    }
+    
+    $_SESSION['success'] = $successMsg;
     
 } catch (Exception $e) {
     $pdo->rollBack();
-    $_SESSION['error'] = "Error logging medication: " . $e->getMessage();
+    $errorMsg = "Error logging medication: " . $e->getMessage();
+    
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $errorMsg]);
+        exit;
+    }
+    
+    $_SESSION['error'] = $errorMsg;
 }
 
 header("Location: /modules/medications/dashboard.php");

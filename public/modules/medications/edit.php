@@ -251,6 +251,26 @@ foreach ($instructions as $i) {
                     </small>
                 </div>
 
+                <div id="prn-limits" style="<?= !empty($schedule['is_prn']) ? '' : 'display:none;' ?>">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Max doses per day (optional)</label>
+                            <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" value="<?= htmlspecialchars($schedule['max_doses_per_day'] ?? '') ?>">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Maximum doses allowed in 24 hours
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Min hours between doses (optional)</label>
+                            <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0" value="<?= htmlspecialchars($schedule['min_hours_between_doses'] ?? '') ?>">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Minimum time required between doses
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="regular-schedule" style="<?= !empty($schedule['is_prn']) ? 'display:none;' : '' ?>">
                     <div class="form-group">
                         <label>Frequency *</label>
@@ -485,14 +505,17 @@ foreach ($instructions as $i) {
     function togglePRN() {
         let isPrn = document.getElementById("is_prn").checked;
         let regularSchedule = document.getElementById("regular-schedule");
+        let prnLimits = document.getElementById("prn-limits");
         let freqSelect = document.getElementById("freq");
         
         if (isPrn) {
             regularSchedule.style.display = "none";
+            prnLimits.style.display = "block";
             // Remove required attribute from schedule fields
             freqSelect.removeAttribute("required");
         } else {
             regularSchedule.style.display = "block";
+            prnLimits.style.display = "none";
             // Add back required attribute
             freqSelect.setAttribute("required", "required");
         }

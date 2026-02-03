@@ -44,15 +44,18 @@ $stmt = $pdo->prepare("UPDATE medication_doses SET dose_amount = ?, dose_unit = 
 $stmt->execute([$doseAmount, $doseUnit, $medId]);
 
 // Validate and update schedule
+$isPrn = isset($_POST['is_prn']) && $_POST['is_prn'] == '1' ? 1 : 0;
 $frequencyType = $_POST['frequency_type'] ?? '';
 $allowedFrequencies = ['per_day', 'per_week', 'as_needed'];
-if (!in_array($frequencyType, $allowedFrequencies)) {
+if (!$isPrn && !in_array($frequencyType, $allowedFrequencies)) {
     header("Location: /modules/medications/edit.php?id=$medId&error=invalid_frequency");
     exit;
 }
 
 $timesPerDay = filter_input(INPUT_POST, 'times_per_day', FILTER_VALIDATE_INT);
 $timesPerWeek = filter_input(INPUT_POST, 'times_per_week', FILTER_VALIDATE_INT);
+$maxDosesPerDay = filter_input(INPUT_POST, 'max_doses_per_day', FILTER_VALIDATE_INT);
+$minHoursBetweenDoses = filter_input(INPUT_POST, 'min_hours_between_doses', FILTER_VALIDATE_FLOAT);
 
 // Validate numeric ranges
 if ($timesPerDay !== false && $timesPerDay !== null && ($timesPerDay < 1 || $timesPerDay > 24)) {
@@ -64,14 +67,24 @@ if ($timesPerWeek !== false && $timesPerWeek !== null && ($timesPerWeek < 1 || $
     exit;
 }
 
-// Set appropriate values based on frequency type
-if ($frequencyType === 'per_day') {
+// Set appropriate values based on PRN or frequency type
+if ($isPrn) {
+    $timesPerDay = null;
     $timesPerWeek = null;
+    $frequencyType = null;
+} elseif ($frequencyType === 'per_day') {
+    $timesPerWeek = null;
+    $maxDosesPerDay = null;
+    $minHoursBetweenDoses = null;
 } elseif ($frequencyType === 'per_week') {
     $timesPerDay = null;
+    $maxDosesPerDay = null;
+    $minHoursBetweenDoses = null;
 } else {
     $timesPerDay = null;
     $timesPerWeek = null;
+    $maxDosesPerDay = null;
+    $minHoursBetweenDoses = null;
 }
 
 // Validate days of week if provided
@@ -87,7 +100,8 @@ if (!empty($_POST['days_of_week']) && is_array($_POST['days_of_week'])) {
 
 $stmt = $pdo->prepare("
     UPDATE medication_schedules 
-    SET frequency_type = ?, times_per_day = ?, times_per_week = ?, days_of_week = ?
+    SET frequency_type = ?, times_per_day = ?, times_per_week = ?, days_of_week = ?, 
+        is_prn = ?, max_doses_per_day = ?, min_hours_between_doses = ?
     WHERE medication_id = ?
 ");
 $stmt->execute([
@@ -95,6 +109,9 @@ $stmt->execute([
     $timesPerDay,
     $timesPerWeek,
     $daysOfWeek,
+    $isPrn,
+    $maxDosesPerDay,
+    $minHoursBetweenDoses,
     $medId
 ]);
 

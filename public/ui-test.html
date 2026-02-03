@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Test - Medication Management</title>
+    <link rel="stylesheet" href="assets/css/app.css">
+    <script src="assets/js/modal.js"></script>
+    <style>
+        body {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        .demo-section h2 {
+            margin-top: 0;
+            color: #5b21b6;
+        }
+        .test-button {
+            margin: 10px 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>UI Enhancement Test Page</h1>
+    
+    <div class="demo-section">
+        <h2>1. Modal Component Tests</h2>
+        <p>Click the buttons below to test different modal types:</p>
+        <button class="btn btn-primary test-button" onclick="showSuccessModal('Medication archived successfully!')">
+            Test Success Modal
+        </button>
+        <button class="btn btn-accept test-button" onclick="showConfirmationModal('Action confirmed!')">
+            Test Confirmation Modal
+        </button>
+        <button class="btn btn-danger test-button" onclick="showErrorModal('An error occurred!')">
+            Test Error Modal
+        </button>
+        <button class="btn btn-info test-button" onclick="showModal('This is an info message', 'info')">
+            Test Info Modal
+        </button>
+    </div>
+
+    <div class="demo-section">
+        <h2>2. Full-Width Medication Tiles (Current Medications)</h2>
+        <p>Light green background with rounded corners:</p>
+        <div style="padding: 0 16px;">
+            <a class="medication-tile-fullwidth" href="#" onclick="event.preventDefault();">
+                <div class="medication-tile-line1">
+                    <span>💊</span>
+                    <span>Aspirin 100mg</span>
+                </div>
+                <div class="medication-tile-line2">
+                    <strong>Schedule:</strong> 2 times per day
+                </div>
+                <div class="medication-tile-line3">
+                    <strong>Status:</strong> Active
+                </div>
+            </a>
+            
+            <a class="medication-tile-fullwidth" href="#" onclick="event.preventDefault();">
+                <div class="medication-tile-line1">
+                    <span>💊</span>
+                    <span>Vitamin D 1000 IU</span>
+                </div>
+                <div class="medication-tile-line2">
+                    <strong>Schedule:</strong> 1 time per day
+                </div>
+                <div class="medication-tile-line3">
+                    <strong>Status:</strong> Active
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>3. Collapsible Archived Medications Section</h2>
+        <p>Click the header to expand/collapse:</p>
+        
+        <div class="expandable-section collapsed" id="archivedSection">
+            <div class="section-header-toggle" onclick="toggleSection('archivedSection')">
+                <span class="toggle-icon">▶</span>
+                <span>Archived Medications (2)</span>
+            </div>
+            <div class="section-content">
+                <div style="padding: 16px;">
+                    <a class="medication-tile-fullwidth" href="#" onclick="event.preventDefault();" style="background: #ffebee; border-left-color: #e57373;">
+                        <div class="medication-tile-line1">
+                            <span>📦</span>
+                            <span>Old Medication A</span>
+                        </div>
+                        <div class="medication-tile-line2">
+                            <strong>Schedule:</strong> 3 times per day
+                        </div>
+                        <div class="medication-tile-line3">
+                            <strong>Status:</strong> Archived on Feb 01, 2026
+                        </div>
+                    </a>
+                    
+                    <a class="medication-tile-fullwidth" href="#" onclick="event.preventDefault();" style="background: #ffebee; border-left-color: #e57373;">
+                        <div class="medication-tile-line1">
+                            <span>📦</span>
+                            <span>Old Medication B</span>
+                        </div>
+                        <div class="medication-tile-line2">
+                            <strong>Schedule:</strong> 1 time per week on Mon, Wed, Fri
+                        </div>
+                        <div class="medication-tile-line3">
+                            <strong>Status:</strong> Archived on Jan 28, 2026
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>

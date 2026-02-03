@@ -178,7 +178,7 @@ function updateTimeInputs() {
         }
         
         // Add evenly split button
-        html += '<button type="button" class="btn btn-secondary" onclick="evenlySpitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+        html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
         
         container.innerHTML = html;
     } else {
@@ -187,7 +187,7 @@ function updateTimeInputs() {
 }
 
 // Evenly split times throughout the day (7am - 10pm)
-function evenlySpitTimes() {
+function evenlySplitTimes() {
     let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
     
     if (timesPerDay < 2) return;

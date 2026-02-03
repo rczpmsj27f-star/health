@@ -304,51 +304,7 @@ $medications = $stmt->fetchAll();
         ← Back to Dashboard
     </a>
     
-    <div class="hamburger" onclick="toggleMenu()">
-        <div></div><div></div><div></div>
-    </div>
-
-    <div class="menu" id="menu">
-        <h3>Menu</h3>
-        <a href="/dashboard.php">🏠 Dashboard</a>
-        
-        <div class="menu-section">
-            <div class="menu-section-header" onclick="toggleSubmenu('medications-menu')">
-                <span>💊 Medications</span>
-                <span id="medications-menu-icon">▶</span>
-            </div>
-            <div class="menu-section-children" id="medications-menu">
-                <a href="/modules/medications/compliance.php">Compliance</a>
-                <a href="/modules/medications/log_prn.php">Log PRN</a>
-                <a href="/modules/medications/stock.php">Medication Stock</a>
-                <a href="/modules/medications/list.php">My Medications</a>
-            </div>
-        </div>
-        
-        <a href="/modules/profile/view.php">👤 My Profile</a>
-        
-        <div class="menu-section">
-            <div class="menu-section-header" onclick="toggleSubmenu('settings-menu')">
-                <span>⚙️ Settings</span>
-                <span id="settings-menu-icon">▶</span>
-            </div>
-            <div class="menu-section-children" id="settings-menu">
-                <?php if ($isAdmin): ?>
-                <div class="menu-section" style="margin-left: 0; padding-left: 0;">
-                    <div class="menu-section-header" onclick="toggleSubmenu('admin-menu'); event.stopPropagation();" style="padding: 8px 16px;">
-                        <span>🔐 Admin Panel</span>
-                        <span id="admin-menu-icon">▶</span>
-                    </div>
-                    <div class="menu-section-children" id="admin-menu">
-                        <a href="/modules/admin/users.php">User Management</a>
-                    </div>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-        
-        <a href="/logout.php">🚪 Logout</a>
-    </div>
+    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
 
     <div class="page-content">
         <div class="page-title">

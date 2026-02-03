@@ -7,7 +7,11 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-$medId = $_GET['id'];
+$medId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$medId) {
+    header("Location: /modules/medications/list.php");
+    exit;
+}
 
 // Get medication details
 $stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ? AND user_id = ?");

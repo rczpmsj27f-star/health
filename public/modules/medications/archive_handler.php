@@ -7,8 +7,15 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-$medId = $_POST['med_id'];
-$action = $_POST['action'];
+// Validate inputs
+$medId = filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
+$action = $_POST['action'] ?? '';
+$allowedActions = ['archive', 'unarchive'];
+
+if (!$medId || !in_array($action, $allowedActions)) {
+    header("Location: /modules/medications/list.php");
+    exit;
+}
 
 // Verify the medication belongs to the current user
 $stmt = $pdo->prepare("SELECT user_id FROM medications WHERE id = ?");

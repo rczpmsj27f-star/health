@@ -7,7 +7,12 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-$medId = $_POST['med_id'];
+// Validate input
+$medId = filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
+if (!$medId) {
+    header("Location: /modules/medications/list.php");
+    exit;
+}
 
 // Verify the medication belongs to the current user
 $stmt = $pdo->prepare("SELECT user_id FROM medications WHERE id = ? AND user_id = ?");
@@ -19,24 +24,55 @@ if (!$med) {
     exit;
 }
 
-// Update medication name
+// Validate and update medication name
+$medName = trim($_POST['med_name'] ?? '');
+if (empty($medName) || strlen($medName) > 255) {
+    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_name");
+    exit;
+}
 $stmt = $pdo->prepare("UPDATE medications SET name = ? WHERE id = ?");
-$stmt->execute([$_POST['med_name'], $medId]);
+$stmt->execute([$medName, $medId]);
 
-// Update dose
+// Validate and update dose
+$doseAmount = filter_input(INPUT_POST, 'dose_amount', FILTER_VALIDATE_FLOAT);
+$doseUnit = trim($_POST['dose_unit'] ?? '');
+if ($doseAmount === false || $doseAmount <= 0 || empty($doseUnit) || strlen($doseUnit) > 50) {
+    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_dose");
+    exit;
+}
 $stmt = $pdo->prepare("UPDATE medication_doses SET dose_amount = ?, dose_unit = ? WHERE medication_id = ?");
-$stmt->execute([$_POST['dose_amount'], $_POST['dose_unit'], $medId]);
+$stmt->execute([$doseAmount, $doseUnit, $medId]);
 
-// Update schedule
+// Validate and update schedule
+$frequencyType = $_POST['frequency_type'] ?? '';
+$allowedFrequencies = ['per_day', 'per_week', 'as_needed'];
+if (!in_array($frequencyType, $allowedFrequencies)) {
+    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_frequency");
+    exit;
+}
+
+$timesPerDay = filter_input(INPUT_POST, 'times_per_day', FILTER_VALIDATE_INT);
+$timesPerWeek = filter_input(INPUT_POST, 'times_per_week', FILTER_VALIDATE_INT);
+
+// Validate numeric ranges
+if ($timesPerDay !== false && $timesPerDay !== null && ($timesPerDay < 1 || $timesPerDay > 24)) {
+    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_times_per_day");
+    exit;
+}
+if ($timesPerWeek !== false && $timesPerWeek !== null && ($timesPerWeek < 1 || $timesPerWeek > 100)) {
+    header("Location: /modules/medications/edit.php?id=$medId&error=invalid_times_per_week");
+    exit;
+}
+
 $stmt = $pdo->prepare("
     UPDATE medication_schedules 
     SET frequency_type = ?, times_per_day = ?, times_per_week = ?, days_of_week = ?
     WHERE medication_id = ?
 ");
 $stmt->execute([
-    $_POST['frequency_type'],
-    $_POST['times_per_day'] ?: null,
-    $_POST['times_per_week'] ?: null,
+    $frequencyType,
+    $timesPerDay ?: null,
+    $timesPerWeek ?: null,
     $_POST['days_of_week'] ?: null,
     $medId
 ]);

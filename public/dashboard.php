@@ -6,7 +6,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 // Check if user is admin
-require_once __DIR__ . '/../app/core/Auth.php';
+require_once __DIR__ . '/../app/core/auth.php';
 $isAdmin = Auth::isAdmin();
 ?>
 <!DOCTYPE html>

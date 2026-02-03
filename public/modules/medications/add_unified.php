@@ -1,6 +1,6 @@
 <?php 
 session_start();
-require_once "../../../app/core/Auth.php";
+require_once "../../../app/core/auth.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");

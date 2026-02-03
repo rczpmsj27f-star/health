@@ -30,8 +30,13 @@ $expandedMeds = !empty($expandedParam) ? explode(',', $expandedParam) : [];
 if ($currentMonth < 1 || $currentMonth > 12) {
     $currentMonth = (int)date('m');
 }
-if ($currentYear < 2020 || $currentYear > 2100) {
+if ($currentYear < 2026 || $currentYear > 2100) {
     $currentYear = (int)date('Y');
+    $currentMonth = (int)date('m');
+}
+// Don't allow months before Feb 2026
+if ($currentYear == 2026 && $currentMonth < 2) {
+    $currentMonth = 2; // February
 }
 
 // Get all active medications (exclude PRN medications from compliance)
@@ -955,6 +960,9 @@ foreach ($medications as $med) {
                     $prevYear--;
                 }
                 
+                // Check if previous month is before Feb 2026
+                $isPrevBeforeFeb2026 = ($prevYear < 2026) || ($prevYear == 2026 && $prevMonth < 2);
+                
                 $nextMonth = $currentMonth + 1;
                 $nextYear = $currentYear;
                 if ($nextMonth > 12) {
@@ -973,9 +981,13 @@ foreach ($medications as $med) {
                 ?>
                 
                 <div class="calendar-nav">
-                    <a href="?view=monthly&month=<?= $prevMonth ?>&year=<?= $prevYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
-                        <button>← Previous</button>
-                    </a>
+                    <?php if (!$isPrevBeforeFeb2026): ?>
+                        <a href="?view=monthly&month=<?= $prevMonth ?>&year=<?= $prevYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
+                            <button>← Previous</button>
+                        </a>
+                    <?php else: ?>
+                        <button disabled style="opacity: 0.3; cursor: not-allowed;">← Previous</button>
+                    <?php endif; ?>
                     <h3><?= htmlspecialchars($monthName) ?></h3>
                     <a href="?view=monthly&month=<?= $nextMonth ?>&year=<?= $nextYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
                         <button>Next →</button>
@@ -1057,6 +1069,11 @@ foreach ($medications as $med) {
                                 $medStartDate = $med['created_at'];
                                 $medEndDate = $med['end_date'];
                                 $isMedActive = true;
+                                
+                                // Don't show compliance for dates before Feb 2026
+                                if (strtotime($dateStr) < strtotime('2026-02-01')) {
+                                    $isMedActive = false;
+                                }
                                 
                                 // Use date comparison only (ignore time)
                                 if ($medStartDate && date('Y-m-d', strtotime($medStartDate)) > $dateStr) {

@@ -41,6 +41,7 @@ $archivedMeds = $stmt->fetchAll();
     <title>Medication Management</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
     <style>
         .page-content {
             max-width: 1200px;
@@ -64,27 +65,21 @@ $archivedMeds = $stmt->fetchAll();
             margin: 0;
             color: var(--color-text-secondary);
         }
-        
-        /* Compact tiles for medication list */
-        .medications-list .tile {
-            min-height: 80px !important;
-            padding: 16px !important;
-        }
-        
-        .medications-list .tile .tile-icon {
-            font-size: 30px !important;
-            margin-bottom: 8px !important;
-        }
-        
-        .medications-list .tile .tile-title {
-            font-size: 16px !important;
-            margin-bottom: 4px !important;
-        }
-        
-        .medications-list .tile .tile-desc {
-            font-size: 12px !important;
-        }
     </style>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('expanded');
+        }
+        
+        // Check for success messages from session
+        window.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['success'])): ?>
+                showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+        });
+    </script>
 </head>
 <body>
     <div class="hamburger" onclick="toggleMenu()">
@@ -115,25 +110,30 @@ $archivedMeds = $stmt->fetchAll();
         <?php else: ?>
             <?php if (!empty($activeMeds)): ?>
                 <div class="section-header">Your Current Medications</div>
-                <div class="dashboard-grid medications-list">
+                <div style="padding: 0 16px;">
                     <?php foreach ($activeMeds as $m): ?>
-                        <a class="tile tile-green" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
-                            <div>
-                                <span class="tile-icon">💊</span>
-                                <div class="tile-title"><?= htmlspecialchars($m['name']) ?></div>
-                                <div class="tile-desc">View details</div>
+                        <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
+                            <div class="medication-tile-line1">
+                                <span>💊</span>
+                                <span><?= htmlspecialchars($m['name']) ?></span>
+                            </div>
+                            <div class="medication-tile-line2">
+                                <strong>Schedule:</strong> 
                                 <?php if ($m['frequency_type']): ?>
-                                    <div class="tile-schedule">
-                                        <?php if ($m['frequency_type'] === 'per_day'): ?>
-                                            <?= htmlspecialchars($m['times_per_day']) ?>x daily
-                                        <?php else: ?>
-                                            <?= htmlspecialchars($m['times_per_week']) ?>x weekly
-                                            <?php if ($m['days_of_week']): ?>
-                                                (<?= htmlspecialchars($m['days_of_week']) ?>)
-                                            <?php endif; ?>
+                                    <?php if ($m['frequency_type'] === 'per_day'): ?>
+                                        <?= htmlspecialchars($m['times_per_day']) ?> time<?= $m['times_per_day'] > 1 ? 's' : '' ?> per day
+                                    <?php else: ?>
+                                        <?= htmlspecialchars($m['times_per_week']) ?> time<?= $m['times_per_week'] > 1 ? 's' : '' ?> per week
+                                        <?php if ($m['days_of_week']): ?>
+                                            on <?= htmlspecialchars($m['days_of_week']) ?>
                                         <?php endif; ?>
-                                    </div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    Not scheduled
                                 <?php endif; ?>
+                            </div>
+                            <div class="medication-tile-line3">
+                                <strong>Status:</strong> Active
                             </div>
                         </a>
                     <?php endforeach; ?>
@@ -141,29 +141,44 @@ $archivedMeds = $stmt->fetchAll();
             <?php endif; ?>
 
             <?php if (!empty($archivedMeds)): ?>
-                <div class="section-header" style="margin-top: 32px;">Archived Medications</div>
-                <div class="dashboard-grid medications-list">
-                    <?php foreach ($archivedMeds as $m): ?>
-                        <a class="tile tile-red" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
-                            <div>
-                                <span class="tile-icon">📦</span>
-                                <div class="tile-title"><?= htmlspecialchars($m['name']) ?></div>
-                                <div class="tile-desc">Archived</div>
-                                <?php if ($m['frequency_type']): ?>
-                                    <div class="tile-schedule">
-                                        <?php if ($m['frequency_type'] === 'per_day'): ?>
-                                            <?= htmlspecialchars($m['times_per_day']) ?>x daily
-                                        <?php else: ?>
-                                            <?= htmlspecialchars($m['times_per_week']) ?>x weekly
-                                            <?php if ($m['days_of_week']): ?>
-                                                (<?= htmlspecialchars($m['days_of_week']) ?>)
+                <div class="expandable-section collapsed" id="archivedSection">
+                    <div class="section-header-toggle" onclick="toggleSection('archivedSection')">
+                        <span class="toggle-icon">▶</span>
+                        <span>Archived Medications (<?= count($archivedMeds) ?>)</span>
+                    </div>
+                    <div class="section-content">
+                        <div style="padding: 16px;">
+                            <?php foreach ($archivedMeds as $m): ?>
+                                <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>" style="background: #ffebee; border-left-color: #e57373;">
+                                    <div class="medication-tile-line1">
+                                        <span>📦</span>
+                                        <span><?= htmlspecialchars($m['name']) ?></span>
+                                    </div>
+                                    <div class="medication-tile-line2">
+                                        <strong>Schedule:</strong> 
+                                        <?php if ($m['frequency_type']): ?>
+                                            <?php if ($m['frequency_type'] === 'per_day'): ?>
+                                                <?= htmlspecialchars($m['times_per_day']) ?> time<?= $m['times_per_day'] > 1 ? 's' : '' ?> per day
+                                            <?php else: ?>
+                                                <?= htmlspecialchars($m['times_per_week']) ?> time<?= $m['times_per_week'] > 1 ? 's' : '' ?> per week
+                                                <?php if ($m['days_of_week']): ?>
+                                                    on <?= htmlspecialchars($m['days_of_week']) ?>
+                                                <?php endif; ?>
                                             <?php endif; ?>
+                                        <?php else: ?>
+                                            Not scheduled
                                         <?php endif; ?>
                                     </div>
-                                <?php endif; ?>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
+                                    <div class="medication-tile-line3">
+                                        <strong>Status:</strong> Archived
+                                        <?php if ($m['archived_at']): ?>
+                                            on <?= date('M d, Y', strtotime($m['archived_at'])) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
         <?php endif; ?>

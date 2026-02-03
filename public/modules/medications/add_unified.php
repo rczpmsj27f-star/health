@@ -281,6 +281,8 @@ $isAdmin = Auth::isAdmin();
         
         if (f === "per_day") {
             document.querySelector('[name="times_per_week"]').value = "";
+            // Uncheck all days_of_week checkboxes
+            document.querySelectorAll('[name="days_of_week[]"]').forEach(cb => cb.checked = false);
             document.getElementById("daily").style.display = "block";
             document.getElementById("weekly").style.display = "none";
             updateTimeInputs();

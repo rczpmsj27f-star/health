@@ -33,11 +33,17 @@ $archivedMeds = $stmtArchived->fetchAll();
 </div>
 
 <div class="dashboard-grid">
-<?php foreach ($meds as $m): ?>
-    <a class="tile" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
-        <?= htmlspecialchars($m['name']) ?>
-    </a>
-<?php endforeach; ?>
+<?php if (empty($meds)): ?>
+    <div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#666;">
+        <p>No active medications found. Click "Add Medication" to get started.</p>
+    </div>
+<?php else: ?>
+    <?php foreach ($meds as $m): ?>
+        <a class="tile" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
+            <?= htmlspecialchars($m['name']) ?>
+        </a>
+    <?php endforeach; ?>
+<?php endif; ?>
 </div>
 
 <?php if (!empty($archivedMeds)): ?>

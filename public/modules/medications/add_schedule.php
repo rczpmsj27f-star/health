@@ -62,7 +62,7 @@ function updateTimeInputs() {
         let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
         for (let i = 1; i <= timesPerDay; i++) {
             html += `<label>Time ${i}:</label>`;
-            html += `<input type="time" name="dose_time_${i}" style="width:100%; padding:8px; margin-bottom:10px;">`;
+            html += `<input type="time" name="dose_time_${i}">`;
         }
         container.innerHTML = html;
     } else {

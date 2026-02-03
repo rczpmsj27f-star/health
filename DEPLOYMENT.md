@@ -1,5 +1,27 @@
 # Deployment and Server Configuration Guide
 
+## Database Migrations
+
+This project includes SQL migration files in the `database/migrations/` directory for managing database schema changes.
+
+### Applying Migrations
+
+Before deploying or after pulling new changes, check if there are new migration files to apply:
+
+```bash
+# List available migrations
+ls -la database/migrations/
+
+# Apply a specific migration
+mysql -u username -p database_name < database/migrations/migration_add_archive_and_dose_times.sql
+```
+
+For detailed migration instructions, see [database/migrations/README.md](database/migrations/README.md).
+
+### Available Migrations
+
+- **migration_add_archive_and_dose_times.sql** - Adds archive functionality and dose time tracking
+
 ## Issue: 404 Error When Accessing the Application
 
 ### Problem

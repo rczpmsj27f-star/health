@@ -51,8 +51,8 @@ foreach ($existingDoseTimes as $dt) {
 <html>
 <head>
     <title>Edit Medication - <?= htmlspecialchars($med['name']) ?></title>
-    <link rel="stylesheet" href="/assets/css/app.css">
-    <script src="/assets/js/menu.js" defer></script>
+    <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
 

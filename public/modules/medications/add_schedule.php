@@ -42,8 +42,18 @@ $medId = $_GET['med'];
 <script>
 function updateUI() {
     let f = document.getElementById("freq").value;
-    document.getElementById("daily").style.display = f === "per_day" ? "block" : "none";
-    document.getElementById("weekly").style.display = f === "per_week" ? "block" : "none";
+    
+    // Clear hidden field values to prevent undefined submissions
+    if (f === "per_day") {
+        document.querySelector('[name="times_per_week"]').value = "";
+        document.querySelector('[name="days_of_week"]').value = "";
+        document.getElementById("daily").style.display = "block";
+        document.getElementById("weekly").style.display = "none";
+    } else {
+        document.querySelector('[name="times_per_day"]').value = "";
+        document.getElementById("daily").style.display = "none";
+        document.getElementById("weekly").style.display = "block";
+    }
 }
 </script>
 

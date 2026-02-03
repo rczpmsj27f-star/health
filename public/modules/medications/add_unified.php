@@ -171,6 +171,26 @@ $isAdmin = Auth::isAdmin();
                     </small>
                 </div>
 
+                <div id="prn-schedule" style="display: none;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Maximum doses per day</label>
+                            <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" max="24" placeholder="e.g., 4">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Maximum number of doses allowed in 24 hours
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Minimum hours between doses</label>
+                            <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0.5" max="24" placeholder="e.g., 4">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Minimum time required between doses (e.g., 4 or 4.5)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="regular-schedule">
                     <div class="form-group">
                         <label>Frequency *</label>
@@ -409,14 +429,17 @@ $isAdmin = Auth::isAdmin();
     function togglePRN() {
         let isPrn = document.getElementById("is_prn").checked;
         let regularSchedule = document.getElementById("regular-schedule");
+        let prnSchedule = document.getElementById("prn-schedule");
         let freqSelect = document.getElementById("freq");
         
         if (isPrn) {
             regularSchedule.style.display = "none";
+            prnSchedule.style.display = "block";
             // Remove required attribute from schedule fields
             freqSelect.removeAttribute("required");
         } else {
             regularSchedule.style.display = "block";
+            prnSchedule.style.display = "none";
             // Add back required attribute
             freqSelect.setAttribute("required", "required");
         }

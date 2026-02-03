@@ -795,6 +795,68 @@ if ($medType === 'prn') {
             color: var(--color-primary);
         }
         
+        /* Expandable medication sections */
+        .expandable-med-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--color-bg-gray);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+        
+        .expandable-med-header:hover {
+            background: #e8e8e8;
+        }
+        
+        .expandable-med-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .expandable-med-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+        
+        .expandable-med-total {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-right: 8px;
+        }
+        
+        .expand-indicator {
+            font-size: 18px;
+            color: var(--color-primary);
+            transition: transform 0.3s ease;
+            user-select: none;
+        }
+        
+        .expand-indicator.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .expandable-med-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .expandable-med-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .expandable-med-content.expanded {
+            max-height: 5000px;
+            opacity: 1;
+        }
+        
         @media (max-width: 768px) {
             .compliance-circle {
                 width: 36px;
@@ -1634,44 +1696,58 @@ if ($medType === 'prn') {
                     $totalDoses = $data['total_doses'];
                     $totalQuantity = $data['total_quantity'];
                     $detailedTimes = $data['detailed_times'];
+                    $isExpanded = in_array($medId, $expandedMeds);
                     ?>
                     <div class="prn-summary-card">
-                        <div class="prn-card-header">
-                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                        <!-- Expandable Header -->
+                        <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-daily')">
+                            <div class="expandable-med-title">
+                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="expandable-med-total">[Total: <?= $totalDoses ?>]</span>
+                                <span class="expand-indicator <?= $isExpanded ? 'expanded' : '' ?>" id="expand-indicator-prn-daily-<?= $medId ?>">▶</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Expandable Content -->
+                        <div class="expandable-med-content <?= $isExpanded ? 'expanded' : 'collapsed' ?>" id="expandable-content-prn-daily-<?= $medId ?>">
                             <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
-                                <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
+                                <div style="margin-bottom: 12px; color: var(--color-text-secondary); font-size: 14px;">
+                                    <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                </div>
                             <?php endif; ?>
-                        </div>
-                        
-                        <div class="prn-stats-grid">
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Doses Taken Today</div>
-                                <div class="prn-stat-value"><?= $totalDoses ?></div>
+                            
+                            <div class="prn-stats-grid">
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Doses Taken Today</div>
+                                    <div class="prn-stat-value"><?= $totalDoses ?></div>
+                                </div>
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Total Quantity</div>
+                                    <div class="prn-stat-value"><?= $totalQuantity ?><?= $med['dose_unit'] ? ' ' . htmlspecialchars($med['dose_unit']) : '' ?></div>
+                                </div>
                             </div>
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Quantity</div>
-                                <div class="prn-stat-value"><?= $totalQuantity ?><?= $med['dose_unit'] ? ' ' . htmlspecialchars($med['dose_unit']) : '' ?></div>
-                            </div>
-                        </div>
-                        
-                        <?php if (!empty($detailedTimes)): ?>
-                            <div class="prn-daily-breakdown">
-                                <div class="prn-breakdown-title">⏰ Times Taken</div>
-                                <ul class="prn-time-list">
-                                    <?php foreach ($detailedTimes as $time): ?>
-                                        <li class="prn-time-item">
-                                            <?= date('h:i A', strtotime($time['time_taken'])) ?> 
-                                            (<?= $time['quantity_taken'] ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'unit' ?><?= $time['quantity_taken'] > 1 ? 's' : '' ?>)
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            </div>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
-                                No doses taken today
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                            
+                            <?php if (!empty($detailedTimes)): ?>
+                                <div class="prn-daily-breakdown">
+                                    <div class="prn-breakdown-title">⏰ Times Taken</div>
+                                    <ul class="prn-time-list">
+                                        <?php foreach ($detailedTimes as $time): ?>
+                                            <li class="prn-time-item">
+                                                <?= date('h:i A', strtotime($time['time_taken'])) ?> 
+                                                (<?= $time['quantity_taken'] ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'unit' ?><?= $time['quantity_taken'] > 1 ? 's' : '' ?>)
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php else: ?>
+                                <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                    No doses taken today
+                                </div>
+                            <?php endif; ?>
+                        </div><!-- /.expandable-med-content -->
+                    </div><!-- /.prn-summary-card -->
                 <?php endforeach; ?>
             
             <?php elseif ($view === 'weekly'): ?>
@@ -1684,49 +1760,63 @@ if ($medType === 'prn') {
                     
                     // Calculate average per day
                     $avgPerDay = $totalDoses > 0 ? round($totalDoses / 7, 1) : 0;
+                    $isExpanded = in_array($medId, $expandedMeds);
                     ?>
                     <div class="prn-summary-card">
-                        <div class="prn-card-header">
-                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                        <!-- Expandable Header -->
+                        <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-weekly')">
+                            <div class="expandable-med-title">
+                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="expandable-med-total">[Total: <?= $totalDoses ?>]</span>
+                                <span class="expand-indicator <?= $isExpanded ? 'expanded' : '' ?>" id="expand-indicator-prn-weekly-<?= $medId ?>">▶</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Expandable Content -->
+                        <div class="expandable-med-content <?= $isExpanded ? 'expanded' : 'collapsed' ?>" id="expandable-content-prn-weekly-<?= $medId ?>">
                             <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
-                                <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
+                                <div style="margin-bottom: 12px; color: var(--color-text-secondary); font-size: 14px;">
+                                    <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                </div>
                             <?php endif; ?>
-                        </div>
-                        
-                        <div class="prn-stats-grid">
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Doses (7 days)</div>
-                                <div class="prn-stat-value"><?= $totalDoses ?></div>
+                            
+                            <div class="prn-stats-grid">
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Total Doses (7 days)</div>
+                                    <div class="prn-stat-value"><?= $totalDoses ?></div>
+                                </div>
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Average per Day</div>
+                                    <div class="prn-stat-value"><?= $avgPerDay ?></div>
+                                </div>
                             </div>
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Average per Day</div>
-                                <div class="prn-stat-value"><?= $avgPerDay ?></div>
-                            </div>
-                        </div>
-                        
-                        <?php if (!empty($dailyBreakdown)): ?>
-                            <div class="prn-daily-breakdown">
-                                <div class="prn-breakdown-title">📊 Daily Breakdown</div>
-                                <?php
-                                // Show last 7 days
-                                for ($i = 6; $i >= 0; $i--) {
-                                    $date = date('Y-m-d', strtotime("-$i days"));
-                                    $dayLabel = date('D, M j', strtotime($date));
-                                    $doses = $dailyBreakdown[$date]['doses'] ?? 0;
-                                    $quantity = $dailyBreakdown[$date]['quantity'] ?? 0;
-                                ?>
-                                    <div class="prn-breakdown-item">
-                                        <span class="prn-breakdown-date"><?= $dayLabel ?></span>
-                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
-                                    </div>
-                                <?php } ?>
-                            </div>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
-                                No doses taken in the last 7 days
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                            
+                            <?php if (!empty($dailyBreakdown)): ?>
+                                <div class="prn-daily-breakdown">
+                                    <div class="prn-breakdown-title">📊 Daily Breakdown</div>
+                                    <?php
+                                    // Show last 7 days
+                                    for ($i = 6; $i >= 0; $i--) {
+                                        $date = date('Y-m-d', strtotime("-$i days"));
+                                        $dayLabel = date('D, M j', strtotime($date));
+                                        $doses = $dailyBreakdown[$date]['doses'] ?? 0;
+                                        $quantity = $dailyBreakdown[$date]['quantity'] ?? 0;
+                                    ?>
+                                        <div class="prn-breakdown-item">
+                                            <span class="prn-breakdown-date"><?= $dayLabel ?></span>
+                                            <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            <?php else: ?>
+                                <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                    No doses taken in the last 7 days
+                                </div>
+                            <?php endif; ?>
+                        </div><!-- /.expandable-med-content -->
+                    </div><!-- /.prn-summary-card -->
                 <?php endforeach; ?>
             
             <?php elseif ($view === 'monthly'): ?>
@@ -1737,6 +1827,7 @@ if ($medType === 'prn') {
                     $totalDoses = $data['total_doses'];
                     $totalQuantity = $data['total_quantity'];
                     $dailyBreakdown = $data['daily_breakdown'];
+                    $isExpanded = in_array($medId, $expandedMeds);
                     
                     // Calculate weekly trends
                     $weeklyTrends = [];
@@ -1764,40 +1855,51 @@ if ($medType === 'prn') {
                     }
                     ?>
                     <div class="prn-summary-card">
-                        <div class="prn-card-header">
-                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                        <!-- Expandable Header -->
+                        <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-monthly')">
+                            <div class="expandable-med-title">
+                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="expandable-med-total">[Total: <?= $totalDoses ?>]</span>
+                                <span class="expand-indicator <?= $isExpanded ? 'expanded' : '' ?>" id="expand-indicator-prn-monthly-<?= $medId ?>">▶</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Expandable Content -->
+                        <div class="expandable-med-content <?= $isExpanded ? 'expanded' : 'collapsed' ?>" id="expandable-content-prn-monthly-<?= $medId ?>">
                             <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                                 <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
                             <?php endif; ?>
-                        </div>
-                        
-                        <div class="prn-stats-grid">
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Doses This Month</div>
-                                <div class="prn-stat-value"><?= $totalDoses ?></div>
+                            
+                            <div class="prn-stats-grid">
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Total Doses This Month</div>
+                                    <div class="prn-stat-value"><?= $totalDoses ?></div>
+                                </div>
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Total Quantity</div>
+                                    <div class="prn-stat-value"><?= $totalQuantity ?></div>
+                                </div>
                             </div>
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Quantity</div>
-                                <div class="prn-stat-value"><?= $totalQuantity ?></div>
-                            </div>
-                        </div>
-                        
-                        <?php if (!empty($weeklyTrends)): ?>
-                            <div class="prn-daily-breakdown">
-                                <div class="prn-breakdown-title">📈 Weekly Trends</div>
-                                <?php foreach ($weeklyTrends as $week => $doses): ?>
-                                    <div class="prn-breakdown-item">
-                                        <span class="prn-breakdown-date"><?= $week ?></span>
-                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
-                                No doses taken this month
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                            
+                            <?php if (!empty($weeklyTrends)): ?>
+                                <div class="prn-daily-breakdown">
+                                    <div class="prn-breakdown-title">📈 Weekly Trends</div>
+                                    <?php foreach ($weeklyTrends as $week => $doses): ?>
+                                        <div class="prn-breakdown-item">
+                                            <span class="prn-breakdown-date"><?= $week ?></span>
+                                            <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                    No doses taken this month
+                                </div>
+                            <?php endif; ?>
+                        </div><!-- /.expandable-med-content -->
+                    </div><!-- /.prn-summary-card -->
                 <?php endforeach; ?>
             
             <?php elseif ($view === 'annual'): ?>
@@ -1805,6 +1907,7 @@ if ($medType === 'prn') {
                 <?php foreach ($prnData as $medId => $data): ?>
                     <?php 
                     $med = $data['medication'];
+                    $isExpanded = in_array($medId, $expandedMeds);
                     
                     // Get monthly breakdown for the year
                     $stmt = $pdo->prepare("
@@ -1834,50 +1937,61 @@ if ($medType === 'prn') {
                     }
                     ?>
                     <div class="prn-summary-card">
-                        <div class="prn-card-header">
-                            <div class="prn-med-name">💊 <?= htmlspecialchars($med['name']) ?></div>
+                        <!-- Expandable Header -->
+                        <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-annual')">
+                            <div class="expandable-med-title">
+                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="expandable-med-total">[Total: <?= $totalDosesYear ?>]</span>
+                                <span class="expand-indicator <?= $isExpanded ? 'expanded' : '' ?>" id="expand-indicator-prn-annual-<?= $medId ?>">▶</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Expandable Content -->
+                        <div class="expandable-med-content <?= $isExpanded ? 'expanded' : 'collapsed' ?>" id="expandable-content-prn-annual-<?= $medId ?>">
                             <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                                 <div class="prn-med-dose"><?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></div>
                             <?php endif; ?>
-                        </div>
-                        
-                        <div class="prn-stats-grid">
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Doses This Year</div>
-                                <div class="prn-stat-value"><?= $totalDosesYear ?></div>
+                            
+                            <div class="prn-stats-grid">
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Total Doses This Year</div>
+                                    <div class="prn-stat-value"><?= $totalDosesYear ?></div>
+                                </div>
+                                <div class="prn-stat-box">
+                                    <div class="prn-stat-label">Total Quantity</div>
+                                    <div class="prn-stat-value"><?= $totalQuantityYear ?></div>
+                                </div>
                             </div>
-                            <div class="prn-stat-box">
-                                <div class="prn-stat-label">Total Quantity</div>
-                                <div class="prn-stat-value"><?= $totalQuantityYear ?></div>
-                            </div>
-                        </div>
-                        
-                        <?php if (!empty($monthlyBreakdown)): ?>
-                            <div class="prn-daily-breakdown">
-                                <div class="prn-breakdown-title">📅 Monthly Breakdown</div>
-                                <?php
-                                $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
-                                             'July', 'August', 'September', 'October', 'November', 'December'];
-                                for ($m = 1; $m <= 12; $m++) {
-                                    if (isset($monthlyBreakdown[$m])) {
-                                        $doses = $monthlyBreakdown[$m]['doses'];
-                                        $quantity = $monthlyBreakdown[$m]['quantity'];
-                                ?>
-                                    <div class="prn-breakdown-item">
-                                        <span class="prn-breakdown-date"><?= $monthNames[$m] ?></span>
-                                        <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
-                                    </div>
-                                <?php 
-                                    }
-                                } 
-                                ?>
-                            </div>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
-                                No doses taken this year
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                            
+                            <?php if (!empty($monthlyBreakdown)): ?>
+                                <div class="prn-daily-breakdown">
+                                    <div class="prn-breakdown-title">📅 Monthly Breakdown</div>
+                                    <?php
+                                    $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                                                 'July', 'August', 'September', 'October', 'November', 'December'];
+                                    for ($m = 1; $m <= 12; $m++) {
+                                        if (isset($monthlyBreakdown[$m])) {
+                                            $doses = $monthlyBreakdown[$m]['doses'];
+                                            $quantity = $monthlyBreakdown[$m]['quantity'];
+                                    ?>
+                                        <div class="prn-breakdown-item">
+                                            <span class="prn-breakdown-date"><?= $monthNames[$m] ?></span>
+                                            <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
+                                        </div>
+                                    <?php 
+                                        }
+                                    } 
+                                    ?>
+                                </div>
+                            <?php else: ?>
+                                <div style="text-align: center; padding: 20px; color: var(--color-text-secondary);">
+                                    No doses taken this year
+                                </div>
+                            <?php endif; ?>
+                        </div><!-- /.expandable-med-content -->
+                    </div><!-- /.prn-summary-card -->
                 <?php endforeach; ?>
             
             <?php endif; ?>
@@ -1930,6 +2044,27 @@ if ($medType === 'prn') {
         }
     }
     
+    function toggleExpandableMed(medId, viewType) {
+        const content = document.getElementById('expandable-content-' + viewType + '-' + medId);
+        const indicator = document.getElementById('expand-indicator-' + viewType + '-' + medId);
+        
+        if (!content || !indicator) return;
+        
+        const isCurrentlyExpanded = content.classList.contains('expanded');
+        
+        if (isCurrentlyExpanded) {
+            content.classList.remove('expanded');
+            content.classList.add('collapsed');
+            indicator.classList.remove('expanded');
+            updateExpandedMeds(medId, false);
+        } else {
+            content.classList.remove('collapsed');
+            content.classList.add('expanded');
+            indicator.classList.add('expanded');
+            updateExpandedMeds(medId, true);
+        }
+    }
+    
     function updateExpandedMeds(medId, isExpanded) {
         const urlParams = new URLSearchParams(window.location.search);
         let expanded = urlParams.get('expanded');
@@ -1964,12 +2099,25 @@ if ($medType === 'prn') {
         if (expanded) {
             expanded.split(',').forEach(medId => {
                 if (medId) {
-                    const content = document.getElementById('calendar-content-' + medId);
-                    const toggle = document.getElementById('toggle-icon-' + medId);
-                    if (content && toggle) {
-                        content.style.display = 'block';
-                        toggle.textContent = '−';
+                    // Try monthly view
+                    const monthlyContent = document.getElementById('calendar-content-' + medId);
+                    const monthlyToggle = document.getElementById('toggle-icon-' + medId);
+                    if (monthlyContent && monthlyToggle) {
+                        monthlyContent.style.display = 'block';
+                        monthlyToggle.textContent = '−';
                     }
+                    
+                    // Try expandable sections (PRN and weekly)
+                    const viewTypes = ['prn-daily', 'prn-weekly', 'prn-monthly', 'prn-annual', 'weekly', 'scheduled'];
+                    viewTypes.forEach(viewType => {
+                        const content = document.getElementById('expandable-content-' + viewType + '-' + medId);
+                        const indicator = document.getElementById('expand-indicator-' + viewType + '-' + medId);
+                        if (content && indicator) {
+                            content.classList.remove('collapsed');
+                            content.classList.add('expanded');
+                            indicator.classList.add('expanded');
+                        }
+                    });
                 }
             });
         }

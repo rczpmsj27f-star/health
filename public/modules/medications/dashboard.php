@@ -226,8 +226,8 @@ foreach ($prnMedications as $med) {
         .schedule-card {
             background: var(--color-bg-gray);
             border-radius: var(--radius-sm);
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
             border-left: 4px solid var(--color-primary);
         }
         
@@ -269,21 +269,21 @@ foreach ($prnMedications as $med) {
         
         /* Compact schedule display */
         .time-group-compact {
-            margin-bottom: 24px;
+            margin-bottom: 16px;
             background: var(--color-bg-gray);
             border-radius: var(--radius-sm);
-            padding: 16px;
+            padding: 12px 16px;
         }
         
         .time-header-compact {
             font-size: 18px;
             font-weight: 600;
             color: var(--color-primary);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
         
         .med-item-compact {
-            padding: 12px;
+            padding: 8px 12px;
             color: var(--color-text);
             font-size: 15px;
             background: white;

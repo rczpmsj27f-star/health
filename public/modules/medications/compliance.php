@@ -22,6 +22,10 @@ if (!in_array($view, $validViews)) {
 $currentMonth = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 $currentYear = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 
+// Get expanded medication IDs from URL parameter
+$expandedParam = $_GET['expanded'] ?? '';
+$expandedMeds = !empty($expandedParam) ? explode(',', $expandedParam) : [];
+
 // Validate month/year
 if ($currentMonth < 1 || $currentMonth > 12) {
     $currentMonth = (int)date('m');
@@ -172,8 +176,8 @@ foreach ($medications as $med) {
             background: var(--color-bg-white);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
-            padding: 24px;
-            margin-bottom: 24px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
         }
         
         .med-header {
@@ -190,6 +194,41 @@ foreach ($medications as $med) {
         .med-dose {
             font-size: 14px;
             color: var(--color-text-secondary);
+        }
+        
+        .compliance-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .compliance-status-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .compliance-status-icon.compliant {
+            background: var(--color-success);
+            color: white;
+        }
+        
+        .compliance-status-icon.non-compliant {
+            background: var(--color-danger);
+            color: white;
+        }
+        
+        .compliance-details {
+            text-align: left;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-top: 4px;
         }
         
         .week-view {
@@ -572,6 +611,8 @@ foreach ($medications as $med) {
                     if ($schedule && $schedule['frequency_type'] === 'per_day') {
                         $expectedDosesPerDay = $schedule['times_per_day'] ?? count($doseTimes);
                     }
+                    // Ensure at least 1 dose per day for daily medications
+                    $expectedDosesPerDay = max(1, $expectedDosesPerDay);
                     
                     $takenCount = $takenLogs[$todayDate] ?? 0;
                     $skippedCount = $skippedLogs[$todayDate] ?? 0;
@@ -596,29 +637,21 @@ foreach ($medications as $med) {
                     $totalMedsToday++;
                 ?>
                     <div class="compliance-section">
-                        <div class="med-header">
-                            <div class="med-name">
-                                💊 <?= htmlspecialchars($med['name']) ?>
-                            </div>
-                            <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
-                                <div class="med-dose">
-                                    <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                        <div class="compliance-card-header">
+                            <div>
+                                <div class="med-name">
+                                    💊 <?= htmlspecialchars($med['name']) ?>
+                                    <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
+                                        <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                    <?php endif; ?>
                                 </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 16px;">
-                            <div class="compliance-circle <?= $isCompliant ? 'compliant' : 'non-compliant' ?>" style="width: 64px; height: 64px; font-size: 32px;">
+                            </div>
+                            <div class="compliance-status-icon <?= $isCompliant ? 'compliant' : 'non-compliant' ?>">
                                 <?= $isCompliant ? '✓' : '✗' ?>
                             </div>
-                            <div>
-                                <div style="font-size: 18px; font-weight: 600; color: var(--color-text);">
-                                    <?= $takenCount ?> / <?= $expectedDosesPerDay ?> doses taken
-                                </div>
-                                <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px;">
-                                    <?= $isCompliant ? 'All doses completed' : ($takenCount > 0 ? 'Partially completed' : 'Not taken yet') ?>
-                                </div>
-                            </div>
+                        </div>
+                        <div class="compliance-details">
+                            <?= $takenCount ?>/<?= $expectedDosesPerDay ?> doses taken • <?= $isCompliant ? 'All doses completed' : ($takenCount > 0 ? 'Partially completed' : 'Not taken yet') ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -654,6 +687,8 @@ foreach ($medications as $med) {
                         if ($schedule && $schedule['frequency_type'] === 'per_day') {
                             $expectedDosesPerDay = $schedule['times_per_day'] ?? count($doseTimes);
                         }
+                        // Ensure at least 1 dose per day for daily medications
+                        $expectedDosesPerDay = max(1, $expectedDosesPerDay);
                         ?>
                         <div class="compliance-section">
                             <div class="med-header">
@@ -811,6 +846,8 @@ foreach ($medications as $med) {
                             if ($schedule && $schedule['frequency_type'] === 'per_day') {
                                 $expectedDosesPerDay = $schedule['times_per_day'] ?? count($data['dose_times']);
                             }
+                            // Ensure at least 1 dose per day for daily medications
+                            $expectedDosesPerDay = max(1, $expectedDosesPerDay);
                             
                             // Count only active days in the week
                             $activeDaysInWeek = 0;
@@ -837,6 +874,11 @@ foreach ($medications as $med) {
                             }
                             
                             $expectedWeekTotal = $expectedDosesPerDay * $activeDaysInWeek;
+                            
+                            // Skip this week if medication was not active at all during this period
+                            if ($activeDaysInWeek === 0) {
+                                continue;
+                            }
                             
                             // For PRN, show doses taken
                             if ($schedule && $schedule['is_prn']) {
@@ -931,11 +973,11 @@ foreach ($medications as $med) {
                 ?>
                 
                 <div class="calendar-nav">
-                    <a href="?view=monthly&month=<?= $prevMonth ?>&year=<?= $prevYear ?>">
+                    <a href="?view=monthly&month=<?= $prevMonth ?>&year=<?= $prevYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
                         <button>← Previous</button>
                     </a>
                     <h3><?= htmlspecialchars($monthName) ?></h3>
-                    <a href="?view=monthly&month=<?= $nextMonth ?>&year=<?= $nextYear ?>">
+                    <a href="?view=monthly&month=<?= $nextMonth ?>&year=<?= $nextYear ?>&expanded=<?= htmlspecialchars($expandedParam) ?>">
                         <button>Next →</button>
                     </a>
                 </div>
@@ -967,6 +1009,8 @@ foreach ($medications as $med) {
                     if ($schedule && $schedule['frequency_type'] === 'per_day') {
                         $expectedDosesPerDay = $schedule['times_per_day'] ?? count($data['dose_times']);
                     }
+                    // Ensure at least 1 dose per day for daily medications
+                    $expectedDosesPerDay = max(1, $expectedDosesPerDay);
                     ?>
                     <div class="compliance-section" id="med-section-<?= $medId ?>">
                         <div class="med-header" style="cursor: pointer;" onclick="toggleMonthlyMed(<?= $medId ?>)">
@@ -1095,6 +1139,8 @@ foreach ($medications as $med) {
                         if ($schedule && $schedule['frequency_type'] === 'per_day') {
                             $expectedDosesPerDay = $schedule['times_per_day'] ?? count($data['dose_times']);
                         }
+                        // Ensure at least 1 dose per day for daily medications
+                        $expectedDosesPerDay = max(1, $expectedDosesPerDay);
                         
                         // Count only active days in the year (from med start to today or year end, excluding future and before med creation)
                         $medStartDate = $med['created_at'];
@@ -1153,8 +1199,37 @@ foreach ($medications as $med) {
                             $stmt->execute([$medId, $userId, $weekStart, $weekEnd]);
                             $weekTaken = $stmt->fetchColumn();
                             
-                            $daysInWeek = (strtotime($weekEnd) - strtotime($weekStart)) / 86400 + 1;
-                            $expectedWeekTotal = $expectedDosesPerDay * $daysInWeek;
+                            // Count only active days in this week
+                            $activeDaysInWeek = 0;
+                            for ($d = 0; $d < 7; $d++) {
+                                $dayDate = date('Y-m-d', strtotime("+$d days", strtotime($weekStart)));
+                                // Break if beyond week end
+                                if (strtotime($dayDate) > strtotime($weekEnd)) break;
+                                
+                                $isMedActive = true;
+                                
+                                if ($medStartDate && strtotime($medStartDate) > strtotime($dayDate)) {
+                                    $isMedActive = false;
+                                }
+                                if ($medEndDate && strtotime($medEndDate) < strtotime($dayDate)) {
+                                    $isMedActive = false;
+                                }
+                                // Don't count future dates
+                                if (strtotime($dayDate) > strtotime(date('Y-m-d'))) {
+                                    $isMedActive = false;
+                                }
+                                
+                                if ($isMedActive) {
+                                    $activeDaysInWeek++;
+                                }
+                            }
+                            
+                            // Skip this week if medication was not active at all during this period
+                            if ($activeDaysInWeek === 0) {
+                                continue;
+                            }
+                            
+                            $expectedWeekTotal = $expectedDosesPerDay * $activeDaysInWeek;
                             $weekPercent = $expectedWeekTotal > 0 ? round(($weekTaken / $expectedWeekTotal) * 100) : 0;
                             
                             $weeks[] = [
@@ -1251,11 +1326,57 @@ foreach ($medications as $med) {
         if (content.style.display === 'none') {
             content.style.display = 'block';
             toggle.textContent = '−';
+            // Add to expanded list
+            updateExpandedMeds(medId, true);
         } else {
             content.style.display = 'none';
             toggle.textContent = '+';
+            // Remove from expanded list
+            updateExpandedMeds(medId, false);
         }
     }
+    
+    function updateExpandedMeds(medId, isExpanded) {
+        const urlParams = new URLSearchParams(window.location.search);
+        let expanded = urlParams.get('expanded');
+        let expandedList = expanded ? expanded.split(',').filter(id => id) : [];
+        
+        if (isExpanded) {
+            if (!expandedList.includes(medId.toString())) {
+                expandedList.push(medId);
+            }
+        } else {
+            expandedList = expandedList.filter(id => id !== medId.toString());
+        }
+        
+        if (expandedList.length > 0) {
+            urlParams.set('expanded', expandedList.join(','));
+        } else {
+            urlParams.delete('expanded');
+        }
+        
+        // Update URL without reload
+        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        window.history.replaceState({}, '', newUrl);
+    }
+    
+    // Auto-expand medications on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const expanded = urlParams.get('expanded');
+        if (expanded) {
+            expanded.split(',').forEach(medId => {
+                if (medId) {
+                    const content = document.getElementById('calendar-content-' + medId);
+                    const toggle = document.getElementById('toggle-icon-' + medId);
+                    if (content && toggle) {
+                        content.style.display = 'block';
+                        toggle.textContent = '−';
+                    }
+                }
+            });
+        }
+    });
     </script>
 </body>
 </html>

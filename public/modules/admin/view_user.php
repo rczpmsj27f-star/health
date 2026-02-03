@@ -31,9 +31,24 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin – View User</title>
     <link rel="stylesheet" href="/assets/css/app.css">
+    <script src="/assets/js/menu.js" defer></script>
 </head>
-<body class="centered-page">
-    <div class="page-card">
+<body>
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div><div></div><div></div>
+    </div>
+
+    <div class="menu" id="menu">
+        <h3>Menu</h3>
+        <a href="/dashboard.php">🏠 Dashboard</a>
+        <a href="/modules/profile/view.php">👤 My Profile</a>
+        <a href="/modules/medications/list.php">💊 Medications</a>
+        <a href="/modules/admin/users.php">⚙️ User Management</a>
+        <a href="/logout.php">🚪 Logout</a>
+    </div>
+
+    <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
+        <div class="page-card">
         <div class="page-header">
             <h2><?= htmlspecialchars($user['username']) ?></h2>
             <p>User Details & Actions</p>
@@ -95,6 +110,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         <div class="page-footer">
             <p><a href="/modules/admin/users.php">Back to User Management</a></p>
         </div>
+    </div>
     </div>
 </body>
 </html>

@@ -7,8 +7,8 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-// Validate input
-$medId = filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
+// Validate input - support both GET and POST
+$medId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
 if (!$medId) {
     header("Location: /modules/medications/list.php");
     exit;

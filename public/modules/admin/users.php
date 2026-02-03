@@ -26,11 +26,12 @@ $users = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin – Users</title>
     <link rel="stylesheet" href="/assets/css/app.css">
+    <script src="/assets/js/menu.js" defer></script>
     <style>
         .page-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 80px 16px 16px 16px;
         }
         
         .page-title {
@@ -73,6 +74,19 @@ $users = $stmt->fetchAll();
     </style>
 </head>
 <body>
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div><div></div><div></div>
+    </div>
+
+    <div class="menu" id="menu">
+        <h3>Menu</h3>
+        <a href="/dashboard.php">🏠 Dashboard</a>
+        <a href="/modules/profile/view.php">👤 My Profile</a>
+        <a href="/modules/medications/list.php">💊 Medications</a>
+        <a href="/modules/admin/users.php">⚙️ User Management</a>
+        <a href="/logout.php">🚪 Logout</a>
+    </div>
+
     <div class="page-content">
         <div class="page-title">
             <h2>User Management</h2>

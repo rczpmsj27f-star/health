@@ -356,24 +356,6 @@ ksort($scheduleByTime);
             color: white;
         }
         
-        /* Compact schedule display */
-        .time-group-compact {
-            margin-bottom: 16px;
-        }
-        
-        .time-header-compact {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--color-primary);
-            margin-bottom: 8px;
-        }
-        
-        .med-item-compact {
-            padding: 6px 0;
-            color: var(--color-text);
-            font-size: 15px;
-        }
-        
         .no-meds {
             text-align: center;
             padding: 40px 20px;

@@ -815,7 +815,7 @@ foreach ($prnMedications as $med) {
     }
     
     function untakeMedication(medId, scheduledDateTime) {
-        if (!confirm('Are you sure you want to untake this medication? This will restore 1 unit to your stock.')) {
+        if (!confirm('Are you sure you want to undo taking this medication? This will remove the log entry and restore 1 unit to your stock.')) {
             return;
         }
         

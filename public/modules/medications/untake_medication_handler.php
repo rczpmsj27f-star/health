@@ -89,7 +89,7 @@ try {
     
     $pdo->commit();
     
-    $successMsg = htmlspecialchars($medication['name']) . " has been unmarked (untaken)";
+    $successMsg = htmlspecialchars($medication['name']) . " has been untaken and log entry removed";
     
     if ($isAjax) {
         header('Content-Type: application/json');

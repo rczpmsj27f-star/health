@@ -330,9 +330,11 @@ if (!$settings) {
                 // On iOS, this may take longer than other platforms
                 const maxWaitTime = 5000; // 5 seconds maximum wait
                 const checkInterval = 100; // Check every 100ms
-                let elapsedTime = 0;
+                const startTime = Date.now();
 
                 const checkReady = setInterval(() => {
+                    const elapsedTime = Date.now() - startTime;
+                    
                     // Try to access OneSignal methods to verify it's ready
                     if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
                         clearInterval(checkReady);
@@ -345,7 +347,6 @@ if (!$settings) {
                         oneSignalReady = true;
                         resolve();
                     }
-                    elapsedTime += checkInterval;
                 }, checkInterval);
             });
         }
@@ -483,13 +484,16 @@ if (!$settings) {
                 // Wait for permission to be processed
                 // Poll for permission state change with timeout
                 // On iOS this may take longer than other platforms
+                // Use recursive setTimeout to avoid concurrency issues with async operations
                 const maxWaitTime = 3000; // 3 seconds maximum wait
                 const checkInterval = 200; // Check every 200ms
-                let elapsedTime = 0;
-                let permission = 'default';
+                const startTime = Date.now();
                 
-                const checkPermission = setInterval(async () => {
+                const pollPermissionState = async () => {
                     try {
+                        const elapsedTime = Date.now() - startTime;
+                        let permission = 'default';
+                        
                         await window.OneSignal.push(async function() {
                             permission = await window.OneSignal.getNotificationPermission();
                         });
@@ -498,8 +502,6 @@ if (!$settings) {
                         
                         // Stop if permission changed or timeout
                         if (permission !== 'default' || elapsedTime >= maxWaitTime) {
-                            clearInterval(checkPermission);
-                            
                             // Get player ID only once after permission is granted
                             let playerId = null;
                             if (permission === 'granted') {
@@ -508,17 +510,19 @@ if (!$settings) {
                                 });
                             }
                             
-                            handlePermissionResult(permission, playerId);
+                            await handlePermissionResult(permission, playerId);
+                        } else {
+                            // Continue polling
+                            setTimeout(pollPermissionState, checkInterval);
                         }
-                        
-                        elapsedTime += checkInterval;
                     } catch (error) {
                         console.error('Error checking permission state:', error);
-                        clearInterval(checkPermission);
-                        // Show error to user
                         alert('Error checking notification permission. Please try again.');
                     }
-                }, checkInterval);
+                };
+                
+                // Start polling
+                pollPermissionState();
                 
                 // Helper function to handle the permission result
                 async function handlePermissionResult(permission, playerId) {

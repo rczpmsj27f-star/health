@@ -1,4 +1,7 @@
 <?php
+// Include OneSignal configuration
+require_once __DIR__ . '/../config.php';
+
 session_start();
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -15,6 +18,14 @@ $isAdmin = Auth::isAdmin();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Health Tracker</title>
+    
+    <!-- OneSignal App ID for client-side JavaScript -->
+    <script>
+        // Make OneSignal App ID available globally for JavaScript
+        // Note: REST API Key is kept server-side only for security
+        window.ONESIGNAL_APP_ID = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
+    </script>
+    
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <style>

@@ -99,6 +99,29 @@ For production deployments, consider one of these approaches:
 
 ## Using OneSignal Credentials
 
+### Configuration Validation
+
+The config.php file includes helper functions to check if credentials are properly configured:
+
+```php
+// Check if credentials are configured (returns boolean)
+if (onesignal_is_configured()) {
+    // Credentials are set
+} else {
+    // Still using placeholder values
+    error_log('Warning: OneSignal credentials not configured');
+}
+
+// Validate and throw exception if not configured (useful for critical features)
+try {
+    onesignal_validate_config(true);
+    // Proceed with OneSignal functionality
+} catch (Exception $e) {
+    // Handle configuration error
+    error_log($e->getMessage());
+}
+```
+
 ### In PHP
 
 Access the credentials using the defined constants:
@@ -108,7 +131,10 @@ Access the credentials using the defined constants:
 $app_id = ONESIGNAL_APP_ID;
 $api_key = ONESIGNAL_REST_API_KEY;
 
-// Use these for OneSignal REST API calls
+// Validate configuration before using
+if (onesignal_is_configured()) {
+    // Use these for OneSignal REST API calls
+}
 ```
 
 ### In JavaScript
@@ -187,8 +213,8 @@ Expected result: Should NOT appear anywhere in the HTML source
 **Cause:** Incorrect path in require statement
 
 **Solution:** Ensure the path is relative to the file including it:
-- From `/public/*.php`: `require __DIR__ . '/../config.php';`
-- From `/app/*/*.php`: `require __DIR__ . '/../../config.php';`
+- From `/public/*.php`: `require_once __DIR__ . '/../config.php';`
+- From `/app/*/*.php`: `require_once __DIR__ . '/../../config.php';`
 
 ## Integration with Existing OneSignal Setup
 

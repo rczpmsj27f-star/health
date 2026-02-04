@@ -11,7 +11,7 @@ if (!isset($isAdmin)) {
 
 <div class="menu" id="menu">
     <h3>Menu</h3>
-    <a href="/dashboard.php">🏠 Dashboard</a>
+    <a href="/dashboard">🏠 Dashboard</a>
     
     <div class="menu-section">
         <div class="menu-section-header" onclick="toggleSubmenu('medications-menu')">
@@ -21,12 +21,12 @@ if (!isset($isAdmin)) {
         <div class="menu-section-children" id="medications-menu">
             <a href="/modules/medications/compliance.php">Compliance</a>
             <a href="/modules/medications/log_prn.php">Log PRN</a>
-            <a href="/modules/medications/stock.php">Medication Stock</a>
-            <a href="/modules/medications/list.php">My Medications</a>
+            <a href="/medications/stock">Medication Stock</a>
+            <a href="/medications">My Medications</a>
         </div>
     </div>
     
-    <a href="/modules/profile/view.php">👤 My Profile</a>
+    <a href="/profile">👤 My Profile</a>
     
     <div class="menu-section">
         <div class="menu-section-header" onclick="toggleSubmenu('settings-menu')">
@@ -34,7 +34,7 @@ if (!isset($isAdmin)) {
             <span class="menu-toggle-icon" id="settings-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="settings-menu">
-            <a href="/modules/settings/notifications.php">🔔 Notifications</a>
+            <a href="/settings/notifications">🔔 Notifications</a>
             <?php if ($isAdmin): ?>
             <div class="menu-section nested">
                 <div class="menu-section-header nested-header" onclick="toggleSubmenu('admin-menu'); event.stopPropagation();">
@@ -49,5 +49,5 @@ if (!isset($isAdmin)) {
         </div>
     </div>
     
-    <a href="/logout.php">🚪 Logout</a>
+    <a href="/logout">🚪 Logout</a>
 </div>

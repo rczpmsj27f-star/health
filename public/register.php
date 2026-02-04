@@ -10,6 +10,16 @@ unset($_SESSION['error'], $_SESSION['success']);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register – Health Tracker</title>
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Health Tracker">
+    <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png">
+    <meta name="theme-color" content="#4F46E5">
+    
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
 </head>
 <body class="centered-page">
@@ -34,7 +44,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="email" required>
+                <input type="email" inputmode="email" name="email" required>
             </div>
 
             <div class="form-group">
@@ -66,8 +76,16 @@ unset($_SESSION['error'], $_SESSION['success']);
         </form>
 
         <div class="page-footer">
-            <p>Already have an account? <a href="/login.php">Login</a></p>
+            <p>Already have an account? <a href="/login">Login</a></p>
         </div>
     </div>
+    
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.error('Service Worker registration failed:', err));
+    }
+    </script>
 </body>
 </html>

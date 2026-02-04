@@ -19,6 +19,15 @@ $isAdmin = Auth::isAdmin();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Health Tracker</title>
     
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Health Tracker">
+    <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png">
+    <meta name="theme-color" content="#4F46E5">
+    
     <!-- OneSignal App ID for client-side JavaScript -->
     <script>
         // Make OneSignal App ID available globally for JavaScript
@@ -119,5 +128,13 @@ $isAdmin = Auth::isAdmin();
             <?php endif; ?>
         </div>
     </div>
+    
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.error('Service Worker registration failed:', err));
+    }
+    </script>
 </body>
 </html>

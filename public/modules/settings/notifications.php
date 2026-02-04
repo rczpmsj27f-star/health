@@ -39,6 +39,15 @@ if (!$settings) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notification Settings</title>
     
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Health Tracker">
+    <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png">
+    <meta name="theme-color" content="#4F46E5">
+    
     <!-- OneSignal App ID for client-side JavaScript -->
     <script>
         window.ONESIGNAL_APP_ID = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
@@ -430,6 +439,22 @@ if (!$settings) {
         async function requestNotificationPermission() {
             console.log('Requesting notification permission...');
             
+            // Check if running in standalone PWA mode
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone === true ||
+                                 document.referrer.includes('android-app://');
+            
+            // Only show "must use home screen" message if NOT in standalone mode on iOS
+            const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+            if (isIOS && !isStandalone) {
+                alert('Push notifications require:\n\n' +
+                      '1. Safari 16.4 or later\n' +
+                      '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
+                      '3. Opening the app from the Home Screen icon\n\n' +
+                      'Please ensure you meet these requirements and try again.');
+                return;
+            }
+            
             // Ensure OneSignal is ready before proceeding
             if (!oneSignalReady) {
                 console.log('OneSignal not ready yet, waiting...');
@@ -453,9 +478,7 @@ if (!$settings) {
                 console.log('Push notifications supported check:', isSupported);
                 
                 if (!isSupported) {
-                    // Provide iOS-specific guidance
                     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-                    // Log user agent to console for debugging (not in alert for privacy)
                     console.log('Push notifications not supported. User Agent:', navigator.userAgent);
                     
                     if (isIOS) {
@@ -655,6 +678,14 @@ if (!$settings) {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', initializeOneSignal);
+    </script>
+    
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.error('Service Worker registration failed:', err));
+    }
     </script>
 </body>
 </html>

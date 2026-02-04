@@ -28,6 +28,16 @@ $medications = $stmt->fetchAll();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medication Stock</title>
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Health Tracker">
+    <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png">
+    <meta name="theme-color" content="#4F46E5">
+    
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
@@ -404,7 +414,7 @@ $medications = $stmt->fetchAll();
                     
                     <div class="form-group">
                         <label>Quantity to Add *</label>
-                        <input type="number" name="quantity" id="quantity" min="1" required placeholder="e.g., 30">
+                        <input type="number" inputmode="numeric" name="quantity" id="quantity" min="1" required placeholder="e.g., 30">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             Enter the number of tablets/doses to add to current stock
                         </small>
@@ -436,7 +446,7 @@ $medications = $stmt->fetchAll();
                     
                     <div class="form-group">
                         <label>Quantity to Remove *</label>
-                        <input type="number" name="quantity" id="remove_quantity" min="1" required placeholder="e.g., 10">
+                        <input type="number" inputmode="numeric" name="quantity" id="remove_quantity" min="1" required placeholder="e.g., 10">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             Enter the number of tablets/doses to remove from stock
                         </small>
@@ -567,6 +577,14 @@ $medications = $stmt->fetchAll();
             otherReasonGroup.style.display = 'none';
             otherReasonInput.required = false;
         }
+    }
+    </script>
+    
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
 </body>

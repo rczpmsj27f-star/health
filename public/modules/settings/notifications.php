@@ -527,7 +527,12 @@ if (!$settings) {
                           '3. Checking your browser settings');
                     return;
                 }
+                
                 // For iOS, we already handled the support check earlier in the function
+                // Log if there's a discrepancy for debugging purposes
+                if (isIOS && !isSupported) {
+                    console.log('Note: Proceeding despite isSupported=false on iOS, trusting earlier OneSignal check');
+                }
 
                 // Use OneSignal's native prompt method - this handles iOS Safari properly
                 console.log('Showing OneSignal native prompt...');

@@ -7,10 +7,8 @@ This guide explains the new PHP-based configuration system for OneSignal credent
 ## Files Modified
 
 1. **`config.php`** (NEW) - Central configuration file for OneSignal credentials
-2. **`public/index.php`** - Updated to include config.php
-3. **`public/dashboard.php`** - Updated to include config.php and expose App ID to JavaScript
-4. **`public/login.php`** - Updated to include config.php
-5. **`.gitignore`** - Updated with optional config.php ignore example
+2. **`public/dashboard.php`** - Updated to include config.php and expose App ID to JavaScript
+3. **`.gitignore`** - Updated with optional config.php ignore example
 
 ## Configuration Structure
 
@@ -31,7 +29,7 @@ define('ONESIGNAL_REST_API_KEY', 'YOUR_ONESIGNAL_REST_API_KEY_HERE');
 
 ### Server-Side Integration
 
-The `config.php` file is included at the top of main PHP entry points:
+The `config.php` file is included only in pages that need OneSignal functionality:
 
 ```php
 <?php
@@ -39,7 +37,12 @@ The `config.php` file is included at the top of main PHP entry points:
 require_once __DIR__ . '/../config.php';
 ```
 
-This makes both constants available throughout the PHP application.
+**Note:** Only include config.php in files where you actually use the OneSignal credentials to avoid unnecessary file loading.
+
+Currently included in:
+- `public/dashboard.php` - To expose App ID to JavaScript for client-side OneSignal initialization
+
+This makes both constants available throughout the PHP application where included.
 
 ### Client-Side Integration
 

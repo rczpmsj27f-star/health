@@ -91,52 +91,6 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// Push notification event
-self.addEventListener('push', event => {
-    console.log('Push notification received');
-    
-    let notificationData = {
-        title: 'Medication Reminder',
-        body: 'Time to take your medication',
-        icon: '/icons/icon-192x192.svg',
-        badge: '/icons/badge-72x72.svg',
-        tag: 'medication-reminder',
-        requireInteraction: true,
-        data: {}
-    };
-    
-    if (event.data) {
-        try {
-            const data = event.data.json();
-            notificationData = { ...notificationData, ...data };
-        } catch (e) {
-            console.error('Error parsing push data:', e);
-        }
-    }
-    
-    event.waitUntil(
-        self.registration.showNotification(notificationData.title, {
-            body: notificationData.body,
-            icon: notificationData.icon,
-            badge: notificationData.badge,
-            tag: notificationData.tag,
-            requireInteraction: notificationData.requireInteraction,
-            data: notificationData.data,
-            vibrate: [200, 100, 200],
-            actions: [
-                {
-                    action: 'mark-taken',
-                    title: '✓ Mark as Taken'
-                },
-                {
-                    action: 'snooze',
-                    title: '⏰ Snooze 10 min'
-                }
-            ]
-        })
-    );
-});
-
 // Notification click event
 self.addEventListener('notificationclick', event => {
     event.notification.close();

@@ -22,20 +22,21 @@ cd server
 npm install
 ```
 
-#### 2. Generate VAPID Keys (for Push Notifications)
+#### 2. Configure OneSignal
 
+Create a free account at [OneSignal.com](https://onesignal.com/) and set up a new web app. Then configure your OneSignal credentials:
+
+**Option A: Using Environment Variables (Recommended)**
 ```bash
-cd server
-node generate-vapid-keys.js
+export ONESIGNAL_APP_ID="your-onesignal-app-id"
+export ONESIGNAL_API_KEY="your-onesignal-rest-api-key"
 ```
 
-Copy the generated keys and update them in `server/index.js`:
-
+**Option B: Directly in server/index.js**
+Update lines 11-12 in `server/index.js`:
 ```javascript
-const vapidKeys = {
-  publicKey: 'YOUR_PUBLIC_KEY_HERE',
-  privateKey: 'YOUR_PRIVATE_KEY_HERE'
-};
+const ONESIGNAL_APP_ID = 'your-onesignal-app-id';
+const ONESIGNAL_API_KEY = 'your-onesignal-rest-api-key';
 ```
 
 #### 3. Start the Server
@@ -111,14 +112,15 @@ The PWA will be served from the `/pwa` directory.
 
 ### How Push Notifications Work
 
-1. **Service Worker Registration**: The PWA registers a service worker that can receive push messages
-2. **Push Subscription**: When you enable notifications, a unique subscription is created and sent to the server
-3. **Scheduled Checks**: The server runs a cron job every minute to check if any medications are due
-4. **Smart Notifications**: Based on your settings, the server sends push notifications:
+1. **OneSignal Integration**: The PWA uses OneSignal SDK for push notification delivery
+2. **Service Worker Registration**: The PWA registers a service worker for offline functionality
+3. **Push Subscription**: When you enable notifications, OneSignal handles the browser subscription
+4. **Scheduled Checks**: The server runs a cron job every minute to check if any medications are due
+5. **Smart Notifications**: Based on your settings, the server sends push notifications via OneSignal API:
    - At the exact scheduled time
    - 10, 20, 30, or 60 minutes after (if not marked as taken)
-5. **Client Handling**: The service worker receives the push and displays a notification
-6. **Action Buttons**: Click the notification to open the app or use quick actions
+6. **Client Handling**: OneSignal delivers the push and displays a notification
+7. **Action Buttons**: Click the notification to open the app or use quick actions
 
 ### Testing Push Notifications
 
@@ -147,18 +149,17 @@ All data is stored locally first, then synced with the server when available.
   ├── app.js            # Application logic
   ├── sw.js             # Service Worker
   ├── manifest.json     # PWA manifest
+  ├── OneSignalSDKWorker.js  # OneSignal service worker
   └── icons/            # App icons
 
 /server                 # Node.js backend
   ├── index.js          # Express server with push notification logic
-  ├── package.json      # Dependencies
-  └── generate-vapid-keys.js  # VAPID key generator
+  └── package.json      # Dependencies
 ```
 
 ### API Endpoints
 
-- `GET /api/vapid-public-key` - Get VAPID public key for push subscription
-- `POST /api/subscriptions` - Register push subscription
+- `GET /api/onesignal-config` - Get OneSignal App ID for client initialization
 - `GET /api/medications` - Get all medications
 - `POST /api/medications` - Create/update medication
 - `DELETE /api/medications/:id` - Delete medication
@@ -182,20 +183,20 @@ Or set the `PORT` environment variable:
 PORT=8080 npm start
 ```
 
-#### VAPID Keys
+#### OneSignal Configuration
 
-VAPID keys are required for push notifications. Generate them using:
+Push notifications require OneSignal configuration:
+
+1. Create a free account at [OneSignal.com](https://onesignal.com/)
+2. Create a new Web Push app
+3. Get your App ID from Settings > Keys & IDs
+4. Get your REST API Key from Settings > Keys & IDs
+
+Set them as environment variables or update `server/index.js`:
 
 ```bash
-cd server
-node generate-vapid-keys.js
-```
-
-Add them to `server/index.js` or set as environment variables:
-
-```bash
-export VAPID_PUBLIC_KEY="your-public-key"
-export VAPID_PRIVATE_KEY="your-private-key"
+export ONESIGNAL_APP_ID="your-app-id"
+export ONESIGNAL_API_KEY="your-rest-api-key"
 npm start
 ```
 
@@ -206,8 +207,8 @@ npm start
 1. **Check permission**: Ensure notification permission is granted in browser settings
 2. **HTTPS requirement**: Push notifications require HTTPS in production (localhost works for development)
 3. **Service worker**: Check browser DevTools > Application > Service Workers to ensure it's registered
-4. **VAPID keys**: Ensure valid VAPID keys are configured in the server
-5. **Subscription**: Check browser console for subscription errors
+4. **OneSignal configuration**: Ensure valid OneSignal App ID and API Key are configured in the server
+5. **OneSignal initialization**: Check browser console for OneSignal initialization errors
 
 #### PWA Not Installing
 
@@ -246,8 +247,8 @@ npm start
 
 ### Security Considerations
 
-- Push subscriptions are stored server-side
-- VAPID keys should be kept secret in production
+- OneSignal handles push subscription security
+- OneSignal API keys should be kept secret in production (server-side only)
 - HTTPS is required for production deployment
 - Implement authentication for multi-user scenarios
 - Consider encrypting sensitive medication data
@@ -257,12 +258,13 @@ npm start
 For production deployment:
 
 1. **Use HTTPS**: Required for PWA and push notifications
-2. **Set environment variables**: VAPID keys, database credentials
+2. **Set environment variables**: OneSignal credentials, database credentials
 3. **Use a real database**: Replace file-based storage with PostgreSQL/MongoDB
 4. **Add authentication**: Implement user login/registration
 5. **Configure CORS**: Restrict to specific domains
 6. **Monitor**: Set up logging and error tracking
 7. **Backup**: Regular backups of user data
+8. **OneSignal setup**: Complete OneSignal web push configuration for your production domain
 
 ### License
 

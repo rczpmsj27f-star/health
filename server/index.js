@@ -1,5 +1,4 @@
 const express = require('express');
-const webpush = require('web-push');
 const cron = require('node-cron');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -9,28 +8,26 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// OneSignal configuration
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || 'YOUR_ONESIGNAL_APP_ID';
+const ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY || 'YOUR_ONESIGNAL_API_KEY';
+
+// Warn if OneSignal is not configured
+if (ONESIGNAL_APP_ID === 'YOUR_ONESIGNAL_APP_ID' || ONESIGNAL_API_KEY === 'YOUR_ONESIGNAL_API_KEY') {
+  console.warn('⚠️  WARNING: OneSignal credentials not configured!');
+  console.warn('⚠️  Set ONESIGNAL_APP_ID and ONESIGNAL_API_KEY environment variables');
+  console.warn('⚠️  or update the values in server/index.js');
+  console.warn('⚠️  See ONESIGNAL_SETUP.md for instructions');
+}
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../pwa')));
 
 // File paths for simple file-based storage (replace with DB in production)
-const SUBSCRIPTIONS_FILE = path.join(__dirname, 'push-subscriptions.json');
 const MEDICATIONS_FILE = path.join(__dirname, 'medications.json');
 const SETTINGS_FILE = path.join(__dirname, 'settings.json');
-
-// Initialize web-push with VAPID keys
-// Generate keys with: ./node_modules/.bin/web-push generate-vapid-keys
-const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BI-ecuub_J7bHRUkLrrqFosQBrXGfyd4vHEKn5xo1CBAOs0yf0NhNWW7aoGLC5tuIgSpVGRYz-eCsO-O1HO78CM',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'vqZQ2f-tdCRyWk8i8Efd3Hty4ZAQnq6TJR3dtcS1urY'
-};
-
-webpush.setVapidDetails(
-  'mailto:example@yourdomain.org',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
 
 // Helper functions for file-based storage
 async function readJSONFile(filePath, defaultValue = []) {
@@ -51,35 +48,9 @@ async function writeJSONFile(filePath, data) {
 
 // API Routes
 
-// Get VAPID public key
-app.get('/api/vapid-public-key', (req, res) => {
-  res.json({ publicKey: vapidKeys.publicKey });
-});
-
-// Store push subscription
-app.post('/api/subscriptions', async (req, res) => {
-  try {
-    const subscription = req.body;
-    const subscriptions = await readJSONFile(SUBSCRIPTIONS_FILE, []);
-    
-    // Check if subscription already exists
-    const exists = subscriptions.some(sub => 
-      sub.endpoint === subscription.endpoint
-    );
-    
-    if (!exists) {
-      subscriptions.push({
-        ...subscription,
-        createdAt: new Date().toISOString()
-      });
-      await writeJSONFile(SUBSCRIPTIONS_FILE, subscriptions);
-    }
-    
-    res.status(201).json({ success: true, message: 'Subscription saved' });
-  } catch (error) {
-    console.error('Error saving subscription:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
+// Get OneSignal App ID (for frontend initialization)
+app.get('/api/onesignal-config', (req, res) => {
+  res.json({ appId: ONESIGNAL_APP_ID });
 });
 
 // Get all medications
@@ -195,18 +166,40 @@ app.post('/api/settings', async (req, res) => {
   }
 });
 
-// Function to send push notification
-async function sendPushNotification(subscription, payload) {
+// Function to send push notification via OneSignal
+async function sendPushNotification(payload) {
   try {
-    await webpush.sendNotification(subscription, JSON.stringify(payload));
-    console.log('Push notification sent successfully');
+    const notificationPayload = {
+      app_id: ONESIGNAL_APP_ID,
+      included_segments: ['All'],
+      headings: { en: payload.title },
+      contents: { en: payload.body },
+      data: payload.data,
+      web_url: payload.data?.url || '/',
+      chrome_web_icon: payload.icon,
+      chrome_web_badge: payload.badge,
+      tag: payload.tag
+    };
+
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${ONESIGNAL_API_KEY}`
+      },
+      body: JSON.stringify(notificationPayload)
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OneSignal API error: ${error}`);
+    }
+
+    const result = await response.json();
+    console.log('Push notification sent successfully via OneSignal:', result.id);
     return true;
   } catch (error) {
     console.error('Error sending push notification:', error);
-    // If subscription is invalid, we could remove it here
-    if (error.statusCode === 410) {
-      console.log('Subscription has expired or is no longer valid');
-    }
     return false;
   }
 }
@@ -237,7 +230,6 @@ function getMinutesDifference(time1, time2) {
 cron.schedule('* * * * *', async () => {
   try {
     const medications = await readJSONFile(MEDICATIONS_FILE, []);
-    const subscriptions = await readJSONFile(SUBSCRIPTIONS_FILE, []);
     const settings = await readJSONFile(SETTINGS_FILE, {
       notifyAtTime: true,
       notifyAfter10Min: true,
@@ -245,10 +237,6 @@ cron.schedule('* * * * *', async () => {
       notifyAfter30Min: true,
       notifyAfter60Min: false
     });
-    
-    if (subscriptions.length === 0) {
-      return; // No subscriptions to send to
-    }
     
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -301,14 +289,13 @@ cron.schedule('* * * * *', async () => {
             data: {
               medicationId: medication.id,
               scheduleTime: scheduleTime,
-              type: notificationType
+              type: notificationType,
+              url: '/'
             }
           };
           
-          // Send to all subscriptions
-          for (const subscription of subscriptions) {
-            await sendPushNotification(subscription, payload);
-          }
+          // Send notification via OneSignal
+          await sendPushNotification(payload);
         }
       }
     }
@@ -320,6 +307,6 @@ cron.schedule('* * * * *', async () => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Medication Reminder Server running on port ${PORT}`);
-  console.log(`VAPID Public Key: ${vapidKeys.publicKey}`);
+  console.log(`OneSignal App ID: ${ONESIGNAL_APP_ID}`);
   console.log('Notification scheduler is active (runs every minute)');
 });

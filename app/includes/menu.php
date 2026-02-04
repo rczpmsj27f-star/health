@@ -34,6 +34,7 @@ if (!isset($isAdmin)) {
             <span class="menu-toggle-icon" id="settings-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="settings-menu">
+            <a href="/modules/settings/notifications.php">🔔 Notifications</a>
             <?php if ($isAdmin): ?>
             <div class="menu-section nested">
                 <div class="menu-section-header nested-header" onclick="toggleSubmenu('admin-menu'); event.stopPropagation();">

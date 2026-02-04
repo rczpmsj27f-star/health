@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Settings - Demo</title>
+    
+    <script>
+        window.ONESIGNAL_APP_ID = '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b';
+    </script>
+    
+    <link rel="stylesheet" href="/assets/css/app.css?v=1">
+    <script src="/assets/js/menu.js?v=1" defer></script>
+    
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    
+    <style>
+        .settings-container {
+            padding: 80px 16px 40px 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .notification-status {
+            background: #f0f4ff;
+            border: 2px solid #4c6ef5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .notification-status.enabled {
+            background: #d3f9d8;
+            border-color: #2f9e44;
+        }
+        
+        .notification-status p {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+        }
+        
+        .settings-list {
+            margin-top: 24px;
+        }
+        
+        .setting-item {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            width: 100%;
+            user-select: none;
+        }
+        
+        .toggle-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            margin-left: 12px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #4c6ef5;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        input:disabled + .toggle-slider {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .info-box p {
+            margin: 0;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        /* Demo styling */
+        .demo-banner {
+            background: #e7f3ff;
+            border: 2px solid #0066cc;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #0066cc;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <?php 
+    // Simulate menu include
+    $isAdmin = false;
+    ?>
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div><div></div><div></div>
+    </div>
+
+    <div class="menu" id="menu">
+        <h3>Menu</h3>
+        <a href="/dashboard.php">🏠 Dashboard</a>
+        
+        <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleSubmenu('medications-menu')">
+                <span>💊 Medications</span>
+                <span class="menu-toggle-icon" id="medications-menu-icon">▶</span>
+            </div>
+            <div class="menu-section-children" id="medications-menu">
+                <a href="/modules/medications/compliance.php">Compliance</a>
+                <a href="/modules/medications/log_prn.php">Log PRN</a>
+                <a href="/modules/medications/stock.php">Medication Stock</a>
+                <a href="/modules/medications/list.php">My Medications</a>
+            </div>
+        </div>
+        
+        <a href="/modules/profile/view.php">👤 My Profile</a>
+        
+        <div class="menu-section">
+            <div class="menu-section-header" onclick="toggleSubmenu('settings-menu')">
+                <span>⚙️ Settings</span>
+                <span class="menu-toggle-icon" id="settings-menu-icon">▶</span>
+            </div>
+            <div class="menu-section-children" id="settings-menu">
+                <a href="/modules/settings/notifications.php" style="font-weight: bold; background: #f0f4ff;">🔔 Notifications</a>
+            </div>
+        </div>
+        
+        <a href="/logout.php">🚪 Logout</a>
+    </div>
+
+    <div class="settings-container">
+        <div class="demo-banner">
+            📸 DEMO VERSION - UI Preview (Database not connected)
+        </div>
+        
+        <div class="page-card">
+            <div class="page-header">
+                <h2>🔔 Notification Settings</h2>
+                <p>Configure your medication reminder notifications</p>
+            </div>
+
+            <!-- View 1: Notification disabled state -->
+            <div id="view1">
+                <h3 style="margin-top: 32px; color: #666;">View 1: Initial State (Notifications Disabled)</h3>
+                <div id="notificationStatus" class="notification-status">
+                    <p><strong>Push notifications are currently disabled.</strong></p>
+                    <p>Enable push notifications to receive medication reminders on this device.</p>
+                    <button class="btn btn-primary" onclick="showEnabledView()">Enable Notifications</button>
+                </div>
+            </div>
+
+            <!-- View 2: Notification enabled state -->
+            <div id="view2" style="display: none;">
+                <h3 style="margin-top: 32px; color: #666;">View 2: Enabled State (After User Grants Permission)</h3>
+                <div class="notification-status enabled">
+                    <p><strong>✅ Push notifications are enabled on this device.</strong></p>
+                </div>
+
+                <div class="settings-list">
+                    <h3 class="section-title">Reminder Timing</h3>
+                    <p style="color: #666; margin-bottom: 16px;">Choose when you want to receive reminder notifications if you haven't taken your medication.</p>
+                    
+                    <form id="settingsForm">
+                        <div class="setting-item">
+                            <label class="toggle-label">
+                                <span class="toggle-text">At scheduled time</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" name="notify_at_time" id="notifyAtTime" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="toggle-label">
+                                <span class="toggle-text">10 minutes after (if not taken)</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" name="notify_after_10min" id="notifyAfter10Min" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="toggle-label">
+                                <span class="toggle-text">20 minutes after (if not taken)</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" name="notify_after_20min" id="notifyAfter20Min" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="toggle-label">
+                                <span class="toggle-text">30 minutes after (if not taken)</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" name="notify_after_30min" id="notifyAfter30Min" checked>
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="toggle-label">
+                                <span class="toggle-text">60 minutes after (if not taken)</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" name="notify_after_60min" id="notifyAfter60Min">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" style="margin-top: 24px; width: 100%;" onclick="alert('✅ Preferences saved successfully!')">
+                            💾 Save Preferences
+                        </button>
+                    </form>
+                    
+                    <div style="margin-top: 24px; text-align: center;">
+                        <button class="btn btn-danger" onclick="showDisabledView()">
+                            🔕 Disable Notifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 32px;">
+                <p><strong>Note:</strong> Notifications are device-specific. You'll need to enable them on each device where you want to receive reminders.</p>
+            </div>
+            
+            <div style="margin-top: 32px; text-align: center; padding-top: 24px; border-top: 2px solid #dee2e6;">
+                <button class="btn btn-info" onclick="toggleViews()">Toggle Views (Demo)</button>
+            </div>
+            
+            <div class="page-footer" style="margin-top: 32px; text-align: center;">
+                <p><a href="/dashboard.php">⬅️ Back to Dashboard</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            document.getElementById("menu").classList.toggle("open");
+        }
+
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            
+            if (submenu) {
+                submenu.classList.toggle('expanded');
+                if (icon) {
+                    icon.textContent = submenu.classList.contains('expanded') ? '▼' : '▶';
+                }
+            }
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('menu');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (menu && menu.classList.contains('open')) {
+                if (!menu.contains(event.target) && !hamburger.contains(event.target)) {
+                    menu.classList.remove('open');
+                }
+            }
+        });
+
+        function showEnabledView() {
+            document.getElementById('view1').style.display = 'none';
+            document.getElementById('view2').style.display = 'block';
+        }
+
+        function showDisabledView() {
+            document.getElementById('view1').style.display = 'block';
+            document.getElementById('view2').style.display = 'none';
+        }
+
+        function toggleViews() {
+            const view1 = document.getElementById('view1');
+            const view2 = document.getElementById('view2');
+            
+            if (view1.style.display === 'none') {
+                showDisabledView();
+            } else {
+                showEnabledView();
+            }
+        }
+
+        // Auto-save demo
+        document.querySelectorAll('#settingsForm input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                console.log('Setting changed:', this.name, '=', this.checked);
+                // Show a brief notification
+                const notification = document.createElement('div');
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 12px 20px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 9999;';
+                notification.textContent = '✓ Auto-saved';
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 2000);
+            });
+        });
+    </script>
+</body>
+</html>

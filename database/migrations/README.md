@@ -18,6 +18,13 @@ Migration files follow the naming convention: `migration_<description>.sql`
    - Tracks individual dose times for medications taken multiple times per day
    - Foreign key relationship with medications table (CASCADE on delete)
 
+3. **migration_create_notification_settings.sql** ⭐ NEW
+   - Creates the user_notification_settings table for storing user notification preferences
+   - Tracks notification enable/disable status per user
+   - Stores notification timing preferences (at time, 10min, 20min, 30min, 60min after)
+   - Stores OneSignal player ID for push notification targeting
+   - Foreign key relationship with users table (CASCADE on delete)
+
 ## How to Apply Migrations
 
 Since this project doesn't use an automated migration framework, migrations must be applied manually:

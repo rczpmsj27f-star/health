@@ -12,6 +12,14 @@ const PORT = process.env.PORT || 3000;
 const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || 'YOUR_ONESIGNAL_APP_ID';
 const ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY || 'YOUR_ONESIGNAL_API_KEY';
 
+// Warn if OneSignal is not configured
+if (ONESIGNAL_APP_ID === 'YOUR_ONESIGNAL_APP_ID' || ONESIGNAL_API_KEY === 'YOUR_ONESIGNAL_API_KEY') {
+  console.warn('⚠️  WARNING: OneSignal credentials not configured!');
+  console.warn('⚠️  Set ONESIGNAL_APP_ID and ONESIGNAL_API_KEY environment variables');
+  console.warn('⚠️  or update the values in server/index.js');
+  console.warn('⚠️  See ONESIGNAL_SETUP.md for instructions');
+}
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());

@@ -478,8 +478,7 @@ if (!$settings) {
                 console.log('Push notifications supported check:', isSupported);
                 
                 if (!isSupported) {
-                    // Provide iOS-specific guidance
-                    // Log user agent to console for debugging (not in alert for privacy)
+                    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
                     console.log('Push notifications not supported. User Agent:', navigator.userAgent);
                     
                     if (isIOS) {

@@ -414,7 +414,7 @@ $medications = $stmt->fetchAll();
                     
                     <div class="form-group">
                         <label>Quantity to Add *</label>
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="quantity" id="quantity" min="1" required placeholder="e.g., 30">
+                        <input type="number" inputmode="numeric" name="quantity" id="quantity" min="1" required placeholder="e.g., 30">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             Enter the number of tablets/doses to add to current stock
                         </small>
@@ -446,7 +446,7 @@ $medications = $stmt->fetchAll();
                     
                     <div class="form-group">
                         <label>Quantity to Remove *</label>
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="quantity" id="remove_quantity" min="1" required placeholder="e.g., 10">
+                        <input type="number" inputmode="numeric" name="quantity" id="remove_quantity" min="1" required placeholder="e.g., 10">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             Enter the number of tablets/doses to remove from stock
                         </small>

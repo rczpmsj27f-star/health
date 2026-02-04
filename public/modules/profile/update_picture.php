@@ -176,7 +176,7 @@ unset($_SESSION['error'], $_SESSION['success']);
         if (!file) return;
         
         // Validate file type
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
             alert('Invalid file type. Please select a JPG, PNG, GIF, or WebP image.');
             this.value = '';

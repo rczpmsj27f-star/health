@@ -17,10 +17,11 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Don't cache authenticated pages or API calls
+  // Don't cache authenticated pages or API calls - use network
   if (event.request.url.includes('/api/') || 
       event.request.url.includes('login') ||
       event.request.url.includes('logout')) {
+    // Let these requests use default network behavior
     return;
   }
   

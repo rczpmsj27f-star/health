@@ -98,8 +98,8 @@ if (!move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target)) {
     exit;
 }
 
-// Set proper permissions
-chmod($target, 0644);
+// Set proper permissions (may fail if web server user differs from file owner)
+@chmod($target, 0644);
 
 $path = "/uploads/profile/" . $filename;
 

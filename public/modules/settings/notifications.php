@@ -487,27 +487,37 @@ if (!$settings) {
                 const checkInterval = 200; // Check every 200ms
                 let elapsedTime = 0;
                 let permission = 'default';
-                let playerId = null;
                 
                 const checkPermission = setInterval(async () => {
-                    await window.OneSignal.push(async function() {
-                        permission = await window.OneSignal.getNotificationPermission();
+                    try {
+                        await window.OneSignal.push(async function() {
+                            permission = await window.OneSignal.getNotificationPermission();
+                        });
                         
-                        if (permission === 'granted') {
-                            // Get the player ID for this device
-                            playerId = await window.OneSignal.getUserId();
+                        console.log('Checking permission state:', permission, 'elapsed:', elapsedTime);
+                        
+                        // Stop if permission changed or timeout
+                        if (permission !== 'default' || elapsedTime >= maxWaitTime) {
+                            clearInterval(checkPermission);
+                            
+                            // Get player ID only once after permission is granted
+                            let playerId = null;
+                            if (permission === 'granted') {
+                                await window.OneSignal.push(async function() {
+                                    playerId = await window.OneSignal.getUserId();
+                                });
+                            }
+                            
+                            handlePermissionResult(permission, playerId);
                         }
-                    });
-                    
-                    console.log('Checking permission state:', permission, 'elapsed:', elapsedTime);
-                    
-                    // Stop if permission changed or timeout
-                    if (permission !== 'default' || elapsedTime >= maxWaitTime) {
+                        
+                        elapsedTime += checkInterval;
+                    } catch (error) {
+                        console.error('Error checking permission state:', error);
                         clearInterval(checkPermission);
-                        handlePermissionResult(permission, playerId);
+                        // Show error to user
+                        alert('Error checking notification permission. Please try again.');
                     }
-                    
-                    elapsedTime += checkInterval;
                 }, checkInterval);
                 
                 // Helper function to handle the permission result

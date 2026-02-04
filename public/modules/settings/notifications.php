@@ -326,43 +326,27 @@ if (!$settings) {
         // This ensures the SDK is ready before we attempt any operations
         async function waitForOneSignalReady() {
             return new Promise((resolve) => {
-                // Use OneSignal's on('ready') event for reliable initialization detection
-                if (window.OneSignal && window.OneSignal.push) {
-                    window.OneSignal.push(function() {
-                        window.OneSignal.on('subscriptionChange', function(isSubscribed) {
-                            console.log('OneSignal subscription changed:', isSubscribed);
-                        });
-                    });
+                // Wait for OneSignal to be fully ready
+                // On iOS, this may take longer than other platforms
+                const maxWaitTime = 5000; // 5 seconds maximum wait
+                const checkInterval = 100; // Check every 100ms
+                let elapsedTime = 0;
 
-                    // Wait for OneSignal to be fully ready
-                    // On iOS, this may take longer than other platforms
-                    const maxWaitTime = 5000; // 5 seconds maximum wait
-                    const checkInterval = 100; // Check every 100ms
-                    let elapsedTime = 0;
-
-                    const checkReady = setInterval(() => {
-                        // Try to access OneSignal methods to verify it's ready
-                        if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
-                            clearInterval(checkReady);
-                            oneSignalReady = true;
-                            console.log('OneSignal is fully ready');
-                            resolve();
-                        } else if (elapsedTime >= maxWaitTime) {
-                            clearInterval(checkReady);
-                            console.warn('OneSignal initialization timeout - proceeding anyway');
-                            oneSignalReady = true;
-                            resolve();
-                        }
-                        elapsedTime += checkInterval;
-                    }, checkInterval);
-                } else {
-                    // Fallback if OneSignal object doesn't exist
-                    setTimeout(() => {
+                const checkReady = setInterval(() => {
+                    // Try to access OneSignal methods to verify it's ready
+                    if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
+                        clearInterval(checkReady);
                         oneSignalReady = true;
-                        console.log('OneSignal ready (fallback)');
+                        console.log('OneSignal is fully ready');
                         resolve();
-                    }, 2000);
-                }
+                    } else if (elapsedTime >= maxWaitTime) {
+                        clearInterval(checkReady);
+                        console.warn('OneSignal initialization timeout - proceeding anyway');
+                        oneSignalReady = true;
+                        resolve();
+                    }
+                    elapsedTime += checkInterval;
+                }, checkInterval);
             });
         }
 
@@ -497,43 +481,57 @@ if (!$settings) {
                 });
 
                 // Wait for permission to be processed
-                // On iOS this may take longer
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Check the result using OneSignal API
+                // Poll for permission state change with timeout
+                // On iOS this may take longer than other platforms
+                const maxWaitTime = 3000; // 3 seconds maximum wait
+                const checkInterval = 200; // Check every 200ms
+                let elapsedTime = 0;
                 let permission = 'default';
                 let playerId = null;
                 
-                await window.OneSignal.push(async function() {
-                    permission = await window.OneSignal.getNotificationPermission();
-                    console.log('Permission after prompt:', permission);
+                const checkPermission = setInterval(async () => {
+                    await window.OneSignal.push(async function() {
+                        permission = await window.OneSignal.getNotificationPermission();
+                        
+                        if (permission === 'granted') {
+                            // Get the player ID for this device
+                            playerId = await window.OneSignal.getUserId();
+                        }
+                    });
                     
-                    if (permission === 'granted') {
-                        // Get the player ID for this device
-                        playerId = await window.OneSignal.getUserId();
-                        console.log('OneSignal Player ID:', playerId);
+                    console.log('Checking permission state:', permission, 'elapsed:', elapsedTime);
+                    
+                    // Stop if permission changed or timeout
+                    if (permission !== 'default' || elapsedTime >= maxWaitTime) {
+                        clearInterval(checkPermission);
+                        handlePermissionResult(permission, playerId);
                     }
-                });
+                    
+                    elapsedTime += checkInterval;
+                }, checkInterval);
                 
-                if (permission === 'granted') {
-                    console.log('Notification permission granted');
-                    
-                    // Save notification enabled status to database
-                    await saveNotificationStatus(true, playerId);
-                    
-                    showNotificationSettings();
-                    
-                    // Show success message
-                    alert('✅ Notifications enabled! You will now receive medication reminders on this device.');
-                } else if (permission === 'denied') {
-                    alert('❌ Notification permission was denied.\n\n' +
-                          'To enable notifications:\n' +
-                          '1. Go to your browser/device settings\n' +
-                          '2. Find this website in the notifications settings\n' +
-                          '3. Enable notifications\n' +
-                          '4. Return here and try again');
-                } else {
-                    console.log('Permission still default/undecided');
+                // Helper function to handle the permission result
+                async function handlePermissionResult(permission, playerId) {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted, Player ID:', playerId);
+                        
+                        // Save notification enabled status to database
+                        await saveNotificationStatus(true, playerId);
+                        
+                        showNotificationSettings();
+                        
+                        // Show success message
+                        alert('✅ Notifications enabled! You will now receive medication reminders on this device.');
+                    } else if (permission === 'denied') {
+                        alert('❌ Notification permission was denied.\n\n' +
+                              'To enable notifications:\n' +
+                              '1. Go to your browser/device settings\n' +
+                              '2. Find this website in the notifications settings\n' +
+                              '3. Enable notifications\n' +
+                              '4. Return here and try again');
+                    } else {
+                        console.log('Permission still default/undecided');
+                    }
                 }
             } catch (error) {
                 console.error('Failed to request notification permission:', error);

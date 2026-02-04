@@ -282,6 +282,7 @@ if (!$settings) {
         // OneSignal Configuration
         let OneSignal;
         let notificationsEnabled = <?= $settings['notifications_enabled'] ? 'true' : 'false' ?>;
+        let oneSignalReady = false;
 
         // Initialize OneSignal when page loads
         async function initializeOneSignal() {
@@ -308,7 +309,11 @@ if (!$settings) {
                     });
                 });
 
-                console.log('OneSignal initialized');
+                console.log('OneSignal SDK loaded, waiting for initialization...');
+                
+                // Wait for OneSignal to be fully ready before checking permissions
+                // This is especially important for iOS Safari PWA
+                await waitForOneSignalReady();
                 
                 // Check current notification permission
                 checkNotificationPermission();
@@ -317,28 +322,103 @@ if (!$settings) {
             }
         }
 
+        // Wait for OneSignal to be fully initialized
+        // This ensures the SDK is ready before we attempt any operations
+        async function waitForOneSignalReady() {
+            return new Promise((resolve) => {
+                // Use OneSignal's on('ready') event for reliable initialization detection
+                if (window.OneSignal && window.OneSignal.push) {
+                    window.OneSignal.push(function() {
+                        window.OneSignal.on('subscriptionChange', function(isSubscribed) {
+                            console.log('OneSignal subscription changed:', isSubscribed);
+                        });
+                    });
+
+                    // Wait for OneSignal to be fully ready
+                    // On iOS, this may take longer than other platforms
+                    const maxWaitTime = 5000; // 5 seconds maximum wait
+                    const checkInterval = 100; // Check every 100ms
+                    let elapsedTime = 0;
+
+                    const checkReady = setInterval(() => {
+                        // Try to access OneSignal methods to verify it's ready
+                        if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
+                            clearInterval(checkReady);
+                            oneSignalReady = true;
+                            console.log('OneSignal is fully ready');
+                            resolve();
+                        } else if (elapsedTime >= maxWaitTime) {
+                            clearInterval(checkReady);
+                            console.warn('OneSignal initialization timeout - proceeding anyway');
+                            oneSignalReady = true;
+                            resolve();
+                        }
+                        elapsedTime += checkInterval;
+                    }, checkInterval);
+                } else {
+                    // Fallback if OneSignal object doesn't exist
+                    setTimeout(() => {
+                        oneSignalReady = true;
+                        console.log('OneSignal ready (fallback)');
+                        resolve();
+                    }, 2000);
+                }
+            });
+        }
+
         // Check notification permission status
         async function checkNotificationPermission() {
-            if (!('Notification' in window)) {
-                console.log('This browser does not support notifications');
-                return;
-            }
-
-            // Wait for OneSignal to be ready
-            setTimeout(async () => {
-                try {
-                    const permission = Notification.permission;
-                    console.log('Notification permission:', permission);
-                    
-                    if (permission === 'granted' && notificationsEnabled) {
-                        showNotificationSettings();
-                    } else {
-                        showNotificationPrompt();
-                    }
-                } catch (error) {
-                    console.error('Error checking notification permission:', error);
+            try {
+                // Use OneSignal API to check if push notifications are supported
+                // This works better on iOS Safari than checking Notification API directly
+                let isSupported = false;
+                
+                if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
+                    await window.OneSignal.push(async function() {
+                        isSupported = await window.OneSignal.isPushNotificationsSupported();
+                    });
                 }
-            }, 1000);
+                
+                console.log('Push notifications supported:', isSupported);
+                
+                if (!isSupported) {
+                    // For iOS, provide more helpful message
+                    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                    if (isIOS) {
+                        console.log('iOS detected - notifications require HTTPS and Safari 16.4+');
+                    }
+                    // Don't show error immediately - some browsers may still support it
+                    // Let the user try to enable, and we'll show error if it fails
+                }
+
+                // Check current permission status using OneSignal API
+                let permission = 'default';
+                
+                if (window.OneSignal) {
+                    await window.OneSignal.push(async function() {
+                        try {
+                            permission = await window.OneSignal.getNotificationPermission();
+                            console.log('Notification permission from OneSignal:', permission);
+                        } catch (error) {
+                            console.log('Could not get permission from OneSignal, falling back to Notification API');
+                            // Fallback to browser Notification API if OneSignal method fails
+                            if ('Notification' in window) {
+                                permission = Notification.permission;
+                            }
+                        }
+                    });
+                }
+                
+                if (permission === 'granted' && notificationsEnabled) {
+                    showNotificationSettings();
+                } else {
+                    showNotificationPrompt();
+                }
+            } catch (error) {
+                console.error('Error checking notification permission:', error);
+                // Show prompt anyway to let user try
+                showNotificationPrompt();
+            }
         }
 
         // Show notification prompt
@@ -360,45 +440,119 @@ if (!$settings) {
 
         // Request notification permission
         async function requestNotificationPermission() {
-            if (!('Notification' in window)) {
-                alert('This browser does not support notifications');
-                return;
+            console.log('Requesting notification permission...');
+            
+            // Ensure OneSignal is ready before proceeding
+            if (!oneSignalReady) {
+                console.log('OneSignal not ready yet, waiting...');
+                await waitForOneSignalReady();
             }
-
+            
             if (!window.OneSignal) {
-                alert('OneSignal is not initialized. Please refresh the page and try again.');
+                alert('Notification system is not ready. Please refresh the page and try again.');
                 return;
             }
 
             try {
-                // Request permission via OneSignal
+                // First check if push notifications are supported using OneSignal API
+                // This is more reliable than checking Notification API on iOS
+                let isSupported = false;
+                
                 await window.OneSignal.push(async function() {
-                    await window.OneSignal.showNativePrompt();
+                    isSupported = await window.OneSignal.isPushNotificationsSupported();
+                });
+                
+                console.log('Push notifications supported check:', isSupported);
+                
+                if (!isSupported) {
+                    // Provide iOS-specific guidance
+                    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                    if (isIOS) {
+                        alert('Push notifications require:\n\n' +
+                              '1. Safari 16.4 or later\n' +
+                              '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
+                              '3. Opening the app from the Home Screen icon\n\n' +
+                              'Current browser: ' + navigator.userAgent);
+                    } else {
+                        alert('Push notifications are not supported in this browser. Please try:\n\n' +
+                              '1. Using a modern browser (Chrome, Firefox, Safari, Edge)\n' +
+                              '2. Ensuring you are on HTTPS\n' +
+                              '3. Checking your browser settings');
+                    }
+                    return;
+                }
+
+                // Use OneSignal's native prompt method - this handles iOS Safari properly
+                console.log('Showing OneSignal native prompt...');
+                
+                await window.OneSignal.push(async function() {
+                    try {
+                        // OneSignal's showNativePrompt handles browser differences automatically
+                        await window.OneSignal.showNativePrompt();
+                        console.log('Native prompt shown');
+                    } catch (error) {
+                        console.error('Error showing native prompt:', error);
+                        throw error;
+                    }
                 });
 
-                // Wait a moment for permission to be processed
-                setTimeout(async () => {
-                    const permission = Notification.permission;
+                // Wait for permission to be processed
+                // On iOS this may take longer
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check the result using OneSignal API
+                let permission = 'default';
+                let playerId = null;
+                
+                await window.OneSignal.push(async function() {
+                    permission = await window.OneSignal.getNotificationPermission();
+                    console.log('Permission after prompt:', permission);
                     
                     if (permission === 'granted') {
-                        console.log('Notification permission granted');
-                        
-                        // Get OneSignal player ID
-                        const playerId = await window.OneSignal.push(function() {
-                            return window.OneSignal.getUserId();
-                        });
-                        
-                        // Save notification enabled status to database
-                        await saveNotificationStatus(true, playerId);
-                        
-                        showNotificationSettings();
-                    } else {
-                        alert('Notification permission denied. You will not receive medication reminders on this device.');
+                        // Get the player ID for this device
+                        playerId = await window.OneSignal.getUserId();
+                        console.log('OneSignal Player ID:', playerId);
                     }
-                }, 500);
+                });
+                
+                if (permission === 'granted') {
+                    console.log('Notification permission granted');
+                    
+                    // Save notification enabled status to database
+                    await saveNotificationStatus(true, playerId);
+                    
+                    showNotificationSettings();
+                    
+                    // Show success message
+                    alert('✅ Notifications enabled! You will now receive medication reminders on this device.');
+                } else if (permission === 'denied') {
+                    alert('❌ Notification permission was denied.\n\n' +
+                          'To enable notifications:\n' +
+                          '1. Go to your browser/device settings\n' +
+                          '2. Find this website in the notifications settings\n' +
+                          '3. Enable notifications\n' +
+                          '4. Return here and try again');
+                } else {
+                    console.log('Permission still default/undecided');
+                }
             } catch (error) {
                 console.error('Failed to request notification permission:', error);
-                alert('Failed to enable notifications. Please try again.');
+                
+                // Provide helpful error messages based on the error
+                let errorMessage = 'Failed to enable notifications.\n\n';
+                
+                const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                if (isIOS) {
+                    errorMessage += 'For iOS:\n' +
+                                  '1. Ensure you are using Safari 16.4+\n' +
+                                  '2. Add this site to Home Screen\n' +
+                                  '3. Open from the Home Screen icon\n' +
+                                  '4. Try enabling notifications again\n\n';
+                }
+                
+                errorMessage += 'Error details: ' + error.message;
+                
+                alert(errorMessage);
             }
         }
 

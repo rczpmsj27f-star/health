@@ -1,5 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
     
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
@@ -9,11 +10,51 @@
     # Serve PWA static files directly from /pwa directory
     # Required for Progressive Web App installation and push notifications
     # Includes: manifest.json, service workers, OneSignal worker, icons, and all PWA frontend assets
-    RewriteCond %{REQUEST_URI} ^/(manifest\.json|sw\.js|OneSignalSDKWorker\.js|app\.js|styles\.css|index\.html)$ [OR]
+    RewriteCond %{REQUEST_URI} ^/(OneSignalSDKWorker\.js|app\.js|styles\.css)$ [OR]
     RewriteCond %{REQUEST_URI} ^/icons/
     RewriteRule ^(.*)$ /pwa/$1 [L]
     
-    # Send Requests To Public Folder
+    # Clean URL routing - handle these before sending to public folder
+    # Dashboard
+    RewriteRule ^dashboard$ /public/dashboard.php [L]
+    
+    # Settings routes
+    RewriteRule ^settings/notifications$ /public/modules/settings/notifications.php [L]
+    
+    # Medication routes
+    RewriteRule ^medications$ /public/modules/medications/list.php [L]
+    RewriteRule ^medications/add$ /public/modules/medications/add.php [L]
+    RewriteRule ^medications/log-prn$ /public/modules/medications/log_prn.php [L]
+    RewriteRule ^medications/stock$ /public/modules/medications/stock.php [L]
+    RewriteRule ^medications/edit/([0-9]+)$ /public/modules/medications/edit.php?id=$1 [L]
+    
+    # Profile routes
+    RewriteRule ^profile$ /public/modules/profile/view.php [L]
+    RewriteRule ^profile/edit$ /public/modules/profile/edit.php [L]
+    RewriteRule ^profile/picture$ /public/modules/profile/update_picture.php [L]
+    RewriteRule ^profile/password$ /public/modules/profile/change_password.php [L]
+    
+    # Auth routes
+    RewriteRule ^login$ /public/login.php [L]
+    RewriteRule ^register$ /public/register.php [L]
+    RewriteRule ^logout$ /public/logout.php [L]
+    
+    # Backward compatibility - redirect old URLs to new ones
+    RewriteRule ^public/dashboard\.php$ /dashboard [R=301,L]
+    RewriteRule ^public/modules/settings/notifications\.php$ /settings/notifications [R=301,L]
+    RewriteRule ^public/modules/medications/list\.php$ /medications [R=301,L]
+    RewriteRule ^public/modules/medications/stock\.php$ /medications/stock [R=301,L]
+    RewriteRule ^public/modules/profile/view\.php$ /profile [R=301,L]
+    RewriteRule ^public/modules/profile/edit\.php$ /profile/edit [R=301,L]
+    RewriteRule ^public/modules/profile/update_picture\.php$ /profile/picture [R=301,L]
+    RewriteRule ^public/modules/profile/change_password\.php$ /profile/password [R=301,L]
+    RewriteRule ^public/login\.php$ /login [R=301,L]
+    RewriteRule ^public/register\.php$ /register [R=301,L]
+    RewriteRule ^public/logout\.php$ /logout [R=301,L]
+    
+    # Send other requests to public folder
     RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_URI} !^/uploads/
+    RewriteCond %{REQUEST_URI} !^/pwa/
     RewriteRule ^(.*)$ /public/$1 [L,QSA]
 </IfModule>

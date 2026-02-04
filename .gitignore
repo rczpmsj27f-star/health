@@ -51,5 +51,5 @@ server/settings.json
 
 # Optional: Uncomment to ignore config.php with actual credentials in production
 # Keep config.php tracked in development with placeholder values
-# config.php
+config.php
 

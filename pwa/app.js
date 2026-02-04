@@ -26,8 +26,44 @@ if ('serviceWorker' in navigator) {
         });
 }
 
+// OneSignal Configuration
+let OneSignal;
+
+// Initialize OneSignal
+async function initializeOneSignal() {
+    try {
+        // Get OneSignal App ID from server
+        const response = await fetch(`${API_URL}/onesignal-config`);
+        const { appId } = await response.json();
+        
+        if (appId === 'YOUR_ONESIGNAL_APP_ID') {
+            console.warn('OneSignal App ID not configured. Notifications will not work.');
+            return;
+        }
+        
+        // Initialize OneSignal SDK
+        window.OneSignal = window.OneSignal || [];
+        OneSignal = window.OneSignal;
+        
+        OneSignal.push(function() {
+            OneSignal.init({
+                appId: appId,
+                allowLocalhostAsSecureOrigin: true,
+                notifyButton: {
+                    enable: false // We'll use our own UI
+                }
+            });
+        });
+        
+        console.log('OneSignal initialized');
+    } catch (error) {
+        console.error('Failed to initialize OneSignal:', error);
+    }
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
+    await initializeOneSignal();
     await loadMedications();
     await loadSettings();
     checkNotificationPermission();
@@ -400,57 +436,30 @@ async function requestNotificationPermission() {
         return;
     }
     
-    const permission = await Notification.requestPermission();
-    
-    if (permission === 'granted') {
-        console.log('Notification permission granted');
-        await subscribeToPushNotifications();
-        updateNotificationUI();
-    } else {
-        alert('Notification permission denied. You will not receive medication reminders.');
+    if (!window.OneSignal) {
+        alert('OneSignal is not initialized. Please refresh the page and try again.');
+        return;
     }
-}
-
-async function subscribeToPushNotifications() {
+    
     try {
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Get VAPID public key from server
-        const keyResponse = await fetch(`${API_URL}/vapid-public-key`);
-        const { publicKey } = await keyResponse.json();
-        
-        // Subscribe to push notifications
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicKey)
+        // Request permission via OneSignal
+        await window.OneSignal.push(async function() {
+            await window.OneSignal.showNativePrompt();
         });
         
-        // Send subscription to server
-        await fetch(`${API_URL}/subscriptions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(subscription)
+        // Check if permission was granted
+        const permission = await window.OneSignal.push(function() {
+            return window.OneSignal.getNotificationPermission();
         });
         
-        console.log('Push subscription successful');
+        if (permission === 'granted') {
+            console.log('Notification permission granted via OneSignal');
+            updateNotificationUI();
+        } else {
+            alert('Notification permission denied. You will not receive medication reminders.');
+        }
     } catch (error) {
-        console.error('Failed to subscribe to push notifications:', error);
+        console.error('Failed to request notification permission:', error);
+        alert('Failed to enable notifications. Please try again.');
     }
-}
-
-// Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
-    
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    
-    return outputArray;
 }

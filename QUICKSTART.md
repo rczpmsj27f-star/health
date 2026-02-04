@@ -14,19 +14,24 @@ cd server
 npm install
 ```
 
-### Step 2: Generate VAPID Keys
+### Step 2: Configure OneSignal
+
+1. Create a free account at [OneSignal.com](https://onesignal.com/)
+2. Click "New App/Website" and select "Web Push"
+3. Follow the setup wizard:
+   - Choose "Typical Site" 
+   - Enter your site URL (use `http://localhost:3000` for development)
+   - Complete the configuration
+4. Go to Settings > Keys & IDs
+5. Copy your **App ID** and **REST API Key**
+
+Set your credentials as environment variables:
 ```bash
-cd server
-node generate-vapid-keys.js
+export ONESIGNAL_APP_ID="your-app-id-here"
+export ONESIGNAL_API_KEY="your-rest-api-key-here"
 ```
 
-Copy the output and update `server/index.js` lines 18-21 with your keys:
-```javascript
-const vapidKeys = {
-  publicKey: 'YOUR_PUBLIC_KEY',
-  privateKey: 'YOUR_PRIVATE_KEY'
-};
-```
+Or update `server/index.js` lines 11-12 with your credentials.
 
 ### Step 3: Start the Server
 ```bash
@@ -37,7 +42,7 @@ npm start
 You should see:
 ```
 Medication Reminder Server running on port 3000
-VAPID Public Key: ...
+OneSignal App ID: ...
 Notification scheduler is active (runs every minute)
 ```
 
@@ -126,7 +131,8 @@ Press `Ctrl+C` in the terminal where the server is running.
 
 ### Notifications not working
 - Check browser notification permissions
-- Verify VAPID keys are set correctly
+- Verify OneSignal App ID and REST API Key are set correctly
+- Check OneSignal dashboard for delivery status
 - Service Worker must be registered (check browser DevTools)
 
 ### Port 3000 already in use

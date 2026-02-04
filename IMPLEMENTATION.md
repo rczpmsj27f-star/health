@@ -15,10 +15,10 @@ This application consists of two main components:
 
 ### 2. Backend (Node.js)
 - **Location**: `/server` directory
-- **Technology**: Express.js, web-push, node-cron
+- **Technology**: Express.js, node-cron, OneSignal
 - **Features**:
   - RESTful API for medication management
-  - Push notification system with VAPID
+  - Push notification system with OneSignal
   - File-based storage (upgradeable to database)
   - Cron scheduler for timed reminders
 
@@ -31,6 +31,7 @@ This application consists of two main components:
 ├── styles.css          # Styling
 ├── sw.js               # Service Worker
 ├── manifest.json       # PWA manifest
+├── OneSignalSDKWorker.js  # OneSignal service worker
 └── icons/              # App icons (SVG)
     ├── icon-*.svg      # Various sizes
     └── badge-72x72.svg # Notification badge
@@ -38,7 +39,6 @@ This application consists of two main components:
 /server
 ├── index.js            # Express server
 ├── package.json        # Dependencies
-├── generate-vapid-keys.js  # VAPID key generator
 └── .gitignore          # Ignored files
 ```
 
@@ -46,26 +46,19 @@ This application consists of two main components:
 
 ### Endpoints
 
-#### 1. Get VAPID Public Key
+#### 1. Get OneSignal Configuration
 ```
-GET /api/vapid-public-key
-Response: { "publicKey": "..." }
-```
-
-#### 2. Register Push Subscription
-```
-POST /api/subscriptions
-Body: PushSubscription object
-Response: { "success": true, "message": "Subscription saved" }
+GET /api/onesignal-config
+Response: { "appId": "..." }
 ```
 
-#### 3. Get All Medications
+#### 2. Get All Medications
 ```
 GET /api/medications
 Response: Array of medication objects
 ```
 
-#### 4. Add/Update Medication
+#### 3. Add/Update Medication
 ```
 POST /api/medications
 Body: {
@@ -78,20 +71,20 @@ Body: {
 Response: Medication object with ID
 ```
 
-#### 5. Delete Medication
+#### 4. Delete Medication
 ```
 DELETE /api/medications/:id
 Response: { "success": true }
 ```
 
-#### 6. Mark Medication as Taken
+#### 5. Mark Medication as Taken
 ```
 POST /api/medications/:id/taken
 Body: { "scheduleTime": "08:00" }
 Response: { "success": true, "medication": {...} }
 ```
 
-#### 7. Get Settings
+#### 6. Get Settings
 ```
 GET /api/settings
 Response: {
@@ -199,7 +192,7 @@ Medication: Aspirin at 08:00
 ## Security Considerations
 
 ### Current Implementation
-- VAPID keys for push notification authentication
+- OneSignal API keys for push notification authentication
 - CORS enabled for development
 - No user authentication (single-user mode)
 
@@ -226,7 +219,7 @@ Medication: Aspirin at 08:00
    - XSS protection
 
 5. **Environment Variables**
-   - Store VAPID keys in environment variables
+   - Store OneSignal credentials in environment variables
    - Never commit secrets to git
    - Use .env files for local development
 
@@ -274,9 +267,9 @@ See README.md for complete list of planned features.
 
 ### Notifications not working
 1. Check browser notification permissions
-2. Verify VAPID keys are correct
+2. Verify OneSignal App ID and API Key are correct
 3. Check service worker is registered
-4. View console for errors
+4. Check OneSignal initialization in browser console
 5. Ensure HTTPS in production
 
 ### PWA not installing

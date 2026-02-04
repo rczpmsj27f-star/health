@@ -6,21 +6,21 @@ echo ""
 
 # Test 1: Server is running
 echo "Test 1: Checking if server is running..."
-if curl -s http://localhost:3000/api/vapid-public-key > /dev/null; then
+if curl -s http://localhost:3000/api/onesignal-config > /dev/null; then
     echo "✓ Server is running"
 else
     echo "✗ Server is not running"
     exit 1
 fi
 
-# Test 2: VAPID key is available
+# Test 2: OneSignal configuration is available
 echo ""
-echo "Test 2: Checking VAPID public key..."
-VAPID_KEY=$(curl -s http://localhost:3000/api/vapid-public-key | jq -r '.publicKey')
-if [ -n "$VAPID_KEY" ]; then
-    echo "✓ VAPID key available: ${VAPID_KEY:0:20}..."
+echo "Test 2: Checking OneSignal configuration..."
+ONESIGNAL_CONFIG=$(curl -s http://localhost:3000/api/onesignal-config | jq -r '.appId')
+if [ -n "$ONESIGNAL_CONFIG" ]; then
+    echo "✓ OneSignal App ID available: ${ONESIGNAL_CONFIG:0:20}..."
 else
-    echo "✗ VAPID key not available"
+    echo "✗ OneSignal configuration not available"
     exit 1
 fi
 
@@ -99,16 +99,14 @@ else
     echo "✗ Service worker is not accessible"
 fi
 
-# Test 10: Icons
+# Test 10: OneSignal SDK Worker
 echo ""
-echo "Test 10: Checking PWA icons..."
-ICON_COUNT=0
-for size in 72 96 128 144 152 192 384 512; do
-    if curl -s -I http://localhost:3000/icons/icon-${size}x${size}.svg | grep -q "200 OK"; then
-        ((ICON_COUNT++))
-    fi
-done
-echo "✓ Found $ICON_COUNT/8 icons"
+echo "Test 10: Checking OneSignal SDK Worker..."
+if curl -s http://localhost:3000/OneSignalSDKWorker.js | grep -q "OneSignal"; then
+    echo "✓ OneSignal SDK Worker is accessible"
+else
+    echo "✗ OneSignal SDK Worker is not accessible"
+fi
 
 echo ""
 echo "=== Test Suite Complete ==="

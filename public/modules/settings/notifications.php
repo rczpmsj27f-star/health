@@ -459,9 +459,12 @@ if (!$settings) {
                 let pushSupported = false;
                 
                 try {
-                    await window.OneSignal.push(async function() {
-                        pushSupported = await window.OneSignal.isPushNotificationsSupported();
-                    });
+                    // Ensure OneSignal is available before checking
+                    if (window.OneSignal) {
+                        await window.OneSignal.push(async function() {
+                            pushSupported = await window.OneSignal.isPushNotificationsSupported();
+                        });
+                    }
                     
                     console.log('OneSignal push supported:', pushSupported);
                     

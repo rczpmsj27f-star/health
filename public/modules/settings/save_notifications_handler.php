@@ -40,10 +40,12 @@ try {
             $params[] = $onesignal_player_id;
         }
         
-        // Always update timing preferences if they're in the POST data
+        // Always update all timing preferences if any timing field is present in the POST data
+        // This ensures unchecked checkboxes (not included in POST) are properly set to 0
         if (isset($_POST['notify_at_time']) || isset($_POST['notify_after_10min']) || 
             isset($_POST['notify_after_20min']) || isset($_POST['notify_after_30min']) || 
-            isset($_POST['notify_after_60min'])) {
+            isset($_POST['notify_after_60min']) || isset($_POST['notifications_enabled'])) {
+            // When updating via form, update all timing fields to handle unchecked checkboxes
             $updateFields[] = "notify_at_time = ?";
             $params[] = $notify_at_time;
             $updateFields[] = "notify_after_10min = ?";

@@ -17,6 +17,3 @@ CREATE TABLE IF NOT EXISTS user_notification_settings (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY unique_user_settings (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Create index for faster lookups by user_id
-CREATE INDEX idx_user_notification_settings_user_id ON user_notification_settings(user_id);

@@ -458,10 +458,27 @@ if (!$settings) {
         document.getElementById('enableNotificationsBtn').addEventListener('click', requestNotificationPermission);
         document.getElementById('disableNotificationsBtn').addEventListener('click', disableNotifications);
 
-        // Prevent form submission (we auto-save on change)
-        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+        // Handle form submission (manual save)
+        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('✅ Preferences saved successfully!');
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('save_notifications_handler.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    alert('✅ Preferences saved successfully!');
+                } else {
+                    alert('❌ Failed to save preferences. Please try again.');
+                }
+            } catch (error) {
+                console.error('Failed to save settings:', error);
+                alert('❌ Failed to save preferences. Please try again.');
+            }
         });
 
         // Initialize on page load

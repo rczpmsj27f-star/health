@@ -1,4 +1,7 @@
 <?php
+// Include OneSignal configuration
+require_once __DIR__ . '/../config.php';
+
 session_start();
 $err = $_SESSION['error'] ?? null;
 $ok  = $_SESSION['success'] ?? null;

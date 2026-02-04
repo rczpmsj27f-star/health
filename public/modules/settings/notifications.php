@@ -439,20 +439,64 @@ if (!$settings) {
         async function requestNotificationPermission() {
             console.log('Requesting notification permission...');
             
-            // Check if running in standalone PWA mode
+            // Check if running in standalone PWA mode with multiple detection methods
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                                  window.navigator.standalone === true ||
-                                 document.referrer.includes('android-app://');
+                                 document.referrer.includes('android-app://') ||
+                                 // Additional checks for iOS PWA context
+                                 !window.matchMedia('(display-mode: browser)').matches ||
+                                 // Check if there's no Safari UI (viewport height equals window height)
+                                 (window.innerHeight === screen.height);
             
-            // Only show "must use home screen" message if NOT in standalone mode on iOS
             const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-            if (isIOS && !isStandalone) {
-                alert('Push notifications require:\n\n' +
-                      '1. Safari 16.4 or later\n' +
-                      '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
-                      '3. Opening the app from the Home Screen icon\n\n' +
-                      'Please ensure you meet these requirements and try again.');
-                return;
+            
+            console.log('Standalone detection:', {
+                'matchMedia standalone': window.matchMedia('(display-mode: standalone)').matches,
+                'navigator.standalone': window.navigator.standalone,
+                'matchMedia NOT browser': !window.matchMedia('(display-mode: browser)').matches,
+                'fullscreen check': window.innerHeight === screen.height,
+                'isStandalone final': isStandalone,
+                'isIOS': isIOS
+            });
+            
+            // On iOS, if OneSignal says push is supported, trust that over display-mode detection
+            // because iOS can be quirky about when it reports standalone mode
+            if (isIOS) {
+                let pushSupported = false;
+                
+                try {
+                    await window.OneSignal.push(async function() {
+                        pushSupported = await window.OneSignal.isPushNotificationsSupported();
+                    });
+                    
+                    console.log('OneSignal push supported:', pushSupported);
+                    
+                    // If OneSignal says push is supported on iOS, we're probably in the right context
+                    // even if display-mode detection is flaky
+                    if (pushSupported) {
+                        console.log('OneSignal confirms push is supported, proceeding with permission request');
+                        // Continue to permission request below, don't show "must use home screen" message
+                    } else if (!isStandalone) {
+                        // Only show the error if BOTH standalone detection fails AND OneSignal says not supported
+                        alert('Push notifications require:\n\n' +
+                              '1. Safari 16.4 or later\n' +
+                              '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
+                              '3. Opening the app from the Home Screen icon\n\n' +
+                              'Please ensure you meet these requirements and try again.');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error checking OneSignal support:', error);
+                    // If we can't check with OneSignal, fall back to standalone detection
+                    if (!isStandalone) {
+                        alert('Push notifications require:\n\n' +
+                              '1. Safari 16.4 or later\n' +
+                              '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
+                              '3. Opening the app from the Home Screen icon\n\n' +
+                              'Please ensure you meet these requirements and try again.');
+                        return;
+                    }
+                }
             }
             
             // Ensure OneSignal is ready before proceeding
@@ -467,34 +511,24 @@ if (!$settings) {
             }
 
             try {
-                // First check if push notifications are supported using OneSignal API
-                // This is more reliable than checking Notification API on iOS
+                // Check if push is supported (this is now just for logging on iOS, we checked above)
                 let isSupported = false;
                 
                 await window.OneSignal.push(async function() {
                     isSupported = await window.OneSignal.isPushNotificationsSupported();
                 });
                 
-                console.log('Push notifications supported check:', isSupported);
+                console.log('Push notifications supported (double-check):', isSupported);
                 
-                if (!isSupported) {
-                    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-                    console.log('Push notifications not supported. User Agent:', navigator.userAgent);
-                    
-                    if (isIOS) {
-                        alert('Push notifications require:\n\n' +
-                              '1. Safari 16.4 or later\n' +
-                              '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
-                              '3. Opening the app from the Home Screen icon\n\n' +
-                              'Please ensure you meet these requirements and try again.');
-                    } else {
-                        alert('Push notifications are not supported in this browser. Please try:\n\n' +
-                              '1. Using a modern browser (Chrome, Firefox, Safari, Edge)\n' +
-                              '2. Ensuring you are on HTTPS\n' +
-                              '3. Checking your browser settings');
-                    }
+                // For non-iOS browsers, still need to check support here
+                if (!isSupported && !isIOS) {
+                    alert('Push notifications are not supported in this browser. Please try:\n\n' +
+                          '1. Using a modern browser (Chrome, Firefox, Safari, Edge)\n' +
+                          '2. Ensuring you are on HTTPS\n' +
+                          '3. Checking your browser settings');
                     return;
                 }
+                // For iOS, we already handled the check above, so just proceed
 
                 // Use OneSignal's native prompt method - this handles iOS Safari properly
                 console.log('Showing OneSignal native prompt...');

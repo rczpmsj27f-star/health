@@ -23,6 +23,9 @@ if (ONESIGNAL_APP_ID === 'YOUR_ONESIGNAL_APP_ID' || ONESIGNAL_API_KEY === 'YOUR_
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+// Serve PWA static files from /pwa directory
+// Required for Progressive Web App installation and push notification functionality
+// This ensures manifest.json, service workers (sw.js, OneSignalSDKWorker.js), icons, and frontend assets are accessible
 app.use(express.static(path.join(__dirname, '../pwa')));
 
 // File paths for simple file-based storage (replace with DB in production)

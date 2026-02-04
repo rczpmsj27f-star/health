@@ -1,5 +1,5 @@
 // Service Worker for Medication Reminder PWA
-const CACHE_NAME = 'medication-reminder-v1';
+const CACHE_NAME = 'medication-reminder-v2';
 const urlsToCache = [
     '/',
     '/index.html',

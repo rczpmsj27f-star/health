@@ -22,8 +22,8 @@ const SETTINGS_FILE = path.join(__dirname, 'settings.json');
 // Initialize web-push with VAPID keys
 // Generate keys with: ./node_modules/.bin/web-push generate-vapid-keys
 const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BNxJLZJYc5VXJLxKp8VGFq8kYJZ5YhLzQp3mNYjxGvJZw8JZjKp5LxZqKp8VGFq8kYJZ5YhLzQp3mNYjxGvJZw8',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'your-private-key-here'
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BI-ecuub_J7bHRUkLrrqFosQBrXGfyd4vHEKn5xo1CBAOs0yf0NhNWW7aoGLC5tuIgSpVGRYz-eCsO-O1HO78CM',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'vqZQ2f-tdCRyWk8i8Efd3Hty4ZAQnq6TJR3dtcS1urY'
 };
 
 webpush.setVapidDetails(

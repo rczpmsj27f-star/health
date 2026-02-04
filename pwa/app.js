@@ -44,7 +44,7 @@ function setupEventListeners() {
     
     // Medication form
     document.getElementById('medicationForm').addEventListener('submit', handleMedicationSubmit);
-    document.getElementById('addTimeBtn').addEventListener('click', addTimeInput);
+    document.getElementById('addTimeBtn').addEventListener('click', () => addTimeInput());
     
     // Settings
     document.getElementById('enableNotificationsBtn').addEventListener('click', requestNotificationPermission);

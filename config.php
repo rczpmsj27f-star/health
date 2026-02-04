@@ -19,10 +19,10 @@
  */
 
 // OneSignal App ID - Will be exposed to JavaScript for client-side SDK initialization
-define('ONESIGNAL_APP_ID', 'YOUR_ONESIGNAL_APP_ID_HERE');
+define('ONESIGNAL_APP_ID', '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b');
 
 // OneSignal REST API Key - Server-side only, never expose to client
-define('ONESIGNAL_REST_API_KEY', 'YOUR_ONESIGNAL_REST_API_KEY_HERE');
+define('ONESIGNAL_REST_API_KEY', 'os_v2_app_e74njuz2nffe3d33ce6rm5r4jobuamioediusjfadwrwiwi53chrv6zoomac3yfthlsb5ws6e4tjhpytgvqzvv5gir44qxfiznor6pi');
 
 /**
  * Helper function to check if OneSignal credentials are properly configured
@@ -30,8 +30,9 @@ define('ONESIGNAL_REST_API_KEY', 'YOUR_ONESIGNAL_REST_API_KEY_HERE');
  * @return bool True if credentials are configured, false if still using placeholders
  */
 function onesignal_is_configured() {
-    return ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID_HERE' 
-        && ONESIGNAL_REST_API_KEY !== 'YOUR_ONESIGNAL_REST_API_KEY_HERE';
+    return ONESIGNAL_APP_ID !== '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b
+' 
+        && ONESIGNAL_REST_API_KEY !== 'os_v2_app_e74njuz2nffe3d33ce6rm5r4jobuamioediusjfadwrwiwi53chrv6zoomac3yfthlsb5ws6e4tjhpytgvqzvv5gir44qxfiznor6pi';
 }
 
 /**

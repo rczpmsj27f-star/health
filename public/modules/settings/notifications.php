@@ -442,19 +442,13 @@ if (!$settings) {
             // Check if running in standalone PWA mode with multiple detection methods
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                                  window.navigator.standalone === true ||
-                                 document.referrer.includes('android-app://') ||
-                                 // Additional checks for iOS PWA context
-                                 !window.matchMedia('(display-mode: browser)').matches ||
-                                 // Check if there's no Safari UI (viewport height equals window height)
-                                 (window.innerHeight === screen.height);
+                                 document.referrer.includes('android-app://');
             
             const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
             
             console.log('Standalone detection:', {
                 'matchMedia standalone': window.matchMedia('(display-mode: standalone)').matches,
                 'navigator.standalone': window.navigator.standalone,
-                'matchMedia NOT browser': !window.matchMedia('(display-mode: browser)').matches,
-                'fullscreen check': window.innerHeight === screen.height,
                 'isStandalone final': isStandalone,
                 'isIOS': isIOS
             });
@@ -511,16 +505,18 @@ if (!$settings) {
             }
 
             try {
-                // Check if push is supported (this is now just for logging on iOS, we checked above)
+                // Check if push notifications are supported
+                // For iOS: already checked earlier in the function, this is for logging/debugging
+                // For non-iOS: this check determines if we should show an error
                 let isSupported = false;
                 
                 await window.OneSignal.push(async function() {
                     isSupported = await window.OneSignal.isPushNotificationsSupported();
                 });
                 
-                console.log('Push notifications supported (double-check):', isSupported);
+                console.log('Push notifications supported (verification):', isSupported);
                 
-                // For non-iOS browsers, still need to check support here
+                // For non-iOS browsers, check support and show error if not supported
                 if (!isSupported && !isIOS) {
                     alert('Push notifications are not supported in this browser. Please try:\n\n' +
                           '1. Using a modern browser (Chrome, Firefox, Safari, Edge)\n' +
@@ -528,7 +524,7 @@ if (!$settings) {
                           '3. Checking your browser settings');
                     return;
                 }
-                // For iOS, we already handled the check above, so just proceed
+                // For iOS, we already handled the support check earlier in the function
 
                 // Use OneSignal's native prompt method - this handles iOS Safari properly
                 console.log('Showing OneSignal native prompt...');

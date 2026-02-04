@@ -324,30 +324,33 @@ if (!$settings) {
 
         // Wait for OneSignal to be fully initialized
         // This ensures the SDK is ready before we attempt any operations
+        // Uses recursive setTimeout to be consistent with other polling operations
         async function waitForOneSignalReady() {
             return new Promise((resolve) => {
-                // Wait for OneSignal to be fully ready
-                // On iOS, this may take longer than other platforms
                 const maxWaitTime = 5000; // 5 seconds maximum wait
                 const checkInterval = 100; // Check every 100ms
                 const startTime = Date.now();
 
-                const checkReady = setInterval(() => {
+                const checkReady = () => {
                     const elapsedTime = Date.now() - startTime;
                     
                     // Try to access OneSignal methods to verify it's ready
                     if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
-                        clearInterval(checkReady);
                         oneSignalReady = true;
-                        console.log('OneSignal is fully ready');
+                        console.log('OneSignal is fully ready after', elapsedTime, 'ms');
                         resolve();
                     } else if (elapsedTime >= maxWaitTime) {
-                        clearInterval(checkReady);
                         console.warn('OneSignal initialization timeout - proceeding anyway');
                         oneSignalReady = true;
                         resolve();
+                    } else {
+                        // Continue checking
+                        setTimeout(checkReady, checkInterval);
                     }
-                }, checkInterval);
+                };
+                
+                // Start checking
+                checkReady();
             });
         }
 
@@ -452,12 +455,14 @@ if (!$settings) {
                 if (!isSupported) {
                     // Provide iOS-specific guidance
                     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                    console.log('Browser User Agent:', navigator.userAgent);
+                    
                     if (isIOS) {
                         alert('Push notifications require:\n\n' +
                               '1. Safari 16.4 or later\n' +
                               '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
                               '3. Opening the app from the Home Screen icon\n\n' +
-                              'Current browser: ' + navigator.userAgent);
+                              'Please ensure you meet these requirements and try again.');
                     } else {
                         alert('Push notifications are not supported in this browser. Please try:\n\n' +
                               '1. Using a modern browser (Chrome, Firefox, Safari, Edge)\n' +

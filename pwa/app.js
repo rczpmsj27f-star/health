@@ -1,5 +1,8 @@
 // API Configuration
-const API_URL = 'http://localhost:3000/api';
+// Automatically determine API URL based on current origin
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : `${window.location.origin}/api`;
 
 // State Management
 let medications = [];

@@ -400,7 +400,7 @@ foreach ($prnMedications as $med) {
                     <?php endif; ?>
                     
                     <button type="button" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?> 
-                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\')' : '' ?>">
+                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\', ' . (int)($med['initial_dose'] ?? 1) . ', ' . (int)($med['subsequent_dose'] ?? 1) . ', ' . $doseCount . ')' : '' ?>">
                         <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
                     </button>
                 </div>
@@ -474,14 +474,18 @@ foreach ($prnMedications as $med) {
     <script>
     let currentMedicationId = null;
     
-    function showQuantityModal(medId, medName, doseInfo) {
+    function showQuantityModal(medId, medName, doseInfo, initialDose, subsequentDose, doseCount) {
         currentMedicationId = medId;
         document.getElementById('quantityModalTitle').textContent = '💊 Take ' + medName;
         document.getElementById('quantityModalDose').textContent = doseInfo;
         
+        // Use initial_dose or subsequent_dose as default value (informational/recommended)
+        const isFirstDose = (parseInt(doseCount) === 0);
+        const recommendedTablets = isFirstDose ? initialDose : subsequentDose;
+        
         document.getElementById('quantityMedicationId').value = medId;
-        document.getElementById('quantityInput').value = 1;
-        document.getElementById('quantityTaken').value = 1;
+        document.getElementById('quantityInput').value = recommendedTablets;
+        document.getElementById('quantityTaken').value = recommendedTablets;
         document.getElementById('quantityModal').classList.add('active');
     }
     

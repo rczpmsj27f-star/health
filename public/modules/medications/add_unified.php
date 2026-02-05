@@ -156,7 +156,7 @@ $isAdmin = Auth::isAdmin();
                             <label>Tablets per dose (initial)</label>
                             <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="1" placeholder="e.g., 2">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Number of tablets for the first dose (e.g., 2 paracetamol tablets)
+                                Recommended number of tablets for the first dose (e.g., 2 paracetamol tablets). This will be the default when logging, but you can adjust it each time.
                             </small>
                         </div>
                         
@@ -164,7 +164,7 @@ $isAdmin = Auth::isAdmin();
                             <label>Tablets per dose (subsequent)</label>
                             <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="1" placeholder="e.g., 2">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Number of tablets for follow-up doses (e.g., 2 paracetamol tablets)
+                                Recommended number of tablets for follow-up doses (e.g., 2 paracetamol tablets). This will be the default when logging, but you can adjust it each time.
                             </small>
                         </div>
                         

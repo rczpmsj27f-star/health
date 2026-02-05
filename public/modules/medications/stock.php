@@ -482,6 +482,10 @@ $medications = $stmt->fetchAll();
     <script>
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function() {
+        // Force close all stock modals on page load to prevent dark overlay behind success modal
+        document.getElementById('addStockModal').classList.remove('active');
+        document.getElementById('removeStockModal').classList.remove('active');
+        
         // Add event listeners to all Add Stock buttons
         var addStockButtons = document.querySelectorAll('.btn-add-stock');
         addStockButtons.forEach(function(button) {

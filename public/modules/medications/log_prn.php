@@ -14,7 +14,7 @@ $isAdmin = Auth::isAdmin();
 // Get all active PRN medications for the user
 $stmt = $pdo->prepare("
     SELECT m.id, m.name, m.current_stock, md.dose_amount, md.dose_unit, 
-           ms.max_doses_per_day, ms.min_hours_between_doses
+           ms.max_doses_per_day, ms.min_hours_between_doses, ms.doses_per_administration
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -59,12 +59,11 @@ foreach ($prnMedications as $med) {
         if ($firstTaken) {
             $firstTakenTimestamp = strtotime($firstTaken);
             $nextAvailableTimestamp = $firstTakenTimestamp + (24 * 3600);
-            $currentDate = date('Y-m-d');
-            $nextAvailableDate = date('Y-m-d', $nextAvailableTimestamp);
+            $currentTimestamp = time();
             
-            // Format time with date if it's tomorrow
-            if ($nextAvailableDate > $currentDate) {
-                $nextAvailableTimeForMaxDose = date('H:i \o\n d M', $nextAvailableTimestamp);
+            // Format time with date if it's tomorrow or later
+            if ($nextAvailableTimestamp > strtotime('tomorrow')) {
+                $nextAvailableTimeForMaxDose = date('H:i, j M', $nextAvailableTimestamp);
             } else {
                 $nextAvailableTimeForMaxDose = date('H:i', $nextAvailableTimestamp);
             }
@@ -392,7 +391,7 @@ foreach ($prnMedications as $med) {
                     <?php endif; ?>
                     
                     <button type="button" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?> 
-                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\')' : '' ?>">
+                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\', ' . (int)($med['doses_per_administration'] ?? 1) . ')' : '' ?>">
                         <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
                     </button>
                 </div>
@@ -407,7 +406,8 @@ foreach ($prnMedications as $med) {
             <p id="quantityModalDose" style="margin: 0 0 24px 0; color: var(--color-text-secondary);"></p>
             
             <div style="text-align: center; margin-bottom: 24px;">
-                <p style="margin: 0 0 16px 0; font-weight: 600;">How many tablets?</p>
+                <p style="margin: 0 0 8px 0; font-weight: 600;">How many doses to take?</p>
+                <p id="quantityDoseInfo" style="margin: 0 0 16px 0; font-size: 14px; color: var(--color-text-secondary);"></p>
                 <div class="number-stepper" style="max-width: 200px; margin: 0 auto;">
                     <button type="button" class="stepper-btn" onclick="decrementQuantity()">−</button>
                     <input type="number" id="quantityInput" value="1" min="1" max="10" style="flex: 1; text-align: center; background: var(--color-bg-gray);">
@@ -465,10 +465,17 @@ foreach ($prnMedications as $med) {
     <script>
     let currentMedicationId = null;
     
-    function showQuantityModal(medId, medName, doseInfo) {
+    function showQuantityModal(medId, medName, doseInfo, dosesPerAdmin) {
         currentMedicationId = medId;
         document.getElementById('quantityModalTitle').textContent = '💊 Take ' + medName;
         document.getElementById('quantityModalDose').textContent = doseInfo;
+        
+        // Show dose information
+        const doseInfoText = dosesPerAdmin > 1 
+            ? '(Each dose contains ' + dosesPerAdmin + ' tablets)' 
+            : '';
+        document.getElementById('quantityDoseInfo').textContent = doseInfoText;
+        
         document.getElementById('quantityMedicationId').value = medId;
         document.getElementById('quantityInput').value = 1;
         document.getElementById('quantityTaken').value = 1;

@@ -36,7 +36,7 @@ unset($_SESSION['error'], $_SESSION['success']);
             <div class="alert alert-success"><?= htmlspecialchars($ok) ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="/app/auth/register_handler.php" enctype="multipart/form-data">
+        <form method="POST" action="/register_handler.php" enctype="multipart/form-data">
             <div class="form-group">
                 <label>Username</label>
                 <input type="text" name="username" required>

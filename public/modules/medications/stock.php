@@ -232,6 +232,7 @@ $medications = $stmt->fetchAll();
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            background: none;
         }
         
         .modal.active {

@@ -53,7 +53,7 @@ async function initializeOneSignal() {
                 appId: appId,
                 allowLocalhostAsSecureOrigin: true,
                 serviceWorkerParam: { scope: '/' },
-                serviceWorkerPath: 'OneSignalSDKWorker.js',
+                serviceWorkerPath: '/OneSignalSDKWorker.js',
                 notifyButton: {
                     enable: false
                 }
@@ -61,7 +61,9 @@ async function initializeOneSignal() {
             
             // Make OneSignal available globally
             window.OneSignal = OneSignal;
-            console.log('OneSignal initialized with App ID:', appId);
+            console.log('✅ OneSignal initialized with App ID:', appId);
+            console.log('✅ OneSignal object available:', !!window.OneSignal);
+            console.log('✅ Push subscription available:', !!OneSignal.User?.PushSubscription);
         });
     } catch (error) {
         console.error('Failed to initialize OneSignal:', error);
@@ -438,31 +440,50 @@ function updateNotificationUI() {
 }
 
 async function requestNotificationPermission() {
+    console.log('🔔 Starting notification permission request...');
+    
+    // Step 1: Check browser support
     if (!('Notification' in window)) {
         alert('This browser does not support notifications');
         return;
     }
     
-    if (!window.OneSignal || !window.OneSignal.Notifications) {
-        alert('OneSignal is not initialized. Please refresh the page and try again.');
-        return;
-    }
-    
+    // Step 2: Try native browser permission FIRST (most reliable)
     try {
-        // Request permission via OneSignal v16
-        await window.OneSignal.Notifications.requestPermission();
+        console.log('📱 Requesting native browser permission...');
+        const permission = await Notification.requestPermission();
+        console.log('✅ Native permission result:', permission);
         
-        // Check if permission was granted (permission is a boolean property)
-        const permission = window.OneSignal.Notifications.permission;
-        
-        if (permission) {
-            console.log('Notification permission granted via OneSignal');
-            updateNotificationUI();
-        } else {
+        if (permission !== 'granted') {
             alert('Notification permission denied. You will not receive medication reminders.');
+            return;
         }
+        
+        // Step 3: Subscribe to OneSignal AFTER native permission is granted
+        console.log('🎯 Native permission granted, subscribing to OneSignal...');
+        
+        // Wait for OneSignal to be available
+        if (!window.OneSignal) {
+            console.warn('⚠️ OneSignal not initialized yet, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        if (window.OneSignal && window.OneSignal.User) {
+            try {
+                // Subscribe using OneSignal User API (v16 pattern)
+                await window.OneSignal.User.PushSubscription.optIn();
+                console.log('✅ Successfully subscribed to OneSignal');
+            } catch (osError) {
+                console.warn('⚠️ OneSignal subscription failed, but native permission granted:', osError);
+            }
+        }
+        
+        // Update UI to show success
+        updateNotificationUI();
+        console.log('🎉 Notification setup complete!');
+        
     } catch (error) {
-        console.error('Failed to request notification permission:', error);
-        alert('Failed to enable notifications. Please try again.');
+        console.error('❌ Permission request failed:', error);
+        alert('Failed to enable notifications. Please check your browser settings.');
     }
 }

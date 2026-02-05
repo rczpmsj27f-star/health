@@ -534,7 +534,7 @@ if (!$settings) {
             }
 
             try {
-                const response = await fetch('save_notifications_handler.php', {
+                const response = await fetch('/settings/notifications/save', {
                     method: 'POST',
                     body: formData,
                     credentials: 'include',
@@ -589,7 +589,7 @@ if (!$settings) {
                 const formData = new FormData(document.getElementById('settingsForm'));
                 
                 try {
-                    const response = await fetch('save_notifications_handler.php', {
+                    const response = await fetch('/settings/notifications/save', {
                         method: 'POST',
                         body: formData,
                         credentials: 'include',
@@ -641,7 +641,7 @@ if (!$settings) {
             const formData = new FormData(this);
             
             try {
-                const response = await fetch('save_notifications_handler.php', {
+                const response = await fetch('/settings/notifications/save', {
                     method: 'POST',
                     body: formData,
                     credentials: 'include',

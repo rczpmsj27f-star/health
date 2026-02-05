@@ -334,6 +334,10 @@ if (!$settings) {
         let notificationsEnabled = <?= $settings['notifications_enabled'] ? 'true' : 'false' ?>;
         let storedPlayerId = <?= $settings['onesignal_player_id'] ? '"' . htmlspecialchars($settings['onesignal_player_id'], ENT_QUOTES, 'UTF-8') . '"' : 'null' ?>;
 
+        // Constants for Player ID retry logic
+        const MAX_PLAYER_ID_ATTEMPTS = 10;
+        const PLAYER_ID_RETRY_DELAY_MS = 500;
+
         // Helper function to check if error is session-related
         function isSessionError(error) {
             if (error && error.message) {
@@ -464,12 +468,11 @@ if (!$settings) {
                     // Wait for Player ID to be available (may take a moment after optIn)
                     let playerId = null;
                     let attempts = 0;
-                    const maxAttempts = 10;
-                    while (!playerId && attempts < maxAttempts) {
+                    while (!playerId && attempts < MAX_PLAYER_ID_ATTEMPTS) {
                         playerId = window.OneSignal.User.PushSubscription.id;
                         if (!playerId) {
-                            console.log(`Waiting for Player ID... attempt ${attempts + 1}/${maxAttempts}`);
-                            await new Promise(resolve => setTimeout(resolve, 500));
+                            console.log(`Waiting for Player ID... attempt ${attempts + 1}/${MAX_PLAYER_ID_ATTEMPTS}`);
+                            await new Promise(resolve => setTimeout(resolve, PLAYER_ID_RETRY_DELAY_MS));
                             attempts++;
                         }
                     }

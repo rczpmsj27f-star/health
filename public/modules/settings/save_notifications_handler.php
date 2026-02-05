@@ -29,9 +29,6 @@ require_once "../../../app/helpers/debug_helpers.php";
 // Debug logging: Create snapshot of request
 debug_snapshot('save_notifications_handler');
 
-// Detect if this is an AJAX/JSON request
-$isAjax = is_ajax_request();
-
 // Check authentication - always return JSON, never redirect
 if (empty($_SESSION['user_id'])) {
     debug_log('save_notifications_handler', 'Authentication failed - no user_id in session');

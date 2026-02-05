@@ -153,10 +153,18 @@ $isAdmin = Auth::isAdmin();
                 <div id="prn-schedule" style="display: none;">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Doses per administration</label>
-                            <input type="number" name="doses_per_administration" id="doses_per_administration" min="1" max="10" value="1" placeholder="e.g., 2">
+                            <label>Initial dose</label>
+                            <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="1" placeholder="e.g., 2">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Number of tablets/doses to take each time (e.g., 2 for paracetamol)
+                                Number of tablets for the first dose (e.g., 2 for paracetamol)
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Subsequent doses</label>
+                            <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="1" placeholder="e.g., 2">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Number of tablets for follow-up doses (e.g., 2 for paracetamol)
                             </small>
                         </div>
                         

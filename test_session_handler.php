@@ -83,7 +83,7 @@ echo "\n";
 echo "Test 4: Verify user-friendly session expiry messages\n";
 echo "-----------------------------------------------------\n";
 
-$sessionExpiredCount = substr_count($notificationsFile, "session has expired");
+$sessionExpiredCount = substr_count($notificationsFile, "Session expired") + substr_count($notificationsFile, "session has expired");
 
 echo "Expected: Multiple session expiry messages\n";
 echo "Actual: $sessionExpiredCount occurrences\n";

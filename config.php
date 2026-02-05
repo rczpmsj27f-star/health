@@ -39,4 +39,61 @@ function onesignal_validate_config($throw_on_error = false) {
 
 // ================= End OneSignal Configuration =====================
 
+// =================== Debug/Logging Configuration ===================
+
+/**
+ * Enable debug logging for troubleshooting
+ * 
+ * When enabled, debug information is logged to PHP error log including:
+ * - Session state information
+ * - POST request payloads (with sensitive data redacted)
+ * - Request headers and metadata
+ * 
+ * SECURITY NOTE: Only enable in development/staging environments.
+ * Disable in production to avoid performance impact and log bloat.
+ * 
+ * To enable:
+ * 1. Set this constant to true, OR
+ * 2. Set environment variable: DEBUG_MODE=true
+ */
+define('ENABLE_DEBUG_LOGGING', false);
+
+// ================= End Debug/Logging Configuration =================
+
+// =================== Session Configuration ==========================
+
+/**
+ * Session Cookie Configuration
+ * 
+ * These settings control how PHP session cookies are handled.
+ * Critical for AJAX requests and cross-subdomain functionality.
+ * 
+ * Current configuration:
+ * - SameSite: Lax (allows cookies on same-site AJAX, blocks cross-site)
+ * - Secure: false (set to true in production with HTTPS)
+ * - HttpOnly: true (prevents JavaScript access for security)
+ * - Path: / (cookie available to entire site)
+ * - Domain: empty (restricts to exact domain, no subdomains)
+ * 
+ * For cross-subdomain support (e.g., api.example.com and www.example.com):
+ * - Set domain to '.example.com' (note the leading dot)
+ * - Both subdomains must use HTTPS if Secure flag is true
+ * 
+ * For local development:
+ * - Secure should be false (unless using HTTPS locally)
+ * - SameSite 'Lax' or 'None' (None requires Secure=true)
+ */
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,  // Session cookie (expires when browser closes)
+        'path' => '/',
+        'domain' => '',   // Current domain only (no subdomains)
+        'secure' => false,  // Set to true in production with HTTPS
+        'httponly' => true,  // Prevent JavaScript access
+        'samesite' => 'Lax'  // Allow same-site requests, block cross-site
+    ]);
+}
+
+// ================= End Session Configuration ========================
+
 // ... (other configuration, functions, or classes)

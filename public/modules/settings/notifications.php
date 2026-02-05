@@ -49,7 +49,7 @@ if (!$settings) {
     <meta name="theme-color" content="#4F46E5">
     
     <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js" async></script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js" async crossorigin="anonymous"></script>
     
     <!-- OneSignal App ID for client-side JavaScript -->
     <script>

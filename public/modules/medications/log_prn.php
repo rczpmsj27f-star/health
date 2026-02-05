@@ -17,7 +17,7 @@ $isAdmin = Auth::isAdmin();
 // Get all active PRN medications for the user
 $stmt = $pdo->prepare("
     SELECT m.id, m.name, m.current_stock, md.dose_amount, md.dose_unit, 
-           ms.max_doses_per_day, ms.min_hours_between_doses, ms.doses_per_administration
+           ms.max_doses_per_day, ms.min_hours_between_doses, ms.initial_dose, ms.subsequent_dose
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -400,7 +400,7 @@ foreach ($prnMedications as $med) {
                     <?php endif; ?>
                     
                     <button type="button" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?> 
-                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\', ' . (int)($med['doses_per_administration'] ?? 1) . ')' : '' ?>">
+                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\', ' . (int)($med['initial_dose'] ?? 1) . ', ' . (int)($med['subsequent_dose'] ?? 1) . ', ' . $doseCount . ')' : '' ?>">
                         <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
                     </button>
                 </div>
@@ -475,14 +475,20 @@ foreach ($prnMedications as $med) {
     <script>
     let currentMedicationId = null;
     
-    function showQuantityModal(medId, medName, doseInfo, dosesPerAdmin) {
+    function showQuantityModal(medId, medName, doseInfo, initialDose, subsequentDose, doseCount) {
         currentMedicationId = medId;
         document.getElementById('quantityModalTitle').textContent = '💊 Take ' + medName;
         document.getElementById('quantityModalDose').textContent = doseInfo;
         
+        // Determine if this is the first dose in the 24-hour period
+        // parseInt is necessary because doseCount is passed as a string via onclick attribute
+        const isFirstDose = (parseInt(doseCount) === 0);
+        const tabletsPerDose = isFirstDose ? initialDose : subsequentDose;
+        const doseType = isFirstDose ? 'initial' : 'subsequent';
+        
         // Show dose information
-        const doseInfoText = dosesPerAdmin > 1 
-            ? '(Each dose contains ' + dosesPerAdmin + ' tablets)' 
+        const doseInfoText = tabletsPerDose > 1 
+            ? '(Each dose contains ' + tabletsPerDose + ' tablets)' 
             : '';
         document.getElementById('quantityDoseInfo').textContent = doseInfoText;
         

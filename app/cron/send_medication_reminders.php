@@ -7,7 +7,7 @@
  * based on user notification preferences and medication schedules.
  * 
  * Cron setup example (run every minute):
- * * * * * * /usr/bin/php /path/to/health/app/cron/send_medication_reminders.php >> /path/to/logs/cron.log 2>&1
+ * * * * * /usr/bin/php /path/to/health/app/cron/send_medication_reminders.php >> /path/to/logs/cron.log 2>&1
  */
 
 // Prevent web access

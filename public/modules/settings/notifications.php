@@ -57,28 +57,45 @@ if (!$settings) {
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         
         OneSignalDeferred.push(async function(OneSignal) {
-            // Get App ID from server-side config
-            const appId = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
-            
-            if (!appId || appId === 'YOUR_ONESIGNAL_APP_ID') {
-                console.warn('OneSignal App ID not configured. Set ONESIGNAL_APP_ID in config.php');
-                return;
+    console.log('🔵 OneSignal callback triggered');
+    console.log('🔵 OneSignal object:', OneSignal);
+    
+    // Get App ID from server-side config
+    const appId = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
+    console.log('🔵 App ID:', appId);
+    
+    if (!appId || appId === 'YOUR_ONESIGNAL_APP_ID') {
+        console.warn('OneSignal App ID not configured. Set ONESIGNAL_APP_ID in config.php');
+        alert('❌ App ID not configured');
+        return;
+    }
+    
+    try {
+        console.log('🔵 Starting OneSignal.init...');
+        await OneSignal.init({
+            appId: appId,
+            allowLocalhostAsSecureOrigin: true,
+            serviceWorkerPath: '/OneSignalSDKWorker.js',
+            serviceWorkerParam: { scope: '/' },
+            notifyButton: {
+                enable: false
             }
-            
-            await OneSignal.init({
-                appId: appId,
-                allowLocalhostAsSecureOrigin: true,
-                serviceWorkerPath: '/OneSignalSDKWorker.js', // Absolute path from root
-                serviceWorkerParam: { scope: '/' },
-                notifyButton: {
-                    enable: false
-                }
-            });
-            
-            // Make available globally
-            window.OneSignal = OneSignal;
-            console.log('✅ OneSignal initialized');
         });
+        console.log('✅ OneSignal.init completed');
+        
+        // Check what's available
+        console.log('🔵 OneSignal.User:', OneSignal.User);
+        console.log('🔵 OneSignal.User.PushSubscription:', OneSignal.User?.PushSubscription);
+        
+        // Make available globally
+        window.OneSignal = OneSignal;
+        alert('✅ OneSignal initialized successfully');
+        console.log('✅ OneSignal initialized');
+    } catch (error) {
+        console.error('❌ OneSignal init failed:', error);
+        alert('❌ Init failed: ' + error.message);
+    }
+});
     </script>
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">

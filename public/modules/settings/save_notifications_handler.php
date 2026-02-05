@@ -17,6 +17,10 @@
  */
 
 session_start();
+
+// Always set JSON content type for this API endpoint
+header('Content-Type: application/json');
+
 require_once "../../../app/config/database.php";
 require_once "../../../config.php";
 require_once "../../../app/helpers/ajax_helpers.php";
@@ -28,29 +32,17 @@ debug_snapshot('save_notifications_handler');
 // Detect if this is an AJAX/JSON request
 $isAjax = is_ajax_request();
 
-// Set JSON content type header for AJAX requests
-if ($isAjax) {
-    header('Content-Type: application/json');
-}
-
-// Check authentication
+// Check authentication - always return JSON, never redirect
 if (empty($_SESSION['user_id'])) {
     debug_log('save_notifications_handler', 'Authentication failed - no user_id in session');
     
-    // Return appropriate response based on request type
-    if ($isAjax) {
-        http_response_code(401);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Unauthorized. Please log in again.',
-            'error_code' => 'UNAUTHORIZED'
-        ]);
-        exit;
-    } else {
-        // Normal page request - redirect to login
-        header("Location: /login.php");
-        exit;
-    }
+    http_response_code(401);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Unauthorized. Please log in again.',
+        'error_code' => 'UNAUTHORIZED'
+    ]);
+    exit;
 }
 
 $user_id = $_SESSION['user_id'];
@@ -159,13 +151,7 @@ try {
     
     debug_log('save_notifications_handler', 'Request completed successfully');
     
-    if ($isAjax) {
-        echo json_encode($response);
-    } else {
-        // For form submissions, redirect back with success message
-        $_SESSION['success'] = 'Notification settings saved successfully';
-        header("Location: /modules/settings/notifications.php");
-    }
+    echo json_encode($response);
     exit;
     
 } catch (Exception $e) {
@@ -189,12 +175,6 @@ try {
         $errorResponse['debug_info'] = $e->getMessage();
     }
     
-    if ($isAjax) {
-        echo json_encode($errorResponse);
-    } else {
-        // For form submissions, redirect back with error message
-        $_SESSION['error'] = $errorResponse['message'];
-        header("Location: /modules/settings/notifications.php");
-    }
+    echo json_encode($errorResponse);
     exit;
 }

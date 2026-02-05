@@ -461,12 +461,28 @@ if (!$settings) {
                     await window.OneSignal.User.PushSubscription.optIn();
                     console.log('✅ OneSignal subscription successful');
                     
-                    // Get user ID for saving to database (id is a property, not a promise)
-                    const userId = window.OneSignal.User.PushSubscription.id;
-                    console.log('OneSignal User ID:', userId);
+                    // Wait for Player ID to be available (may take a moment after optIn)
+                    let playerId = null;
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    while (!playerId && attempts < maxAttempts) {
+                        playerId = window.OneSignal.User.PushSubscription.id;
+                        if (!playerId) {
+                            console.log(`Waiting for Player ID... attempt ${attempts + 1}/${maxAttempts}`);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            attempts++;
+                        }
+                    }
+                    
+                    if (!playerId) {
+                        console.warn('⚠️ Player ID not available after waiting');
+                        throw new Error('Could not retrieve device ID. Please refresh and try again.');
+                    }
+                    
+                    console.log('OneSignal User ID:', playerId);
                     
                     // Save notification enabled status to database
-                    await saveNotificationStatus(true, userId);
+                    await saveNotificationStatus(true, playerId);
                 } else {
                     console.error('⚠️ OneSignal PushSubscription not available');
                     throw new Error('OneSignal is not properly initialized. Please refresh the page and try again.');
@@ -519,8 +535,19 @@ if (!$settings) {
                 const response = await fetch('save_notifications_handler.php', {
                     method: 'POST',
                     body: formData,
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
+
+                // Validate content type before parsing JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('Server returned non-JSON response');
+                    throw new Error('Server error: Invalid response format. Please refresh and try again.');
+                }
 
                 if (!response.ok) {
                     // Try to parse error message from JSON response
@@ -563,8 +590,19 @@ if (!$settings) {
                     const response = await fetch('save_notifications_handler.php', {
                         method: 'POST',
                         body: formData,
-                        credentials: 'include'
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
                     });
+                    
+                    // Validate content type before parsing JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.error('Server returned non-JSON response');
+                        return;
+                    }
                     
                     if (response.ok) {
                         // Success - just log without parsing response for performance
@@ -601,8 +639,19 @@ if (!$settings) {
                 const response = await fetch('save_notifications_handler.php', {
                     method: 'POST',
                     body: formData,
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
+                
+                // Validate content type before parsing JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('Server returned non-JSON response');
+                    throw new Error('Server error: Invalid response format. Please refresh and try again.');
+                }
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -640,7 +689,7 @@ if (!$settings) {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('Service Worker registered'))
-            .catch(err => console.error('Service Worker registration failed:', err));
+            .catch(err => console.warn('Service Worker registration failed (non-fatal):', err));
     }
     </script>
 </body>

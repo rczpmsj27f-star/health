@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notification Settings - Demo</title>
     
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js" async crossorigin="anonymous"></script>
+    
     <script>
         window.ONESIGNAL_APP_ID = '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b';
+        window.OneSignal = window.OneSignal || [];
     </script>
     
     <link rel="stylesheet" href="/assets/css/app.css?v=1">
     <script src="/assets/js/menu.js?v=1" defer></script>
-    
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     
     <style>
         .settings-container {

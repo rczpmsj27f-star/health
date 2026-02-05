@@ -48,16 +48,17 @@ if (!$settings) {
     <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png">
     <meta name="theme-color" content="#4F46E5">
     
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js" async crossorigin="anonymous"></script>
+    
     <!-- OneSignal App ID for client-side JavaScript -->
     <script>
         window.ONESIGNAL_APP_ID = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
+        window.OneSignal = window.OneSignal || [];
     </script>
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
-    
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     
     <style>
         .settings-container {

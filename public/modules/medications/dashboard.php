@@ -796,6 +796,11 @@ foreach ($prnMedications as $med) {
         background: none;
     }
     
+    .modal.active {
+        display: flex;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
     .modal-content {
         background: var(--color-bg-white);
         padding: 32px;

@@ -19,6 +19,13 @@ $surname    = trim($_POST['surname']);
 $password   = $_POST['password'];
 $confirm    = $_POST['confirm_password'];
 
+// Validate email format
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $_SESSION['error'] = "Invalid email address.";
+    header("Location: /register.php");
+    exit;
+}
+
 if ($password !== $confirm) {
     $_SESSION['error'] = "Passwords do not match.";
     header("Location: /register.php");
@@ -30,6 +37,32 @@ $hash = password_hash($password, PASSWORD_DEFAULT);
 // Profile picture upload
 $profilePath = null;
 if (!empty($_FILES['profile_picture']['name'])) {
+    // Validate file upload
+    if ($_FILES['profile_picture']['error'] !== UPLOAD_ERR_OK) {
+        $_SESSION['error'] = "File upload failed. Please try again.";
+        header("Location: /register.php");
+        exit;
+    }
+    
+    // Validate file type (images only)
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $_FILES['profile_picture']['tmp_name']);
+    finfo_close($finfo);
+    
+    if (!in_array($mimeType, $allowedTypes)) {
+        $_SESSION['error'] = "Invalid file type. Please upload an image (JPEG, PNG, GIF, or WebP).";
+        header("Location: /register.php");
+        exit;
+    }
+    
+    // Validate file size (max 5MB)
+    if ($_FILES['profile_picture']['size'] > 5 * 1024 * 1024) {
+        $_SESSION['error'] = "File too large. Maximum size is 5MB.";
+        header("Location: /register.php");
+        exit;
+    }
+    
     $ext = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
     $filename = uniqid("pp_") . "." . $ext;
     $target = __DIR__ . "/../uploads/profile/" . $filename;
@@ -79,20 +112,28 @@ $ver = $pdo->prepare("
 $ver->execute([$userId, $tokenHash, $expires]);
 
 // Send email
-$mail = mailer();
-$mail->addAddress($email);
-$mail->Subject = "Verify your email address";
+try {
+    $mail = mailer();
+    $mail->addAddress($email);
+    $mail->Subject = "Verify your email address";
 
-$link = "https://ht.ianconroy.co.uk/verify-email.php?token=" . $token;
+    $link = "https://ht.ianconroy.co.uk/verify-email.php?token=" . $token;
 
-$mail->Body = "
-    <p>Hello $first,</p>
-    <p>Please verify your email by clicking the link below:</p>
-    <p><a href='$link'>$link</a></p>
-    <p>If you did not create this account, you can ignore this email.</p>
-";
+    $mail->Body = "
+        <p>Hello $first,</p>
+        <p>Please verify your email by clicking the link below:</p>
+        <p><a href='$link'>$link</a></p>
+        <p>If you did not create this account, you can ignore this email.</p>
+    ";
 
-$mail->send();
+    $mail->send();
+} catch (Exception $e) {
+    // Email failed, but user is registered - they can request a new verification email
+    error_log("Failed to send verification email to $email: " . $e->getMessage());
+    $_SESSION['success'] = "Registration successful! However, we couldn't send the verification email. Please contact support.";
+    header("Location: /login.php");
+    exit;
+}
 
 $_SESSION['success'] = "Registration successful! Please check your email.";
 header("Location: /login.php");

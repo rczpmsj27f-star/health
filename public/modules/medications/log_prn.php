@@ -8,6 +8,9 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
+// Date format constant for next dose time display
+define('NEXT_DOSE_DATE_FORMAT', 'H:i \o\n d M');  // e.g., "14:30 on 06 Feb"
+
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
@@ -82,7 +85,7 @@ foreach ($prnMedications as $med) {
             // Show date if next dose is on a different day
             $todayEnd = strtotime('tomorrow') - 1;
             if ($nextAvailableTimestamp > $todayEnd) {
-                $nextAvailableTime = date('H:i \o\n d M', $nextAvailableTimestamp);
+                $nextAvailableTime = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
             } else {
                 $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
             }

@@ -2,6 +2,7 @@
   "name": "Health Tracker",
   "short_name": "HealthTracker",
   "description": "Manage your health and medications",
+  "gcm_sender_id": "482941778795",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

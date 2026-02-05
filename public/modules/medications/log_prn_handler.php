@@ -44,7 +44,7 @@ try {
     
     // 2. Check if max doses reached in last 24 hours
     $stmt = $pdo->prepare("
-        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken
+        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
         FROM medication_logs 
         WHERE medication_id = ? 
         AND user_id = ?
@@ -56,12 +56,16 @@ try {
     
     $doseCount = $logData['dose_count'] ?? 0;
     $lastTaken = $logData['last_taken'];
+    $firstTaken = $logData['first_taken'];
     $maxDoses = $medication['max_doses_per_day'] ?? 999;
     $minHours = $medication['min_hours_between_doses'] ?? 0;
     
     // Check max doses limit
     if ($doseCount >= $maxDoses) {
-        throw new Exception("Maximum daily dose limit reached. You cannot take more doses today.");
+        // Calculate when the next dose will be available (24 hours after the first dose in this period)
+        $nextAvailableTimestamp = strtotime($firstTaken) + (24 * 3600);
+        $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+        throw new Exception("Maximum daily dose limit reached. Next dose available at {$nextAvailableTime}.");
     }
     
     // 3. Check if minimum time has passed since last dose

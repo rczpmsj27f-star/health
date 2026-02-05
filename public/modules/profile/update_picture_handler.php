@@ -2,6 +2,13 @@
 session_start();
 require_once "../../../app/config/database.php";
 
+// Check if user is logged in
+if (empty($_SESSION['user_id'])) {
+    $_SESSION['error'] = "You must be logged in to upload a profile picture.";
+    header("Location: /login.php");
+    exit;
+}
+
 // Validate file was uploaded
 if (empty($_FILES['profile_picture']['name'])) {
     $_SESSION['error'] = "No file selected.";

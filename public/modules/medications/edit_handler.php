@@ -194,5 +194,14 @@ if (!empty($_POST['other_instructions'])) {
     }
 }
 
+// Update current stock if provided
+if (isset($_POST['current_stock'])) {
+    $currentStock = filter_input(INPUT_POST, 'current_stock', FILTER_VALIDATE_INT);
+    if ($currentStock !== false && $currentStock >= 0) {
+        $stmt = $pdo->prepare("UPDATE medications SET current_stock = ?, stock_updated_at = NOW() WHERE id = ?");
+        $stmt->execute([$currentStock, $medId]);
+    }
+}
+
 header("Location: /modules/medications/view.php?id=$medId");
 exit;

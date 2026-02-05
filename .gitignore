@@ -53,3 +53,7 @@ server/settings.json
 # Keep config.php tracked in development with placeholder values
 config.php
 
+# Composer dependencies
+vendor/
+composer.lock
+

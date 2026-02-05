@@ -77,7 +77,7 @@ try {
         // Format time with date if it's on a different day than today
         $todayEnd = strtotime('tomorrow') - 1;
         if ($nextAvailableTimestamp > $todayEnd) {
-            $nextAvailableTime = date('H:i, j M', $nextAvailableTimestamp);
+            $nextAvailableTime = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
         } else {
             $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
         }

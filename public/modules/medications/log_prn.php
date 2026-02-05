@@ -30,7 +30,7 @@ $prnMedications = $stmt->fetchAll();
 $prnData = [];
 foreach ($prnMedications as $med) {
     $stmt = $pdo->prepare("
-        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken
+        SELECT COALESCE(SUM(quantity_taken), 0) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
         FROM medication_logs 
         WHERE medication_id = ? 
         AND user_id = ?
@@ -42,17 +42,33 @@ foreach ($prnMedications as $med) {
     
     $doseCount = $logData['dose_count'] ?? 0;
     $lastTaken = $logData['last_taken'];
+    $firstTaken = $logData['first_taken'];
     $maxDoses = $med['max_doses_per_day'] ?? 999;
     $minHours = $med['min_hours_between_doses'] ?? 0;
     
     // Calculate if can take now
     $canTakeNow = true;
     $nextAvailableTime = null;
+    $nextAvailableTimeForMaxDose = null;
     $timeRemaining = 0;
     
     // Check max doses
     if ($doseCount >= $maxDoses) {
         $canTakeNow = false;
+        // Calculate when next dose will be available (24 hours after first dose)
+        if ($firstTaken) {
+            $firstTakenTimestamp = strtotime($firstTaken);
+            $nextAvailableTimestamp = $firstTakenTimestamp + (24 * 3600);
+            $currentDate = date('Y-m-d');
+            $nextAvailableDate = date('Y-m-d', $nextAvailableTimestamp);
+            
+            // Format time with date if it's tomorrow
+            if ($nextAvailableDate > $currentDate) {
+                $nextAvailableTimeForMaxDose = date('H:i \o\n d M', $nextAvailableTimestamp);
+            } else {
+                $nextAvailableTimeForMaxDose = date('H:i', $nextAvailableTimestamp);
+            }
+        }
     }
     
     // Check minimum time between doses
@@ -73,8 +89,10 @@ foreach ($prnMedications as $med) {
         'dose_count' => $doseCount,
         'max_doses' => $maxDoses,
         'last_taken' => $lastTaken,
+        'first_taken' => $firstTaken,
         'can_take_now' => $canTakeNow,
         'next_available_time' => $nextAvailableTime,
+        'next_available_time_for_max_dose' => $nextAvailableTimeForMaxDose,
         'time_remaining' => $timeRemaining
     ];
 }
@@ -356,7 +374,12 @@ foreach ($prnMedications as $med) {
                     
                     <?php if (!$canTake && $doseCount >= $maxDoses): ?>
                         <div class="status-message danger">
-                            ⚠️ <strong>Maximum daily dose reached.</strong> Do not take more until 24 hours have passed since your first dose today.
+                            ⚠️ <strong>Maximum daily dose limit reached.</strong> 
+                            <?php if (!empty($data['next_available_time_for_max_dose'])): ?>
+                                Next dose available at <?= htmlspecialchars($data['next_available_time_for_max_dose']) ?>.
+                            <?php else: ?>
+                                Do not take more until 24 hours have passed since your first dose today.
+                            <?php endif; ?>
                         </div>
                     <?php elseif (!$canTake && $nextTime): ?>
                         <div class="status-message warning">

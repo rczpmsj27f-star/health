@@ -44,7 +44,7 @@ try {
     
     // 2. Check if max doses reached in last 24 hours
     $stmt = $pdo->prepare("
-        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
+        SELECT COALESCE(SUM(quantity_taken), 0) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
         FROM medication_logs 
         WHERE medication_id = ? 
         AND user_id = ?

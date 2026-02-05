@@ -66,7 +66,7 @@ foreach ($prnMedications as $med) {
             // Format time with date if it's on a different day than today
             $todayEnd = strtotime('tomorrow') - 1;
             if ($nextAvailableTimestamp > $todayEnd) {
-                $nextAvailableTimeForMaxDose = date('H:i, j M', $nextAvailableTimestamp);
+                $nextAvailableTimeForMaxDose = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
             } else {
                 $nextAvailableTimeForMaxDose = date('H:i', $nextAvailableTimestamp);
             }
@@ -446,12 +446,12 @@ foreach ($prnMedications as $med) {
         z-index: 1000;
         align-items: center;
         justify-content: center;
-        background: none;
+        background: none !important;
     }
     
     .modal.active {
-        display: flex;
-        background: rgba(0, 0, 0, 0.5);
+        display: flex !important;
+        background: rgba(0, 0, 0, 0.5) !important;
     }
     
     .modal-content {

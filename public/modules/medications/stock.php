@@ -232,12 +232,12 @@ $medications = $stmt->fetchAll();
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            background: none;
+            background: none !important;
         }
         
         .modal.active {
-            display: flex;
-            background: rgba(0, 0, 0, 0.5);
+            display: flex !important;
+            background: rgba(0, 0, 0, 0.5) !important;
         }
         
         .modal-content {

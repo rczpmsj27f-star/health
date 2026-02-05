@@ -411,7 +411,6 @@ foreach ($prnMedications as $med) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
         z-index: 1000;
         align-items: center;
         justify-content: center;
@@ -419,6 +418,7 @@ foreach ($prnMedications as $med) {
     
     .modal.active {
         display: flex;
+        background: rgba(0, 0, 0, 0.5);
     }
     
     .modal-content {
@@ -484,6 +484,18 @@ foreach ($prnMedications as $med) {
                 const clampedValue = Math.max(1, Math.min(10, value));
                 this.value = clampedValue;
                 document.getElementById('quantityTaken').value = clampedValue;
+            });
+        }
+        
+        // Ensure quantity is synced before form submission
+        const quantityForm = document.getElementById('quantityForm');
+        if (quantityForm) {
+            quantityForm.addEventListener('submit', function(e) {
+                const input = document.getElementById('quantityInput');
+                const hidden = document.getElementById('quantityTaken');
+                const value = parseInt(input.value) || 1;
+                const clampedValue = Math.max(1, Math.min(10, value));
+                hidden.value = clampedValue;
             });
         }
         

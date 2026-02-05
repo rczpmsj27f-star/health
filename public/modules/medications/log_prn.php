@@ -488,7 +488,7 @@ foreach ($prnMedications as $med) {
         // Show dose information
         const doseInfoText = tabletsPerDose > 1 
             ? '(Each dose contains ' + tabletsPerDose + ' tablets)' 
-            : '(Each dose contains 1 tablet)';
+            : '';
         document.getElementById('quantityDoseInfo').textContent = doseInfoText;
         
         document.getElementById('quantityMedicationId').value = medId;

@@ -14,7 +14,7 @@ $isAdmin = Auth::isAdmin();
 // Get all active PRN medications for the user
 $stmt = $pdo->prepare("
     SELECT m.id, m.name, m.current_stock, md.dose_amount, md.dose_unit, 
-           ms.max_doses_per_day, ms.min_hours_between_doses
+           ms.max_doses_per_day, ms.min_hours_between_doses, ms.doses_per_administration
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -30,7 +30,7 @@ $prnMedications = $stmt->fetchAll();
 $prnData = [];
 foreach ($prnMedications as $med) {
     $stmt = $pdo->prepare("
-        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken
+        SELECT COALESCE(SUM(quantity_taken), 0) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
         FROM medication_logs 
         WHERE medication_id = ? 
         AND user_id = ?
@@ -42,17 +42,32 @@ foreach ($prnMedications as $med) {
     
     $doseCount = $logData['dose_count'] ?? 0;
     $lastTaken = $logData['last_taken'];
+    $firstTaken = $logData['first_taken'];
     $maxDoses = $med['max_doses_per_day'] ?? 999;
     $minHours = $med['min_hours_between_doses'] ?? 0;
     
     // Calculate if can take now
     $canTakeNow = true;
     $nextAvailableTime = null;
+    $nextAvailableTimeForMaxDose = null;
     $timeRemaining = 0;
     
     // Check max doses
     if ($doseCount >= $maxDoses) {
         $canTakeNow = false;
+        // Calculate when next dose will be available (24 hours after first dose)
+        if ($firstTaken) {
+            $firstTakenTimestamp = strtotime($firstTaken);
+            $nextAvailableTimestamp = $firstTakenTimestamp + (24 * 3600);
+            
+            // Format time with date if it's on a different day than today
+            $todayEnd = strtotime('tomorrow') - 1;
+            if ($nextAvailableTimestamp > $todayEnd) {
+                $nextAvailableTimeForMaxDose = date('H:i, j M', $nextAvailableTimestamp);
+            } else {
+                $nextAvailableTimeForMaxDose = date('H:i', $nextAvailableTimestamp);
+            }
+        }
     }
     
     // Check minimum time between doses
@@ -73,8 +88,10 @@ foreach ($prnMedications as $med) {
         'dose_count' => $doseCount,
         'max_doses' => $maxDoses,
         'last_taken' => $lastTaken,
+        'first_taken' => $firstTaken,
         'can_take_now' => $canTakeNow,
         'next_available_time' => $nextAvailableTime,
+        'next_available_time_for_max_dose' => $nextAvailableTimeForMaxDose,
         'time_remaining' => $timeRemaining
     ];
 }
@@ -356,7 +373,12 @@ foreach ($prnMedications as $med) {
                     
                     <?php if (!$canTake && $doseCount >= $maxDoses): ?>
                         <div class="status-message danger">
-                            ⚠️ <strong>Maximum daily dose reached.</strong> Do not take more until 24 hours have passed since your first dose today.
+                            ⚠️ <strong>Maximum daily dose limit reached.</strong> 
+                            <?php if (!empty($data['next_available_time_for_max_dose'])): ?>
+                                Next dose available at <?= htmlspecialchars($data['next_available_time_for_max_dose']) ?>.
+                            <?php else: ?>
+                                Do not take more until 24 hours have passed since your first dose today.
+                            <?php endif; ?>
                         </div>
                     <?php elseif (!$canTake && $nextTime): ?>
                         <div class="status-message warning">
@@ -369,7 +391,7 @@ foreach ($prnMedications as $med) {
                     <?php endif; ?>
                     
                     <button type="button" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?> 
-                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\')' : '' ?>">
+                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\', ' . (int)($med['doses_per_administration'] ?? 1) . ')' : '' ?>">
                         <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
                     </button>
                 </div>
@@ -384,7 +406,8 @@ foreach ($prnMedications as $med) {
             <p id="quantityModalDose" style="margin: 0 0 24px 0; color: var(--color-text-secondary);"></p>
             
             <div style="text-align: center; margin-bottom: 24px;">
-                <p style="margin: 0 0 16px 0; font-weight: 600;">How many tablets?</p>
+                <p style="margin: 0 0 8px 0; font-weight: 600;">How many doses to take?</p>
+                <p id="quantityDoseInfo" style="margin: 0 0 16px 0; font-size: 14px; color: var(--color-text-secondary);"></p>
                 <div class="number-stepper" style="max-width: 200px; margin: 0 auto;">
                     <button type="button" class="stepper-btn" onclick="decrementQuantity()">−</button>
                     <input type="number" id="quantityInput" value="1" min="1" max="10" style="flex: 1; text-align: center; background: var(--color-bg-gray);">
@@ -442,10 +465,17 @@ foreach ($prnMedications as $med) {
     <script>
     let currentMedicationId = null;
     
-    function showQuantityModal(medId, medName, doseInfo) {
+    function showQuantityModal(medId, medName, doseInfo, dosesPerAdmin) {
         currentMedicationId = medId;
         document.getElementById('quantityModalTitle').textContent = '💊 Take ' + medName;
         document.getElementById('quantityModalDose').textContent = doseInfo;
+        
+        // Show dose information
+        const doseInfoText = dosesPerAdmin > 1 
+            ? '(Each dose contains ' + dosesPerAdmin + ' tablets)' 
+            : '';
+        document.getElementById('quantityDoseInfo').textContent = doseInfoText;
+        
         document.getElementById('quantityMedicationId').value = medId;
         document.getElementById('quantityInput').value = 1;
         document.getElementById('quantityTaken').value = 1;

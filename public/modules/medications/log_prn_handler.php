@@ -44,7 +44,7 @@ try {
     
     // 2. Check if max doses reached in last 24 hours
     $stmt = $pdo->prepare("
-        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
+        SELECT COALESCE(SUM(quantity_taken), 0) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
         FROM medication_logs 
         WHERE medication_id = ? 
         AND user_id = ?
@@ -64,12 +64,11 @@ try {
     if ($doseCount >= $maxDoses) {
         // Calculate when the next dose will be available (24 hours after the first dose in this period)
         $nextAvailableTimestamp = strtotime($firstTaken) + (24 * 3600);
-        $currentDate = date('Y-m-d');
-        $nextAvailableDate = date('Y-m-d', $nextAvailableTimestamp);
         
-        // Format time with date if it's tomorrow
-        if ($nextAvailableDate > $currentDate) {
-            $nextAvailableTime = date('H:i \o\n d M', $nextAvailableTimestamp);
+        // Format time with date if it's on a different day than today
+        $todayEnd = strtotime('tomorrow') - 1;
+        if ($nextAvailableTimestamp > $todayEnd) {
+            $nextAvailableTime = date('H:i, j M', $nextAvailableTimestamp);
         } else {
             $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
         }

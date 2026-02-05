@@ -332,6 +332,7 @@ if (!$settings) {
     <script>
         // OneSignal Configuration
         let notificationsEnabled = <?= $settings['notifications_enabled'] ? 'true' : 'false' ?>;
+        let storedPlayerId = <?= $settings['onesignal_player_id'] ? '"' . htmlspecialchars($settings['onesignal_player_id'], ENT_QUOTES, 'UTF-8') . '"' : 'null' ?>;
 
         // Initialize OneSignal when page loads
         async function initializeOneSignal() {
@@ -376,8 +377,13 @@ if (!$settings) {
                 }
                 
                 console.log('Current notification permission:', permission);
+                console.log('Stored Player ID:', storedPlayerId);
+                console.log('Notifications enabled in DB:', notificationsEnabled);
                 
-                if (permission === 'granted' && notificationsEnabled) {
+                // Show settings if:
+                // 1. Browser permission is granted AND
+                // 2. Either notifications are enabled in DB OR we have a stored Player ID
+                if (permission === 'granted' && (notificationsEnabled || storedPlayerId)) {
                     showNotificationSettings();
                 } else {
                     showNotificationPrompt();

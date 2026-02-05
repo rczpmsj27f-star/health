@@ -31,7 +31,7 @@ try {
     
     // 1. Verify user owns this medication and it's a PRN medication
     $stmt = $pdo->prepare("
-        SELECT m.id, m.name, m.current_stock, ms.doses_per_administration, ms.max_doses_per_day, ms.min_hours_between_doses
+        SELECT m.id, m.name, m.current_stock, ms.initial_dose, ms.subsequent_dose, ms.max_doses_per_day, ms.min_hours_between_doses
         FROM medications m
         LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
         WHERE m.id = ? AND m.user_id = ? AND ms.is_prn = 1
@@ -43,7 +43,8 @@ try {
         throw new Exception("Medication not found or is not a PRN medication.");
     }
     
-    $dosesPerAdmin = $medication['doses_per_administration'] ?? 1;
+    $initialDose = $medication['initial_dose'] ?? 1;
+    $subsequentDose = $medication['subsequent_dose'] ?? 1;
     
     // 2. Check if max doses reached in last 24 hours
     $stmt = $pdo->prepare("
@@ -62,6 +63,10 @@ try {
     $firstTaken = $logData['first_taken'];
     $maxDoses = $medication['max_doses_per_day'] ?? 999;
     $minHours = $medication['min_hours_between_doses'] ?? 0;
+    
+    // Determine if this is the first dose in the 24-hour period
+    $isFirstDose = ($doseCount == 0);
+    $tabletsPerDose = $isFirstDose ? $initialDose : $subsequentDose;
     
     // Check max doses limit
     if ($doseCount >= $maxDoses) {
@@ -106,9 +111,9 @@ try {
     ");
     $stmt->execute([$medicationId, $userId, $now, $quantityTaken, $now]);
     
-    // 5. Decrement stock by quantity taken (quantity * doses_per_administration)
+    // 5. Decrement stock by (doses_taken × tablets_per_dose)
     if ($medication['current_stock'] !== null && $medication['current_stock'] > 0) {
-        $stockToRemove = $quantityTaken * $dosesPerAdmin;
+        $stockToRemove = $quantityTaken * $tabletsPerDose;
         $stockToRemove = min($stockToRemove, $medication['current_stock']); // Don't go below 0
         
         $stmt = $pdo->prepare("
@@ -123,8 +128,8 @@ try {
             INSERT INTO medication_stock_log (medication_id, user_id, quantity_change, change_type, reason)
             VALUES (?, ?, ?, 'remove', ?)
         ");
-        $tabletText = $quantityTaken > 1 ? "{$quantityTaken} tablets" : "1 tablet";
-        $reason = "PRN dose taken ({$tabletText})";
+        $doseText = $quantityTaken > 1 ? "{$quantityTaken} doses" : "1 dose";
+        $reason = "PRN dose taken ({$doseText}, {$stockToRemove} tablets)";
         $stmt->execute([$medicationId, $userId, -$stockToRemove, $reason]);
     }
     
@@ -146,8 +151,8 @@ try {
     }
     
     $currentTime = date('H:i');
-    $tabletText = $quantityTaken > 1 ? "{$quantityTaken} tablets" : "1 tablet";
-    $_SESSION['success'] = "Took {$tabletText} at {$currentTime}.{$nextDoseMessage}";
+    $doseText = $quantityTaken > 1 ? "{$quantityTaken} doses" : "1 dose";
+    $_SESSION['success'] = "Took {$doseText} at {$currentTime}.{$nextDoseMessage}";
     header("Location: /modules/medications/log_prn.php");
     exit;
     

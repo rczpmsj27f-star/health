@@ -65,13 +65,24 @@ if (!empty($_FILES['profile_picture']['name'])) {
     
     $ext = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
     $filename = uniqid("pp_") . "." . $ext;
-    $target = __DIR__ . "/../uploads/profile/" . $filename;
+    $uploadDir = __DIR__ . "/../uploads/profile/";
+    $target = $uploadDir . $filename;
+    
+    // Ensure upload directory exists
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
 
-    move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target);
-    $profilePath = "/uploads/profile/" . $filename;
+    if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target)) {
+        $profilePath = "/uploads/profile/" . $filename;
+    } else {
+        $_SESSION['error'] = "Failed to save profile picture. Please try again.";
+        header("Location: /register.php");
+        exit;
+    }
 }
 
-// Insert user
+// Insert user and assign role
 try {
     $stmt = $pdo->prepare("
         INSERT INTO users (username, email, first_name, surname, password_hash, profile_picture_path)
@@ -80,6 +91,18 @@ try {
     $stmt->execute([$username, $email, $first, $surname, $hash, $profilePath]);
     
     $userId = $pdo->lastInsertId();
+    
+    // Assign role "user"
+    $roleStmt = $pdo->prepare("SELECT id FROM user_roles WHERE role_name = 'user'");
+    $roleStmt->execute();
+    $roleId = $roleStmt->fetchColumn();
+    
+    if (!$roleId) {
+        throw new Exception("User role not found in database");
+    }
+    
+    $map = $pdo->prepare("INSERT INTO user_role_map (user_id, role_id) VALUES (?, ?)");
+    $map->execute([$userId, $roleId]);
 } catch (PDOException $e) {
     // Check if it's a duplicate entry error (code 23000)
     if ($e->getCode() == 23000) {
@@ -89,15 +112,11 @@ try {
     }
     header("Location: /register.php");
     exit;
+} catch (Exception $e) {
+    $_SESSION['error'] = "Registration failed: " . $e->getMessage();
+    header("Location: /register.php");
+    exit;
 }
-
-// Assign role "user"
-$roleStmt = $pdo->prepare("SELECT id FROM user_roles WHERE role_name = 'user'");
-$roleStmt->execute();
-$roleId = $roleStmt->fetchColumn();
-
-$map = $pdo->prepare("INSERT INTO user_role_map (user_id, role_id) VALUES (?, ?)");
-$map->execute([$userId, $roleId]);
 
 // Create verification token
 $token = bin2hex(random_bytes(32));

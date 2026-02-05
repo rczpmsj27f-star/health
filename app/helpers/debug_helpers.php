@@ -6,6 +6,9 @@
  * environment settings and avoid logging sensitive data.
  */
 
+// Maximum length for logged values before truncation
+define('MAX_LOG_VALUE_LENGTH', 200);
+
 /**
  * Check if debug mode is enabled
  * 
@@ -155,8 +158,8 @@ function sanitize_log_data($data) {
                 $sanitized[$key] = sanitize_log_data($value);
             } else {
                 // Truncate very long values
-                $sanitized[$key] = is_string($value) && strlen($value) > 200 
-                    ? substr($value, 0, 200) . '...[truncated]' 
+                $sanitized[$key] = is_string($value) && strlen($value) > MAX_LOG_VALUE_LENGTH 
+                    ? substr($value, 0, MAX_LOG_VALUE_LENGTH) . '...[truncated]' 
                     : $value;
             }
         }

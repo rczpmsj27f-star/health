@@ -43,7 +43,7 @@ if (empty($_SESSION['user_id'])) {
         echo json_encode([
             'success' => false, 
             'message' => 'Unauthorized. Please log in again.',
-            'error_code' => 'AUTH_REQUIRED'
+            'error_code' => 'UNAUTHORIZED'
         ]);
         exit;
     } else {

@@ -567,8 +567,8 @@ if (!$settings) {
                     });
                     
                     if (response.ok) {
-                        const data = await response.json();
-                        console.log('Settings auto-saved:', data.message || 'Success');
+                        // Success - just log without parsing response for performance
+                        console.log('Settings auto-saved');
                     } else if (response.status === 401) {
                         handleSessionExpiry();
                     } else {

@@ -65,7 +65,8 @@ try {
     $minHours = $medication['min_hours_between_doses'] ?? 0;
     
     // Determine if this is the first dose in the 24-hour period
-    $isFirstDose = ($doseCount === 0);
+    // Cast to int since SQL COALESCE returns string "0" not integer 0
+    $isFirstDose = ((int)$doseCount === 0);
     $tabletsPerDose = $isFirstDose ? $initialDose : $subsequentDose;
     
     // Check max doses limit

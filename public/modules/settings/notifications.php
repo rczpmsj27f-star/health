@@ -325,20 +325,21 @@ if (!$settings) {
                 
                 // Wait for OneSignal to be available
                 let attempts = 0;
+                const startTime = Date.now();
                 while (!window.OneSignal && attempts < 50) {
                     await new Promise(resolve => setTimeout(resolve, 100));
                     attempts++;
                 }
                 
                 if (!window.OneSignal) {
-                    console.warn('OneSignal not available after waiting');
+                    console.warn(`OneSignal not available after ${attempts * 100}ms`);
                     document.getElementById('notificationStatus').innerHTML = 
                         '<p style="color: #dc3545;"><strong>OneSignal failed to load.</strong></p>' +
                         '<p>Please refresh the page or check your internet connection.</p>';
                     return;
                 }
                 
-                console.log('✅ OneSignal is ready');
+                console.log(`✅ OneSignal is ready (loaded in ${Date.now() - startTime}ms)`);
                 
                 // Check current notification permission
                 checkNotificationPermission();
@@ -421,8 +422,8 @@ if (!$settings) {
                     await window.OneSignal.User.PushSubscription.optIn();
                     console.log('✅ OneSignal subscription successful');
                     
-                    // Get user ID for saving to database
-                    const userId = await window.OneSignal.User.PushSubscription.onesignalId;
+                    // Get user ID for saving to database (id is a property, not a promise)
+                    const userId = window.OneSignal.User.PushSubscription.id;
                     console.log('OneSignal User ID:', userId);
                     
                     // Save notification enabled status to database

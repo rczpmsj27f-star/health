@@ -59,10 +59,10 @@ foreach ($prnMedications as $med) {
         if ($firstTaken) {
             $firstTakenTimestamp = strtotime($firstTaken);
             $nextAvailableTimestamp = $firstTakenTimestamp + (24 * 3600);
-            $currentTimestamp = time();
             
-            // Format time with date if it's tomorrow or later
-            if ($nextAvailableTimestamp > strtotime('tomorrow')) {
+            // Format time with date if it's on a different day than today
+            $todayEnd = strtotime('tomorrow') - 1;
+            if ($nextAvailableTimestamp > $todayEnd) {
                 $nextAvailableTimeForMaxDose = date('H:i, j M', $nextAvailableTimestamp);
             } else {
                 $nextAvailableTimeForMaxDose = date('H:i', $nextAvailableTimestamp);

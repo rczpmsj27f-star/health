@@ -65,8 +65,9 @@ try {
         // Calculate when the next dose will be available (24 hours after the first dose in this period)
         $nextAvailableTimestamp = strtotime($firstTaken) + (24 * 3600);
         
-        // Format time with date if it's tomorrow or later
-        if ($nextAvailableTimestamp > strtotime('tomorrow')) {
+        // Format time with date if it's on a different day than today
+        $todayEnd = strtotime('tomorrow') - 1;
+        if ($nextAvailableTimestamp > $todayEnd) {
             $nextAvailableTime = date('H:i, j M', $nextAvailableTimestamp);
         } else {
             $nextAvailableTime = date('H:i', $nextAvailableTimestamp);

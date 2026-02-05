@@ -323,7 +323,10 @@ if ($schedule && $schedule['days_of_week']) {
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function() {
         // Force close add stock modal on page load to prevent dark overlay behind success modal
-        document.getElementById('addStockModal').classList.remove('active');
+        var addStockModal = document.getElementById('addStockModal');
+        if (addStockModal) {
+            addStockModal.classList.remove('active');
+        }
         
         // Add Stock button handler
         var addStockBtn = document.getElementById('addStockBtn');

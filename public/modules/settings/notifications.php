@@ -515,17 +515,42 @@ if (!$settings) {
                 formData.append('onesignal_player_id', playerId);
             }
 
-            const response = await fetch('save_notifications_handler.php', {
-                method: 'POST',
-                body: formData,
-                credentials: 'include'
-            });
+            try {
+                const response = await fetch('save_notifications_handler.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Session expired. Please log in again.');
+                if (!response.ok) {
+                    // Try to parse error message from JSON response
+                    let errorMessage = 'Failed to save notification status';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                        
+                        // Log error details for debugging
+                        console.error('Server error:', errorData);
+                    } catch (e) {
+                        // Response wasn't JSON, use default message
+                        console.error('Non-JSON error response');
+                    }
+                    
+                    if (response.status === 401) {
+                        throw new Error('Session expired. Please log in again.');
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
-                throw new Error('Failed to save notification status');
+                
+                // Parse success response
+                const data = await response.json();
+                console.log('Notification status saved:', data);
+                return data;
+                
+            } catch (error) {
+                console.error('Failed to save notification status:', error);
+                throw error;
             }
         }
 
@@ -542,12 +567,22 @@ if (!$settings) {
                     });
                     
                     if (response.ok) {
-                        console.log('Settings auto-saved');
+                        const data = await response.json();
+                        console.log('Settings auto-saved:', data.message || 'Success');
                     } else if (response.status === 401) {
                         handleSessionExpiry();
+                    } else {
+                        // Try to get error message from response
+                        try {
+                            const errorData = await response.json();
+                            console.error('Auto-save failed:', errorData.message);
+                        } catch (e) {
+                            console.error('Auto-save failed with status:', response.status);
+                        }
                     }
                 } catch (error) {
                     console.error('Failed to auto-save settings:', error);
+                    // Don't show alert for auto-save failures, just log them
                 }
             });
         });
@@ -570,15 +605,30 @@ if (!$settings) {
                 });
                 
                 if (response.ok) {
-                    alert('✅ Preferences saved successfully!');
+                    const data = await response.json();
+                    alert('✅ ' + (data.message || 'Preferences saved successfully!'));
                 } else if (response.status === 401) {
                     handleSessionExpiry();
                 } else {
-                    alert('❌ Failed to save preferences. Please try again.');
+                    // Try to get specific error message from server
+                    let errorMessage = 'Failed to save preferences. Please try again.';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        // Non-JSON response, use default message
+                    }
+                    alert('❌ ' + errorMessage);
                 }
             } catch (error) {
                 console.error('Failed to save settings:', error);
-                alert('❌ Failed to save preferences. Please try again.');
+                
+                // Check for network errors
+                if (error.message && error.message.includes('Failed to fetch')) {
+                    alert('❌ Network error. Please check your internet connection and try again.');
+                } else {
+                    alert('❌ Failed to save preferences. Please try again.');
+                }
             }
         });
 

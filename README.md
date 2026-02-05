@@ -253,6 +253,95 @@ npm start
 - Implement authentication for multi-user scenarios
 - Consider encrypting sensitive medication data
 
+### Troubleshooting
+
+Having issues with notification settings or session handling? See our comprehensive guides:
+
+#### Notification Settings Issues
+
+Common issues and solutions:
+- **"Unauthorized" errors when logged in**: Session cookies not being sent with AJAX requests
+- **Player ID not saved**: Timing or initialization issues with OneSignal
+- **Session expires too quickly**: Session timeout or cookie configuration issues
+- **Getting HTML redirects instead of JSON**: AJAX request detection not working
+
+**Quick Diagnostics:**
+1. Check browser console for JavaScript errors
+2. Check Network tab for failed requests (look for 401, 500 status codes)
+3. Verify session cookie exists (DevTools → Application → Cookies)
+4. Enable debug logging (see below)
+
+**Detailed troubleshooting:** See [`NOTIFICATION_TROUBLESHOOTING.md`](NOTIFICATION_TROUBLESHOOTING.md)
+
+**Testing guide:** See [`NOTIFICATION_SESSION_TESTING.md`](NOTIFICATION_SESSION_TESTING.md)
+
+#### Enable Debug Logging
+
+For detailed diagnostics, enable debug logging:
+
+```php
+// In config.php
+define('ENABLE_DEBUG_LOGGING', true);
+```
+
+Or via environment variable:
+```bash
+export DEBUG_MODE=true
+```
+
+This will log:
+- Session state information
+- POST request payloads (with sensitive data redacted)
+- Request headers and metadata
+- Database operations
+
+**View logs:**
+```bash
+# Find log location
+php -i | grep error_log
+
+# Watch logs in real-time
+tail -f /var/log/apache2/error.log | grep save_notifications_handler
+```
+
+**⚠️ Important:** Disable debug logging in production to avoid performance impact and log bloat.
+
+#### Session Cookie Configuration
+
+Session cookies must be properly configured for AJAX requests to work. Check `config.php`:
+
+```php
+session_set_cookie_params([
+    'lifetime' => 0,        // Session cookie (expires when browser closes)
+    'path' => '/',          // Available to entire site
+    'domain' => '',         // Current domain only (no subdomains)
+    'secure' => false,      // Set to true in production with HTTPS
+    'httponly' => true,     // Prevent JavaScript access (security)
+    'samesite' => 'Lax'     // Allow same-site requests, block cross-site
+]);
+```
+
+**For cross-subdomain support:**
+- Set `domain` to `'.example.com'` (note the leading dot)
+- Both subdomains must use HTTPS if `secure` is `true`
+
+#### AJAX Request Issues
+
+All AJAX/fetch requests must include `credentials: 'include'` to send session cookies:
+
+```javascript
+fetch('/modules/settings/save_notifications_handler.php', {
+    method: 'POST',
+    body: formData,
+    credentials: 'include'  // ← CRITICAL for session cookies
+})
+```
+
+**Verify in browser:**
+- DevTools → Network → Select request
+- Check "Request Headers" section
+- Should see `Cookie:` header with session ID
+
 ### Deployment
 
 For production deployment:

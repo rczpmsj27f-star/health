@@ -422,11 +422,14 @@ if (!$settings) {
                     console.log('✅ OneSignal subscription successful');
                     
                     // Get user ID for saving to database
-                    const userId = await window.OneSignal.User.PushSubscription.id;
+                    const userId = await window.OneSignal.User.PushSubscription.onesignalId;
                     console.log('OneSignal User ID:', userId);
                     
                     // Save notification enabled status to database
                     await saveNotificationStatus(true, userId);
+                } else {
+                    console.error('⚠️ OneSignal PushSubscription not available');
+                    throw new Error('OneSignal is not properly initialized. Please refresh the page and try again.');
                 }
                 
                 // Update UI

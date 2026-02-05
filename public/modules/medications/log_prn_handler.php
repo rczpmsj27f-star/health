@@ -84,7 +84,13 @@ try {
         $timeRemaining = $nextAvailableTimestamp - time();
         
         if ($timeRemaining > 0) {
-            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+            // Show date if next dose is on a different day
+            $todayEnd = strtotime('tomorrow') - 1;
+            if ($nextAvailableTimestamp > $todayEnd) {
+                $nextAvailableTime = date('H:i \o\n d M', $nextAvailableTimestamp);
+            } else {
+                $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+            }
             throw new Exception("You must wait at least {$minHours} hours between doses. Next dose available at {$nextAvailableTime}.");
         }
     }
@@ -126,7 +132,13 @@ try {
     $nextDoseMessage = "";
     if ($minHours > 0) {
         $nextAvailableTimestamp = time() + ($minHours * 3600);
-        $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+        // Show date if next dose is on a different day
+        $todayEnd = strtotime('tomorrow') - 1;
+        if ($nextAvailableTimestamp > $todayEnd) {
+            $nextAvailableTime = date('H:i \o\n d M', $nextAvailableTimestamp);
+        } else {
+            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+        }
         $nextDoseMessage = " You can take the next dose at {$nextAvailableTime}.";
     }
     

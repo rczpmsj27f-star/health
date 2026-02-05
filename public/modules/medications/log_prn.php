@@ -79,7 +79,13 @@ foreach ($prnMedications as $med) {
         
         if ($timeRemaining > 0) {
             $canTakeNow = false;
-            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+            // Show date if next dose is on a different day
+            $todayEnd = strtotime('tomorrow') - 1;
+            if ($nextAvailableTimestamp > $todayEnd) {
+                $nextAvailableTime = date('H:i \o\n d M', $nextAvailableTimestamp);
+            } else {
+                $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+            }
         }
     }
     

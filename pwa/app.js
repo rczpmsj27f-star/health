@@ -452,8 +452,8 @@ async function requestNotificationPermission() {
         // Request permission via OneSignal v16
         await window.OneSignal.Notifications.requestPermission();
         
-        // Check if permission was granted
-        const permission = await window.OneSignal.Notifications.permission;
+        // Check if permission was granted (permission is a boolean property)
+        const permission = window.OneSignal.Notifications.permission;
         
         if (permission) {
             console.log('Notification permission granted via OneSignal');

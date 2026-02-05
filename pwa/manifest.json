@@ -9,7 +9,6 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "gcm_sender_id": "482941778795",
-  "gcm_sender_id_comment": "Do not change - required for OneSignal",
   "icons": [
     {
       "src": "/icons/icon-72x72.svg",

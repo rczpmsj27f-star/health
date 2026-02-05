@@ -1,0 +1,12 @@
+# Ignore all uploaded files except directory structure
+*
+!.gitignore
+!profile/
+!documents/
+!temp/
+profile/*
+!profile/.gitkeep
+documents/*
+!documents/.gitkeep
+temp/*
+!temp/.gitkeep

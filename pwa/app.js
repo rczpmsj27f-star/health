@@ -41,21 +41,28 @@ async function initializeOneSignal() {
             return;
         }
         
-        // Initialize OneSignal SDK
-        window.OneSignal = window.OneSignal || [];
-        OneSignal = window.OneSignal;
+        // Wait for OneSignal to be available
+        if (!window.OneSignalDeferred) {
+            console.error('OneSignal SDK not loaded');
+            return;
+        }
         
-        OneSignal.push(function() {
-            OneSignal.init({
+        // Initialize using v16 pattern
+        window.OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
                 appId: appId,
                 allowLocalhostAsSecureOrigin: true,
+                serviceWorkerParam: { scope: '/' },
+                serviceWorkerPath: 'OneSignalSDKWorker.js',
                 notifyButton: {
-                    enable: false // We'll use our own UI
+                    enable: false
                 }
             });
+            
+            // Make OneSignal available globally
+            window.OneSignal = OneSignal;
+            console.log('OneSignal initialized with App ID:', appId);
         });
-        
-        console.log('OneSignal initialized');
     } catch (error) {
         console.error('Failed to initialize OneSignal:', error);
     }
@@ -442,17 +449,13 @@ async function requestNotificationPermission() {
     }
     
     try {
-        // Request permission via OneSignal
-        await window.OneSignal.push(async function() {
-            await window.OneSignal.showNativePrompt();
-        });
+        // Request permission via OneSignal v16
+        await window.OneSignal.Notifications.requestPermission();
         
         // Check if permission was granted
-        const permission = await window.OneSignal.push(function() {
-            return window.OneSignal.getNotificationPermission();
-        });
+        const permission = await window.OneSignal.Notifications.permission;
         
-        if (permission === 'granted') {
+        if (permission) {
             console.log('Notification permission granted via OneSignal');
             updateNotificationUI();
         } else {

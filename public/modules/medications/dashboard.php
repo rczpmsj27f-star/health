@@ -392,14 +392,15 @@ foreach ($prnMedications as $med) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            background: none;
         }
         
         .modal.active {
             display: flex;
+            background: rgba(0, 0, 0, 0.5);
         }
         
         .modal-content {
@@ -789,10 +790,10 @@ foreach ($prnMedications as $med) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
         z-index: 1000;
         align-items: center;
         justify-content: center;
+        background: none;
     }
     
     .modal-content {
@@ -875,10 +876,12 @@ foreach ($prnMedications as $med) {
             closeConfirmModal();
             onConfirm();
         };
-        document.getElementById('confirmModal').style.display = 'flex';
+        const confirmModal = document.getElementById('confirmModal');
+        confirmModal.style.display = 'flex';
+        confirmModal.style.background = 'rgba(0, 0, 0, 0.5)';
         
         // Close on outside click
-        document.getElementById('confirmModal').onclick = function(e) {
+        confirmModal.onclick = function(e) {
             if (e.target === this) {
                 closeConfirmModal();
             }
@@ -886,7 +889,9 @@ foreach ($prnMedications as $med) {
     }
     
     function closeConfirmModal() {
-        document.getElementById('confirmModal').style.display = 'none';
+        const confirmModal = document.getElementById('confirmModal');
+        confirmModal.style.display = 'none';
+        confirmModal.style.background = 'none';
     }
     
     function showSkipModal(medId, medName, scheduledDateTime) {

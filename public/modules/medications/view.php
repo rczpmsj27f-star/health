@@ -264,14 +264,15 @@ if ($schedule && $schedule['days_of_week']) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
         z-index: 1000;
         align-items: center;
         justify-content: center;
+        background: none;
     }
     
     .modal.active {
         display: flex;
+        background: rgba(0, 0, 0, 0.5);
     }
     
     .modal-content {

@@ -443,7 +443,7 @@ async function requestNotificationPermission() {
         return;
     }
     
-    if (!window.OneSignal) {
+    if (!window.OneSignal || !window.OneSignal.Notifications) {
         alert('OneSignal is not initialized. Please refresh the page and try again.');
         return;
     }

@@ -467,14 +467,13 @@ if (!$settings) {
                     
                     // Wait for Player ID to be available (may take a moment after optIn)
                     let playerId = null;
-                    let attempts = 0;
-                    while (!playerId && attempts < MAX_PLAYER_ID_ATTEMPTS) {
+                    for (let attempts = 0; attempts < MAX_PLAYER_ID_ATTEMPTS; attempts++) {
                         playerId = window.OneSignal.User.PushSubscription.id;
-                        if (!playerId) {
-                            console.log(`Waiting for Player ID... attempt ${attempts + 1}/${MAX_PLAYER_ID_ATTEMPTS}`);
-                            await new Promise(resolve => setTimeout(resolve, PLAYER_ID_RETRY_DELAY_MS));
-                            attempts++;
+                        if (playerId) {
+                            break; // Player ID found, exit loop
                         }
+                        console.log(`Waiting for Player ID... attempt ${attempts + 1}/${MAX_PLAYER_ID_ATTEMPTS}`);
+                        await new Promise(resolve => setTimeout(resolve, PLAYER_ID_RETRY_DELAY_MS));
                     }
                     
                     if (!playerId) {
@@ -603,7 +602,10 @@ if (!$settings) {
                     // Validate content type before parsing JSON
                     const contentType = response.headers.get('content-type');
                     if (!contentType || !contentType.includes('application/json')) {
-                        console.error('Server returned non-JSON response');
+                        console.error('Auto-save failed: Server returned non-JSON response', {
+                            status: response.status,
+                            contentType: contentType
+                        });
                         return;
                     }
                     

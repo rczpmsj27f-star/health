@@ -14,8 +14,16 @@ define('ONESIGNAL_REST_API_KEY', 'yos_v2_app_e74njuz2nffe3d33ce6rm5r4jobuamioedi
  * @return bool
  */
 function onesignal_is_configured() {
-    return ONESIGNAL_APP_ID !== '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b'
-        && ONESIGNAL_REST_API_KEY !== 'os_v2_app_e74njuz2nffe3d33ce6rm5r4jobuamioediusjfadwrwiwi53chrv6zoomac3yfthlsb5ws6e4tjhpytgvqzvv5gir44qxfiznor6pi';
+    // Check that credentials are set and not placeholder values
+    $appIdSet = defined('ONESIGNAL_APP_ID') 
+        && ONESIGNAL_APP_ID !== '' 
+        && ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID';
+    
+    $apiKeySet = defined('ONESIGNAL_REST_API_KEY') 
+        && ONESIGNAL_REST_API_KEY !== '' 
+        && ONESIGNAL_REST_API_KEY !== 'YOUR_ONESIGNAL_REST_API_KEY';
+    
+    return $appIdSet && $apiKeySet;
 }
 
 /**
@@ -88,7 +96,7 @@ if (session_status() === PHP_SESSION_NONE) {
         'lifetime' => 0,  // Session cookie (expires when browser closes)
         'path' => '/',
         'domain' => '',   // Current domain only (no subdomains)
-        'secure' => false,  // Set to true in production with HTTPS
+        'secure' => true,  // HTTPS requires secure cookies
         'httponly' => true,  // Prevent JavaScript access
         'samesite' => 'Lax'  // Allow same-site requests, block cross-site
     ]);

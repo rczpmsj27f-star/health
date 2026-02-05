@@ -20,6 +20,7 @@
     
     # Settings routes
     RewriteRule ^settings/notifications$ /public/modules/settings/notifications.php [L]
+    RewriteRule ^settings/notifications/save$ /public/modules/settings/save_notifications_handler.php [L]
     
     # Medication routes
     RewriteRule ^medications$ /public/modules/medications/list.php [L]

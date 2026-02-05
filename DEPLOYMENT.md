@@ -1,5 +1,36 @@
 # Deployment and Server Configuration Guide
 
+## PHP Dependencies (Composer)
+
+This project uses Composer to manage PHP dependencies, primarily PHPMailer for email functionality.
+
+### Installing Dependencies
+
+Before deploying or after pulling new changes, you must install PHP dependencies:
+
+```bash
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+
+# For development (includes dev dependencies)
+composer install
+```
+
+**Important**: The `vendor/` directory is not tracked in git. You must run `composer install` on every deployment or environment setup.
+
+### Required Dependencies
+
+- **PHPMailer** (phpmailer/phpmailer ^6.9) - Used for sending registration verification emails and password reset emails
+
+### Troubleshooting
+
+If you encounter errors like:
+```
+Warning: require(vendor/autoload.php): Failed to open stream: No such file or directory
+```
+
+This means Composer dependencies are not installed. Run `composer install` to fix.
+
 ## Database Migrations
 
 This project includes SQL migration files in the `database/migrations/` directory for managing database schema changes.

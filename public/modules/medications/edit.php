@@ -231,18 +231,18 @@ foreach ($instructions as $i) {
                 <div id="prn-limits" style="<?= !empty($schedule['is_prn']) ? '' : 'display:none;' ?>">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="initial_dose">Initial dose</label>
+                            <label for="initial_dose">Tablets per dose (initial)</label>
                             <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="<?= htmlspecialchars($schedule['initial_dose'] ?? '1') ?>">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Number of tablets for the first dose (e.g., 2 for paracetamol)
+                                Number of tablets for the first dose (e.g., 2 paracetamol tablets)
                             </small>
                         </div>
                         
                         <div class="form-group">
-                            <label for="subsequent_dose">Subsequent doses</label>
+                            <label for="subsequent_dose">Tablets per dose (subsequent)</label>
                             <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="<?= htmlspecialchars($schedule['subsequent_dose'] ?? '1') ?>">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Number of tablets for follow-up doses (e.g., 2 for paracetamol)
+                                Number of tablets for follow-up doses (e.g., 2 paracetamol tablets)
                             </small>
                         </div>
                         

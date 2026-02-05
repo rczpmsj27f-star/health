@@ -33,7 +33,7 @@ $prnMedications = $stmt->fetchAll();
 $prnData = [];
 foreach ($prnMedications as $med) {
     $stmt = $pdo->prepare("
-        SELECT COALESCE(SUM(quantity_taken), 0) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
+        SELECT COUNT(*) as dose_count, MAX(taken_at) as last_taken, MIN(taken_at) as first_taken
         FROM medication_logs 
         WHERE medication_id = ? 
         AND user_id = ?
@@ -400,7 +400,7 @@ foreach ($prnMedications as $med) {
                     <?php endif; ?>
                     
                     <button type="button" class="btn-take-dose" <?= !$canTake ? 'disabled' : '' ?> 
-                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\', ' . (int)($med['initial_dose'] ?? 1) . ', ' . (int)($med['subsequent_dose'] ?? 1) . ', ' . $doseCount . ')' : '' ?>">
+                            onclick="<?= $canTake ? 'showQuantityModal(' . $med['id'] . ', \'' . htmlspecialchars($med['name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($med['dose_amount'] . ' ' . $med['dose_unit'], ENT_QUOTES) . '\')' : '' ?>">
                         <?= $canTake ? '✅ Take Dose Now' : '🚫 Cannot Take Dose' ?>
                     </button>
                 </div>
@@ -415,8 +415,7 @@ foreach ($prnMedications as $med) {
             <p id="quantityModalDose" style="margin: 0 0 24px 0; color: var(--color-text-secondary);"></p>
             
             <div style="text-align: center; margin-bottom: 24px;">
-                <p style="margin: 0 0 8px 0; font-weight: 600;">How many doses to take?</p>
-                <p id="quantityDoseInfo" style="margin: 0 0 16px 0; font-size: 14px; color: var(--color-text-secondary);"></p>
+                <p style="margin: 0 0 16px 0; font-weight: 600;">How many tablets are you taking?</p>
                 <div class="number-stepper" style="max-width: 200px; margin: 0 auto;">
                     <button type="button" class="stepper-btn" onclick="decrementQuantity()">−</button>
                     <input type="number" id="quantityInput" value="1" min="1" max="10" style="flex: 1; text-align: center; background: var(--color-bg-gray);">
@@ -475,22 +474,10 @@ foreach ($prnMedications as $med) {
     <script>
     let currentMedicationId = null;
     
-    function showQuantityModal(medId, medName, doseInfo, initialDose, subsequentDose, doseCount) {
+    function showQuantityModal(medId, medName, doseInfo) {
         currentMedicationId = medId;
         document.getElementById('quantityModalTitle').textContent = '💊 Take ' + medName;
         document.getElementById('quantityModalDose').textContent = doseInfo;
-        
-        // Determine if this is the first dose in the 24-hour period
-        // parseInt is necessary because doseCount is passed as a string via onclick attribute
-        const isFirstDose = (parseInt(doseCount) === 0);
-        const tabletsPerDose = isFirstDose ? initialDose : subsequentDose;
-        const doseType = isFirstDose ? 'initial' : 'subsequent';
-        
-        // Show dose information
-        const doseInfoText = tabletsPerDose > 1 
-            ? '(Each dose contains ' + tabletsPerDose + ' tablets)' 
-            : '';
-        document.getElementById('quantityDoseInfo').textContent = doseInfoText;
         
         document.getElementById('quantityMedicationId').value = medId;
         document.getElementById('quantityInput').value = 1;

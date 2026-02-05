@@ -481,7 +481,7 @@ foreach ($prnMedications as $med) {
         document.getElementById('quantityModalDose').textContent = doseInfo;
         
         // Determine if this is the first dose in the 24-hour period
-        const isFirstDose = (doseCount === 0);
+        const isFirstDose = (doseCount == 0);  // Use == to handle both 0 and "0" from PHP
         const tabletsPerDose = isFirstDose ? initialDose : subsequentDose;
         const doseType = isFirstDose ? 'initial' : 'subsequent';
         

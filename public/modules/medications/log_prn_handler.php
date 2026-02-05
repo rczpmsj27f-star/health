@@ -65,7 +65,7 @@ try {
     $minHours = $medication['min_hours_between_doses'] ?? 0;
     
     // Determine if this is the first dose in the 24-hour period
-    $isFirstDose = ($doseCount == 0);
+    $isFirstDose = ($doseCount === 0);
     $tabletsPerDose = $isFirstDose ? $initialDose : $subsequentDose;
     
     // Check max doses limit

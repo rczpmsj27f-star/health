@@ -64,7 +64,14 @@ try {
     if ($doseCount >= $maxDoses) {
         // Calculate when the next dose will be available (24 hours after the first dose in this period)
         $nextAvailableTimestamp = strtotime($firstTaken) + (24 * 3600);
-        $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+        
+        // Format time with date if it's tomorrow
+        if (date('Y-m-d', $nextAvailableTimestamp) > date('Y-m-d')) {
+            $nextAvailableTime = date('H:i \o\n d M', $nextAvailableTimestamp);
+        } else {
+            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+        }
+        
         throw new Exception("Maximum daily dose limit reached. Next dose available at {$nextAvailableTime}.");
     }
     

@@ -2,9 +2,12 @@
 session_start();
 require_once "../../../app/config/database.php";
 
+// Set JSON content type header
+header('Content-Type: application/json');
+
 if (empty($_SESSION['user_id'])) {
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized. Please log in again.']);
     exit;
 }
 

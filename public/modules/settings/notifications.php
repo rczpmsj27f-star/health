@@ -463,7 +463,13 @@ if (!$settings) {
                 
             } catch (error) {
                 console.error('❌ Permission request failed:', error);
-                alert('Failed to enable notifications: ' + error.message);
+                // Check if error is session-related
+                if (error.message.includes('Session expired') || error.message.includes('log in')) {
+                    alert('⚠️ Your session has expired. Please log in again.');
+                    window.location.href = '/login.php';
+                } else {
+                    alert('Failed to enable notifications: ' + error.message);
+                }
             }
         }
 
@@ -476,7 +482,13 @@ if (!$settings) {
                     showNotificationPrompt();
                 } catch (error) {
                     console.error('Failed to disable notifications:', error);
-                    alert('Failed to disable notifications. Please try again.');
+                    // Check if error is session-related
+                    if (error.message.includes('Session expired') || error.message.includes('log in')) {
+                        alert('⚠️ Your session has expired. Please log in again.');
+                        window.location.href = '/login.php';
+                    } else {
+                        alert('Failed to disable notifications. Please try again.');
+                    }
                 }
             }
         }
@@ -491,10 +503,14 @@ if (!$settings) {
 
             const response = await fetch('save_notifications_handler.php', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'include'
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Session expired. Please log in again.');
+                }
                 throw new Error('Failed to save notification status');
             }
         }
@@ -507,11 +523,15 @@ if (!$settings) {
                 try {
                     const response = await fetch('save_notifications_handler.php', {
                         method: 'POST',
-                        body: formData
+                        body: formData,
+                        credentials: 'include'
                     });
                     
                     if (response.ok) {
                         console.log('Settings auto-saved');
+                    } else if (response.status === 401) {
+                        alert('⚠️ Your session has expired. Please log in again.');
+                        window.location.href = '/login.php';
                     }
                 } catch (error) {
                     console.error('Failed to auto-save settings:', error);
@@ -532,11 +552,15 @@ if (!$settings) {
             try {
                 const response = await fetch('save_notifications_handler.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include'
                 });
                 
                 if (response.ok) {
                     alert('✅ Preferences saved successfully!');
+                } else if (response.status === 401) {
+                    alert('⚠️ Your session has expired. Please log in again.');
+                    window.location.href = '/login.php';
                 } else {
                     alert('❌ Failed to save preferences. Please try again.');
                 }

@@ -4,6 +4,14 @@ require_once __DIR__ . '/../app/config/mailer.php';
 
 session_start();
 
+// Input validation for empty fields
+if (empty($_POST['username']) || empty($_POST['email']) || empty($_POST['first_name']) || 
+    empty($_POST['surname']) || empty($_POST['password']) || empty($_POST['confirm_password'])) {
+    $_SESSION['error'] = "All fields are required.";
+    header("Location: /register.php");
+    exit;
+}
+
 $username   = trim($_POST['username']);
 $email      = trim($_POST['email']);
 $first      = trim($_POST['first_name']);
@@ -31,13 +39,24 @@ if (!empty($_FILES['profile_picture']['name'])) {
 }
 
 // Insert user
-$stmt = $pdo->prepare("
-    INSERT INTO users (username, email, first_name, surname, password_hash, profile_picture_path)
-    VALUES (?, ?, ?, ?, ?, ?)
-");
-$stmt->execute([$username, $email, $first, $surname, $hash, $profilePath]);
-
-$userId = $pdo->lastInsertId();
+try {
+    $stmt = $pdo->prepare("
+        INSERT INTO users (username, email, first_name, surname, password_hash, profile_picture_path)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    $stmt->execute([$username, $email, $first, $surname, $hash, $profilePath]);
+    
+    $userId = $pdo->lastInsertId();
+} catch (PDOException $e) {
+    // Check if it's a duplicate entry error (code 23000)
+    if ($e->getCode() == 23000) {
+        $_SESSION['error'] = "Username or email already exists.";
+    } else {
+        $_SESSION['error'] = "Registration failed. Please try again.";
+    }
+    header("Location: /register.php");
+    exit;
+}
 
 // Assign role "user"
 $roleStmt = $pdo->prepare("SELECT id FROM user_roles WHERE role_name = 'user'");

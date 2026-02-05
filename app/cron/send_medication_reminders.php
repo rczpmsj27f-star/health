@@ -15,6 +15,9 @@ if (php_sapi_name() !== 'cli') {
     die('This script can only be run from command line');
 }
 
+// Configuration constants
+const NOTIFICATION_TOLERANCE_MINUTES = 1; // Tolerance window for matching scheduled times
+
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/NotificationService.php';
@@ -73,23 +76,24 @@ try {
         $notificationType = '';
         
         // Check if we should send a notification based on user preferences
-        if ($diffMinutes >= -1 && $diffMinutes <= 1 && $dose['notify_at_time']) {
-            // At scheduled time (within 1 minute tolerance)
+        // Note: Using tolerance to account for cron timing variations
+        if ($diffMinutes >= 0 && $diffMinutes <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_at_time']) {
+            // At scheduled time (within tolerance, not before)
             $shouldNotify = true;
             $notificationType = 'scheduled';
-        } elseif ($diffMinutes >= 9 && $diffMinutes <= 11 && $dose['notify_after_10min']) {
-            // 10 minutes after (within 1 minute tolerance)
+        } elseif ($diffMinutes >= (10 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (10 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_10min']) {
+            // 10 minutes after (within tolerance)
             $shouldNotify = true;
             $notificationType = 'reminder-10';
-        } elseif ($diffMinutes >= 19 && $diffMinutes <= 21 && $dose['notify_after_20min']) {
+        } elseif ($diffMinutes >= (20 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (20 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_20min']) {
             // 20 minutes after
             $shouldNotify = true;
             $notificationType = 'reminder-20';
-        } elseif ($diffMinutes >= 29 && $diffMinutes <= 31 && $dose['notify_after_30min']) {
+        } elseif ($diffMinutes >= (30 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (30 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_30min']) {
             // 30 minutes after
             $shouldNotify = true;
             $notificationType = 'reminder-30';
-        } elseif ($diffMinutes >= 59 && $diffMinutes <= 61 && $dose['notify_after_60min']) {
+        } elseif ($diffMinutes >= (60 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (60 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_60min']) {
             // 60 minutes after
             $shouldNotify = true;
             $notificationType = 'reminder-60';

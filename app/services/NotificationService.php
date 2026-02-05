@@ -115,7 +115,8 @@ class NotificationService {
         
         $result = json_decode($response, true);
         
-        if ($httpCode === 200 && isset($result['id'])) {
+        // Check for success: HTTP 200, notification ID present, and no errors
+        if ($httpCode === 200 && isset($result['id']) && !isset($result['errors'])) {
             return [
                 'success' => true,
                 'notification_id' => $result['id'],
@@ -124,7 +125,7 @@ class NotificationService {
         } else {
             return [
                 'success' => false,
-                'error' => $result['errors'] ?? 'Unknown error',
+                'error' => $result['errors'] ?? ($result['error'] ?? 'Unknown error'),
                 'http_code' => $httpCode
             ];
         }

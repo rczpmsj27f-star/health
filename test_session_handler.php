@@ -101,14 +101,15 @@ echo "Test 5: Verify redirect to login page on auth failure\n";
 echo "------------------------------------------------------\n";
 
 $redirectCount = substr_count($notificationsFile, "window.location.href = '/login.php'");
+$handleSessionCount = substr_count($notificationsFile, "handleSessionExpiry()");
 
-echo "Expected: Multiple redirects to login page\n";
-echo "Actual: $redirectCount occurrences\n";
+echo "Expected: handleSessionExpiry() helper function with redirect\n";
+echo "Actual: handleSessionExpiry() called $handleSessionCount times, redirect in function: $redirectCount time(s)\n";
 
-if ($redirectCount >= 3) {
-    echo "✅ PASS: Redirects to login on auth failure\n";
+if ($redirectCount >= 1 && $handleSessionCount >= 3) {
+    echo "✅ PASS: Centralized redirect via helper function\n";
 } else {
-    echo "❌ FAIL: Missing login redirects\n";
+    echo "❌ FAIL: Missing login redirects or helper function\n";
 }
 
 echo "\n";
@@ -142,3 +143,4 @@ echo "3. Navigate to /modules/settings/notifications.php\n";
 echo "4. Test notification enable/disable\n";
 echo "5. Test with missing session (delete cookie in DevTools)\n";
 echo "\nSee NOTIFICATION_SESSION_TESTING.md for detailed test cases.\n";
+

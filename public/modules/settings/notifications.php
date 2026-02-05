@@ -334,6 +334,22 @@ if (!$settings) {
         let notificationsEnabled = <?= $settings['notifications_enabled'] ? 'true' : 'false' ?>;
         let storedPlayerId = <?= $settings['onesignal_player_id'] ? '"' . htmlspecialchars($settings['onesignal_player_id'], ENT_QUOTES, 'UTF-8') . '"' : 'null' ?>;
 
+        // Helper function to check if error is session-related
+        function isSessionError(error) {
+            if (error && error.message) {
+                return error.message.includes('Session expired') || 
+                       error.message.includes('log in') ||
+                       error.message.includes('Unauthorized');
+            }
+            return false;
+        }
+
+        // Helper function to handle session expiry
+        function handleSessionExpiry() {
+            alert('⚠️ Your session has expired. Please log in again.');
+            window.location.href = '/login.php';
+        }
+
         // Initialize OneSignal when page loads
         async function initializeOneSignal() {
             try {
@@ -464,9 +480,8 @@ if (!$settings) {
             } catch (error) {
                 console.error('❌ Permission request failed:', error);
                 // Check if error is session-related
-                if (error.message.includes('Session expired') || error.message.includes('log in')) {
-                    alert('⚠️ Your session has expired. Please log in again.');
-                    window.location.href = '/login.php';
+                if (isSessionError(error)) {
+                    handleSessionExpiry();
                 } else {
                     alert('Failed to enable notifications: ' + error.message);
                 }
@@ -483,9 +498,8 @@ if (!$settings) {
                 } catch (error) {
                     console.error('Failed to disable notifications:', error);
                     // Check if error is session-related
-                    if (error.message.includes('Session expired') || error.message.includes('log in')) {
-                        alert('⚠️ Your session has expired. Please log in again.');
-                        window.location.href = '/login.php';
+                    if (isSessionError(error)) {
+                        handleSessionExpiry();
                     } else {
                         alert('Failed to disable notifications. Please try again.');
                     }
@@ -530,8 +544,7 @@ if (!$settings) {
                     if (response.ok) {
                         console.log('Settings auto-saved');
                     } else if (response.status === 401) {
-                        alert('⚠️ Your session has expired. Please log in again.');
-                        window.location.href = '/login.php';
+                        handleSessionExpiry();
                     }
                 } catch (error) {
                     console.error('Failed to auto-save settings:', error);
@@ -559,8 +572,7 @@ if (!$settings) {
                 if (response.ok) {
                     alert('✅ Preferences saved successfully!');
                 } else if (response.status === 401) {
-                    alert('⚠️ Your session has expired. Please log in again.');
-                    window.location.href = '/login.php';
+                    handleSessionExpiry();
                 } else {
                     alert('❌ Failed to save preferences. Please try again.');
                 }

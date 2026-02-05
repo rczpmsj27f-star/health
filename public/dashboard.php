@@ -28,11 +28,37 @@ $isAdmin = Auth::isAdmin();
     <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png">
     <meta name="theme-color" content="#4F46E5">
     
-    <!-- OneSignal App ID for client-side JavaScript -->
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    
+    <!-- OneSignal Initialization -->
     <script>
-        // Make OneSignal App ID available globally for JavaScript
-        // Note: REST API Key is kept server-side only for security
-        window.ONESIGNAL_APP_ID = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
+        // v16 initialization pattern
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        
+        OneSignalDeferred.push(async function(OneSignal) {
+            // Get App ID from server-side config
+            const appId = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
+            
+            if (!appId || appId === 'YOUR_ONESIGNAL_APP_ID') {
+                console.warn('OneSignal App ID not configured. Set ONESIGNAL_APP_ID in config.php');
+                return;
+            }
+            
+            await OneSignal.init({
+                appId: appId,
+                allowLocalhostAsSecureOrigin: true,
+                serviceWorkerPath: '/OneSignalSDKWorker.js', // Absolute path from root
+                serviceWorkerParam: { scope: '/' },
+                notifyButton: {
+                    enable: false
+                }
+            });
+            
+            // Make available globally
+            window.OneSignal = OneSignal;
+            console.log('✅ OneSignal initialized');
+        });
     </script>
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">

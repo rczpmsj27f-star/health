@@ -49,12 +49,36 @@ if (!$settings) {
     <meta name="theme-color" content="#4F46E5">
     
     <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js" async crossorigin="anonymous"></script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     
-    <!-- OneSignal App ID for client-side JavaScript -->
+    <!-- OneSignal Initialization -->
     <script>
-        window.ONESIGNAL_APP_ID = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
-        window.OneSignal = window.OneSignal || [];
+        // v16 initialization pattern
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        
+        OneSignalDeferred.push(async function(OneSignal) {
+            // Get App ID from server-side config
+            const appId = '<?php echo htmlspecialchars(ONESIGNAL_APP_ID, ENT_QUOTES, 'UTF-8'); ?>';
+            
+            if (!appId || appId === 'YOUR_ONESIGNAL_APP_ID') {
+                console.warn('OneSignal App ID not configured. Set ONESIGNAL_APP_ID in config.php');
+                return;
+            }
+            
+            await OneSignal.init({
+                appId: appId,
+                allowLocalhostAsSecureOrigin: true,
+                serviceWorkerPath: '/OneSignalSDKWorker.js', // Absolute path from root
+                serviceWorkerParam: { scope: '/' },
+                notifyButton: {
+                    enable: false
+                }
+            });
+            
+            // Make available globally
+            window.OneSignal = OneSignal;
+            console.log('✅ OneSignal initialized');
+        });
     </script>
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
@@ -290,40 +314,31 @@ if (!$settings) {
 
     <script>
         // OneSignal Configuration
-        let OneSignal;
         let notificationsEnabled = <?= $settings['notifications_enabled'] ? 'true' : 'false' ?>;
-        let oneSignalReady = false;
 
         // Initialize OneSignal when page loads
         async function initializeOneSignal() {
             try {
-                if (window.ONESIGNAL_APP_ID === 'YOUR_ONESIGNAL_APP_ID') {
-                    console.warn('OneSignal App ID not configured. Notifications will not work.');
+                // OneSignal is already initialized via OneSignalDeferred in the head section
+                // Just wait for it to be ready
+                console.log('Waiting for OneSignal to be ready...');
+                
+                // Wait for OneSignal to be available
+                let attempts = 0;
+                while (!window.OneSignal && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.OneSignal) {
+                    console.warn('OneSignal not available after waiting');
                     document.getElementById('notificationStatus').innerHTML = 
-                        '<p style="color: #dc3545;"><strong>OneSignal not configured.</strong></p>' +
-                        '<p>Please contact your administrator to set up push notifications.</p>';
-                    document.getElementById('enableNotificationsBtn').disabled = true;
+                        '<p style="color: #dc3545;"><strong>OneSignal failed to load.</strong></p>' +
+                        '<p>Please refresh the page or check your internet connection.</p>';
                     return;
                 }
-
-                window.OneSignal = window.OneSignal || [];
-                OneSignal = window.OneSignal;
-
-                OneSignal.push(function() {
-                    OneSignal.init({
-                        appId: window.ONESIGNAL_APP_ID,
-                        allowLocalhostAsSecureOrigin: true,
-                        notifyButton: {
-                            enable: false
-                        }
-                    });
-                });
-
-                console.log('OneSignal SDK loaded, waiting for initialization...');
                 
-                // Wait for OneSignal to be fully ready before checking permissions
-                // This is especially important for iOS Safari PWA
-                await waitForOneSignalReady();
+                console.log('✅ OneSignal is ready');
                 
                 // Check current notification permission
                 checkNotificationPermission();
@@ -332,80 +347,17 @@ if (!$settings) {
             }
         }
 
-        // Wait for OneSignal to be fully initialized
-        // This ensures the SDK is ready before we attempt any operations
-        // Uses recursive setTimeout to be consistent with other polling operations
-        async function waitForOneSignalReady() {
-            return new Promise((resolve) => {
-                const maxWaitTime = 5000; // 5 seconds maximum wait
-                const checkInterval = 100; // Check every 100ms
-                const startTime = Date.now();
-
-                const checkReady = () => {
-                    const elapsedTime = Date.now() - startTime;
-                    
-                    // Try to access OneSignal methods to verify it's ready
-                    if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
-                        oneSignalReady = true;
-                        console.log('OneSignal is fully ready after', elapsedTime, 'ms');
-                        resolve();
-                    } else if (elapsedTime >= maxWaitTime) {
-                        console.warn('OneSignal initialization timeout - proceeding anyway');
-                        oneSignalReady = true;
-                        resolve();
-                    } else {
-                        // Continue checking
-                        setTimeout(checkReady, checkInterval);
-                    }
-                };
-                
-                // Start checking
-                checkReady();
-            });
-        }
-
         // Check notification permission status
         async function checkNotificationPermission() {
             try {
-                // Use OneSignal API to check if push notifications are supported
-                // This works better on iOS Safari than checking Notification API directly
-                let isSupported = false;
-                
-                if (window.OneSignal && typeof window.OneSignal.isPushNotificationsSupported === 'function') {
-                    await window.OneSignal.push(async function() {
-                        isSupported = await window.OneSignal.isPushNotificationsSupported();
-                    });
-                }
-                
-                console.log('Push notifications supported:', isSupported);
-                
-                if (!isSupported) {
-                    // For iOS, provide more helpful message
-                    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-                    if (isIOS) {
-                        console.log('iOS detected - notifications require HTTPS and Safari 16.4+');
-                    }
-                    // Don't show error immediately - some browsers may still support it
-                    // Let the user try to enable, and we'll show error if it fails
-                }
-
-                // Check current permission status using OneSignal API
+                // Check browser Notification API permission status
                 let permission = 'default';
                 
-                if (window.OneSignal) {
-                    await window.OneSignal.push(async function() {
-                        try {
-                            permission = await window.OneSignal.getNotificationPermission();
-                            console.log('Notification permission from OneSignal:', permission);
-                        } catch (error) {
-                            console.log('Could not get permission from OneSignal, falling back to Notification API');
-                            // Fallback to browser Notification API if OneSignal method fails
-                            if ('Notification' in window) {
-                                permission = Notification.permission;
-                            }
-                        }
-                    });
+                if ('Notification' in window) {
+                    permission = Notification.permission;
                 }
+                
+                console.log('Current notification permission:', permission);
                 
                 if (permission === 'granted' && notificationsEnabled) {
                     showNotificationSettings();
@@ -438,201 +390,53 @@ if (!$settings) {
 
         // Request notification permission
         async function requestNotificationPermission() {
-            console.log('Requesting notification permission...');
+            console.log('🔔 Requesting notification permission...');
             
-            // Check if running in standalone PWA mode with multiple detection methods
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 window.navigator.standalone === true ||
-                                 document.referrer.includes('android-app://');
-            
-            const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-            
-            console.log('Standalone detection:', {
-                'matchMedia standalone': window.matchMedia('(display-mode: standalone)').matches,
-                'navigator.standalone': window.navigator.standalone,
-                'isStandalone final': isStandalone,
-                'isIOS': isIOS
-            });
-            
-            // On iOS, if OneSignal says push is supported, trust that over display-mode detection
-            // because iOS can be quirky about when it reports standalone mode
-            if (isIOS) {
-                let pushSupported = false;
-                
-                try {
-                    // Ensure OneSignal is available before checking
-                    if (window.OneSignal) {
-                        await window.OneSignal.push(async function() {
-                            pushSupported = await window.OneSignal.isPushNotificationsSupported();
-                        });
-                    }
-                    
-                    console.log('OneSignal push supported:', pushSupported);
-                    
-                    // If OneSignal says push is supported on iOS, we're probably in the right context
-                    // even if display-mode detection is flaky
-                    if (pushSupported) {
-                        console.log('OneSignal confirms push is supported, proceeding with permission request');
-                        // Continue to permission request below, don't show "must use home screen" message
-                    } else if (!isStandalone) {
-                        // Only show the error if BOTH standalone detection fails AND OneSignal says not supported
-                        alert('Push notifications require:\n\n' +
-                              '1. Safari 16.4 or later\n' +
-                              '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
-                              '3. Opening the app from the Home Screen icon\n\n' +
-                              'Please ensure you meet these requirements and try again.');
-                        return;
-                    }
-                } catch (error) {
-                    console.error('Error checking OneSignal support:', error);
-                    // If we can't check with OneSignal, fall back to standalone detection
-                    if (!isStandalone) {
-                        alert('Push notifications require:\n\n' +
-                              '1. Safari 16.4 or later\n' +
-                              '2. Adding this site to your Home Screen (Add to Home Screen)\n' +
-                              '3. Opening the app from the Home Screen icon\n\n' +
-                              'Please ensure you meet these requirements and try again.');
-                        return;
-                    }
-                }
-            }
-            
-            // Ensure OneSignal is ready before proceeding
-            if (!oneSignalReady) {
-                console.log('OneSignal not ready yet, waiting...');
-                await waitForOneSignalReady();
-            }
-            
-            if (!window.OneSignal) {
-                alert('Notification system is not ready. Please refresh the page and try again.');
+            // Check browser support
+            if (!('Notification' in window)) {
+                alert('This browser does not support notifications');
                 return;
             }
-
+            
             try {
-                // Check if push notifications are supported
-                // For iOS: already checked earlier in the function, this is for logging/debugging
-                // For non-iOS: this check determines if we should show an error
-                let isSupported = false;
+                // Native browser permission first
+                console.log('📱 Requesting native permission...');
+                const permission = await Notification.requestPermission();
+                console.log('✅ Permission result:', permission);
                 
-                await window.OneSignal.push(async function() {
-                    isSupported = await window.OneSignal.isPushNotificationsSupported();
-                });
-                
-                console.log('Push notifications supported (verification):', isSupported);
-                
-                // For non-iOS browsers, check support and show error if not supported
-                if (!isSupported && !isIOS) {
-                    alert('Push notifications are not supported in this browser. Please try:\n\n' +
-                          '1. Using a modern browser (Chrome, Firefox, Safari, Edge)\n' +
-                          '2. Ensuring you are on HTTPS\n' +
-                          '3. Checking your browser settings');
+                if (permission !== 'granted') {
+                    alert('Notification permission denied.');
                     return;
                 }
                 
-                // For iOS, we already handled the support check earlier in the function
-                // Log if there's a discrepancy for debugging purposes
-                if (isIOS && !isSupported) {
-                    console.log('Note: Proceeding despite isSupported=false on iOS, trusting earlier OneSignal check');
+                // Subscribe to OneSignal after permission granted
+                console.log('🎯 Subscribing to OneSignal...');
+                
+                if (!window.OneSignal) {
+                    console.warn('⚠️ Waiting for OneSignal...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
-
-                // Use OneSignal's native prompt method - this handles iOS Safari properly
-                console.log('Showing OneSignal native prompt...');
                 
-                await window.OneSignal.push(async function() {
-                    try {
-                        // OneSignal's showNativePrompt handles browser differences automatically
-                        await window.OneSignal.showNativePrompt();
-                        console.log('Native prompt shown');
-                    } catch (error) {
-                        console.error('Error showing native prompt:', error);
-                        throw error;
-                    }
-                });
-
-                // Wait for permission to be processed
-                // Poll for permission state change with timeout
-                // On iOS this may take longer than other platforms
-                // Use recursive setTimeout to avoid concurrency issues with async operations
-                const maxWaitTime = 3000; // 3 seconds maximum wait
-                const checkInterval = 200; // Check every 200ms
-                const startTime = Date.now();
-                
-                const pollPermissionState = async () => {
-                    try {
-                        const elapsedTime = Date.now() - startTime;
-                        let permission = 'default';
-                        
-                        await window.OneSignal.push(async function() {
-                            permission = await window.OneSignal.getNotificationPermission();
-                        });
-                        
-                        console.log('Checking permission state:', permission, 'elapsed:', elapsedTime);
-                        
-                        // Stop if permission changed or timeout
-                        if (permission !== 'default' || elapsedTime >= maxWaitTime) {
-                            // Get player ID only once after permission is granted
-                            let playerId = null;
-                            if (permission === 'granted') {
-                                await window.OneSignal.push(async function() {
-                                    playerId = await window.OneSignal.getUserId();
-                                });
-                            }
-                            
-                            await handlePermissionResult(permission, playerId);
-                        } else {
-                            // Continue polling
-                            setTimeout(pollPermissionState, checkInterval);
-                        }
-                    } catch (error) {
-                        console.error('Error checking permission state:', error);
-                        alert('Error checking notification permission. Please try again.');
-                    }
-                };
-                
-                // Start polling
-                pollPermissionState();
-                
-                // Helper function to handle the permission result
-                async function handlePermissionResult(permission, playerId) {
-                    if (permission === 'granted') {
-                        console.log('Notification permission granted, Player ID:', playerId);
-                        
-                        // Save notification enabled status to database
-                        await saveNotificationStatus(true, playerId);
-                        
-                        showNotificationSettings();
-                        
-                        // Show success message
-                        alert('✅ Notifications enabled! You will now receive medication reminders on this device.');
-                    } else if (permission === 'denied') {
-                        alert('❌ Notification permission was denied.\n\n' +
-                              'To enable notifications:\n' +
-                              '1. Go to your browser/device settings\n' +
-                              '2. Find this website in the notifications settings\n' +
-                              '3. Enable notifications\n' +
-                              '4. Return here and try again');
-                    } else {
-                        console.log('Permission still default/undecided');
-                    }
+                if (window.OneSignal?.User?.PushSubscription) {
+                    await window.OneSignal.User.PushSubscription.optIn();
+                    console.log('✅ OneSignal subscription successful');
+                    
+                    // Get user ID for saving to database
+                    const userId = await window.OneSignal.User.PushSubscription.id;
+                    console.log('OneSignal User ID:', userId);
+                    
+                    // Save notification enabled status to database
+                    await saveNotificationStatus(true, userId);
                 }
+                
+                // Update UI
+                showNotificationSettings();
+                console.log('🎉 Notifications enabled!');
+                alert('✅ Notifications enabled! You will now receive medication reminders on this device.');
+                
             } catch (error) {
-                console.error('Failed to request notification permission:', error);
-                
-                // Provide helpful error messages based on the error
-                let errorMessage = 'Failed to enable notifications.\n\n';
-                
-                const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-                if (isIOS) {
-                    errorMessage += 'For iOS:\n' +
-                                  '1. Ensure you are using Safari 16.4+\n' +
-                                  '2. Add this site to Home Screen\n' +
-                                  '3. Open from the Home Screen icon\n' +
-                                  '4. Try enabling notifications again\n\n';
-                }
-                
-                errorMessage += 'Error details: ' + error.message;
-                
-                alert(errorMessage);
+                console.error('❌ Permission request failed:', error);
+                alert('Failed to enable notifications: ' + error.message);
             }
         }
 

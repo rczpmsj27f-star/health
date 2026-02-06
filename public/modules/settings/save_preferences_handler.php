@@ -11,19 +11,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $userId = $_SESSION['user_id'];
 
+// DARK MODE TEMPORARILY DISABLED - 2026-02-06
+// Dark mode implementation incomplete - causing usability issues
+// TODO: Properly implement dark mode with correct text colors
+
 // Get form values
-$themeMode = $_POST['theme_mode'] ?? 'device';
 $timeFormat = $_POST['time_format'] ?? '12h';
 $stockNotificationEnabled = isset($_POST['stock_notification_enabled']) ? 1 : 0;
 $stockNotificationThreshold = intval($_POST['stock_notification_threshold'] ?? 10);
 $notifyLinkedUsers = isset($_POST['notify_linked_users']) ? 1 : 0;
-
-// Validate theme mode
-if (!in_array($themeMode, ['light', 'dark', 'device'])) {
-    $_SESSION['error'] = "Invalid theme mode selected.";
-    header("Location: /modules/settings/preferences.php");
-    exit;
-}
 
 // Validate time format
 if (!in_array($timeFormat, ['12h', '24h'])) {
@@ -40,14 +36,13 @@ if ($stockNotificationThreshold < 1 || $stockNotificationThreshold > 90) {
 }
 
 try {
-    // Update or insert preferences
+    // Update or insert preferences (theme_mode removed - dark mode disabled)
     $stmt = $pdo->prepare("
         INSERT INTO user_preferences 
-            (user_id, theme_mode, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
+            (user_id, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
         VALUES 
-            (?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
-            theme_mode = VALUES(theme_mode),
             time_format = VALUES(time_format),
             stock_notification_threshold = VALUES(stock_notification_threshold),
             stock_notification_enabled = VALUES(stock_notification_enabled),
@@ -57,7 +52,6 @@ try {
     
     $stmt->execute([
         $userId,
-        $themeMode,
         $timeFormat,
         $stockNotificationThreshold,
         $stockNotificationEnabled,

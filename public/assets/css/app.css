@@ -31,49 +31,55 @@
     --transition: all 0.3s ease;
 }
 
-/* Light mode - explicit */
-body.theme-light {
-    --color-text: #333;
-    --color-text-primary: #333;
-    --color-text-secondary: #666;
-    --color-border: #ddd;
-    --color-bg-light: #f5f5f5;
-    --color-bg-gray: #f8f9fa;
-    --color-bg-white: #fff;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Dark mode - explicit */
-body.theme-dark {
-    --color-text: #e0e0e0;
-    --color-text-primary: #f5f5f5;
-    --color-text-secondary: #b0b0b0;
-    --color-border: #444;
-    --color-bg-light: #1a1a1a;
-    --color-bg-gray: #2a2a2a;
-    --color-bg-white: #1e1e1e;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
-/* Device mode - follows system preference */
-@media (prefers-color-scheme: dark) {
-    body:not(.theme-light):not(.theme-dark) {
-        --color-text: #e0e0e0;
-        --color-text-primary: #f5f5f5;
-        --color-text-secondary: #b0b0b0;
-        --color-border: #444;
-        --color-bg-light: #1a1a1a;
-        --color-bg-gray: #2a2a2a;
-        --color-bg-white: #1e1e1e;
-        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-        --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.3);
-        --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-}
+/* DARK MODE TEMPORARILY DISABLED - 2026-02-06
+ * Current implementation does not properly change text colors
+ * Causes dark text on dark backgrounds, making app unusable
+ * TODO: Implement complete dark mode color scheme with proper contrast
+ *
+ * Light mode - explicit
+ * body.theme-light {
+ *     --color-text: #333;
+ *     --color-text-primary: #333;
+ *     --color-text-secondary: #666;
+ *     --color-border: #ddd;
+ *     --color-bg-light: #f5f5f5;
+ *     --color-bg-gray: #f8f9fa;
+ *     --color-bg-white: #fff;
+ *     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+ *     --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
+ *     --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+ * }
+ *
+ * Dark mode - explicit
+ * body.theme-dark {
+ *     --color-text: #e0e0e0;
+ *     --color-text-primary: #f5f5f5;
+ *     --color-text-secondary: #b0b0b0;
+ *     --color-border: #444;
+ *     --color-bg-light: #1a1a1a;
+ *     --color-bg-gray: #2a2a2a;
+ *     --color-bg-white: #1e1e1e;
+ *     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+ *     --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.3);
+ *     --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.4);
+ * }
+ *
+ * Device mode - follows system preference
+ * @media (prefers-color-scheme: dark) {
+ *     body:not(.theme-light):not(.theme-dark) {
+ *         --color-text: #e0e0e0;
+ *         --color-text-primary: #f5f5f5;
+ *         --color-text-secondary: #b0b0b0;
+ *         --color-border: #444;
+ *         --color-bg-light: #1a1a1a;
+ *         --color-bg-gray: #2a2a2a;
+ *         --color-bg-white: #1e1e1e;
+ *         --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+ *         --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.3);
+ *         --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.4);
+ *     }
+ * }
+ */
 
 body {
     margin: 0;

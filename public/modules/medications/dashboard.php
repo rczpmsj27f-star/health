@@ -39,6 +39,7 @@ $todayDate = date('Y-m-d');
 
 // Get current date time for filtering
 $currentDateTime = date('Y-m-d H:i:s');
+$currentDateTimeStamp = strtotime($currentDateTime); // Compute once for reuse
 
 // Get medication logs for today - only future doses OR doses with status
 $stmt = $pdo->prepare("
@@ -86,7 +87,7 @@ foreach ($todaysMeds as $med) {
             // Skip if this dose time is in the past AND has no log entry
             $logKey = $med['id'] . '_' . $scheduledDateTime;
             $hasLog = isset($medLogs[$logKey]);
-            $isPastTime = strtotime($scheduledDateTime) < strtotime($currentDateTime);
+            $isPastTime = strtotime($scheduledDateTime) < $currentDateTimeStamp;
             
             if ($isPastTime && !$hasLog) {
                 continue; // Skip past doses without logs
@@ -99,9 +100,10 @@ foreach ($todaysMeds as $med) {
             // Add log status to medication data
             $medWithStatus = $med;
             $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
-            $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
-            $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
-            $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
+            // Safely access log data with null coalescing
+            $medWithStatus['log_status'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['status'] ?? 'pending') : 'pending';
+            $medWithStatus['taken_at'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['taken_at'] ?? null) : null;
+            $medWithStatus['skipped_reason'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['skipped_reason'] ?? null) : null;
             
             $scheduleByTime[$timeKey][] = $medWithStatus;
         }

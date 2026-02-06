@@ -18,9 +18,8 @@ if (empty($_SESSION['user_id'])) {
 $isAdmin = Auth::isAdmin();
 
 // Get overdue medication count
-$today = date('D');
+$todayDayOfWeek = date('D'); // Day of week: Mon, Tue, etc.
 $todayDate = date('Y-m-d');
-$currentTime = date('H:i:s');
 $currentDateTime = date('Y-m-d H:i:s');
 
 // Query for overdue medications with special time handling
@@ -45,7 +44,7 @@ $stmt = $pdo->prepare("
     )
     AND (ml.status IS NULL OR ml.status = 'pending')
 ");
-$stmt->execute([$todayDate, $_SESSION['user_id'], "%$today%"]);
+$stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%"]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Count overdue medications

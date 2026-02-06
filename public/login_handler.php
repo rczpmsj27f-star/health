@@ -31,5 +31,8 @@ if (!$user['is_email_verified']) {
 
 $_SESSION['user_id'] = $user['id'];
 
+// Update last login time
+$pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
+
 header("Location: /dashboard.php");
 exit;

@@ -161,10 +161,12 @@ $users = $stmt->fetchAll();
         }
 
         .action-buttons {
-            display: flex;
-            gap: 4px;
+            display: flex !important;
+            grid-template-columns: none !important;
+            gap: 4px !important;
             flex-shrink: 0;
-            flex-wrap: nowrap;
+            flex-wrap: nowrap !important;
+            margin-bottom: 0 !important;
         }
 
         .action-buttons .btn {
@@ -172,10 +174,17 @@ $users = $stmt->fetchAll();
             padding: 4px 8px !important;
             border-radius: 4px !important;
             white-space: nowrap;
-            min-height: 24px;
-            display: inline-flex;
+            min-height: 24px !important;
+            max-height: 24px !important;
+            height: 24px !important;
+            display: inline-flex !important;
+            width: auto !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
             align-items: center;
             justify-content: center;
+            line-height: 1 !important;
+            box-sizing: border-box;
         }
 
         .action-buttons .btn:hover {
@@ -236,15 +245,20 @@ $users = $stmt->fetchAll();
             }
 
             .action-buttons {
-                flex-wrap: nowrap;
-                width: auto;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                width: auto !important;
             }
 
             .action-buttons .btn {
-                flex: none;
+                flex: none !important;
+                width: auto !important;
                 padding: 3px 6px !important;
-                min-height: 22px;
+                min-height: 22px !important;
+                max-height: 22px !important;
+                height: 22px !important;
                 font-size: 10px !important;
+                margin-top: 0 !important;
             }
 
             .user-row-header {

@@ -1316,6 +1316,30 @@ button[disabled], input[disabled] {
     margin-bottom: 4px;
 }
 
+/* Icon selector grid - white fill with black stroke for visibility */
+.icon-grid .icon-option svg path,
+.icon-grid .icon-option svg circle,
+.icon-grid .icon-option svg ellipse,
+.icon-grid .icon-option svg rect {
+    fill: white !important;
+    stroke: black !important;
+    stroke-width: 0.5 !important;
+}
+
+/* Secondary color paths in icon selector should also be white */
+.icon-grid .icon-option svg path.secondary-color {
+    fill: white !important;
+    stroke: black !important;
+    stroke-width: 0.5 !important;
+    opacity: 0.7 !important;
+}
+
+/* Lines in scored tablets should remain visible */
+.icon-grid .icon-option svg line {
+    stroke: #666 !important;
+    stroke-width: 1 !important;
+}
+
 .icon-option .icon-name {
     font-size: 10px;
     text-align: center;
@@ -1438,6 +1462,258 @@ button[disabled], input[disabled] {
     width: 100%;
     height: 100%;
 }
+
+/* Color Picker Modal Styles */
+.color-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.color-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.color-modal-content {
+    position: relative;
+    background: var(--color-bg-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.color-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--color-primary);
+    background: var(--color-bg-light);
+}
+
+.color-modal-header h3 {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.color-modal-close {
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.color-modal-close:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
+.color-modal-body {
+    padding: 24px;
+}
+
+.color-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+    .color-palette-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+    }
+}
+
+@media (max-width: 400px) {
+    .color-palette-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+}
+
+.color-palette-option {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: var(--transition);
+    position: relative;
+    min-height: 50px;
+}
+
+.color-palette-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.color-palette-option.selected {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-bg-white), 0 0 0 4px var(--color-primary);
+}
+
+.color-palette-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.color-hex-input-group {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+}
+
+.color-hex-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+#color-hex-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-family: monospace;
+    text-transform: uppercase;
+}
+
+#color-hex-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.color-modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+}
+
+.color-modal-footer .btn {
+    flex: 1;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Custom color button styling */
+.custom-color-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--color-bg-gray);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-top: 12px;
+}
+
+.custom-color-btn:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    border-style: solid;
+}
+
+.custom-color-btn::before {
+    content: '🎨 ';
+}
+
+/* Icon toggle button */
+.btn-toggle-icons {
+    background: var(--color-bg-gray);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+    color: var(--color-text-primary);
+}
+
+.btn-toggle-icons:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* Selected icon display */
+#selected-icon-display {
+    font-size: 14px;
+}
+
+#selected-icon-display strong {
+    color: var(--color-primary);
+}
+
+#selected-icon-name {
+    color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+
 
 
 

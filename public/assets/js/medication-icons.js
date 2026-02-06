@@ -47,17 +47,17 @@ const MedicationIcons = {
             supportsTwoColors: false
         },
         'pill-two-tone': {
-            name: 'Two-Tone Pill',
+            name: 'Two-Tone Pill ⚫⚪',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M11.29 4.22l-7.07 7.07 7.07 7.07z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
         'pill-half': {
-            name: 'Half-and-Half Pill',
+            name: 'Half & Half Pill ⚫⚪',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/><path class="secondary-color" d="M12 4 A8 8 0 0 1 12 20 Z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
         'capsule': {
-            name: 'Capsule',
+            name: 'Two-Tone Capsule ⚫⚪',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M11.29 4.22l-7.07 7.07 7.07 7.07z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
@@ -72,7 +72,7 @@ const MedicationIcons = {
             supportsTwoColors: false
         },
         'capsule-two-tone': {
-            name: 'Two-Tone Capsule',
+            name: 'Two-Tone Capsule ⚫⚪',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M11.29 4.22l-7.07 7.07c-2.68 2.68-2.68 7.02 0 9.7l7.07-7.07z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
@@ -98,7 +98,7 @@ const MedicationIcons = {
         },
         'cream': {
             name: 'Cream/Ointment',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 20c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm6-5h2v2h-2v-2zm4 0h2v2h-2v-2zm-8 0h2v2h-2v-2zm4-3c-3.31 0-6 2.69-6 6h12c0-3.31-2.69-6-6-6zm-8-8h16v8H7V4z"/></svg>',
+            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 2h8v3H8V2zm-1 5h10c1.1 0 2 .9 2 2v11c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2zm1 3v8h8v-8H8z"/></svg>',
             supportsTwoColors: false
         },
         'patch': {

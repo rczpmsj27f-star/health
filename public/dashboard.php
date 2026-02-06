@@ -17,6 +17,67 @@ if (empty($_SESSION['user_id'])) {
 // Check if user is admin
 $isAdmin = Auth::isAdmin();
 
+// Get overdue medication count
+$today = date('D');
+$todayDate = date('Y-m-d');
+$currentTime = date('H:i:s');
+$currentDateTime = date('Y-m-d H:i:s');
+
+// Query for overdue medications with special time handling
+$stmt = $pdo->prepare("
+    SELECT 
+        m.id, 
+        mdt.dose_time, 
+        ms.special_timing,
+        ml.status
+    FROM medications m
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+    LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
+    LEFT JOIN medication_logs ml ON m.id = ml.medication_id 
+        AND DATE(ml.scheduled_date_time) = ?
+        AND TIME(ml.scheduled_date_time) = mdt.dose_time
+    WHERE m.user_id = ?
+    AND (m.archived = 0 OR m.archived IS NULL)
+    AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
+    AND (
+        ms.frequency_type = 'per_day' 
+        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE ?)
+    )
+    AND (ml.status IS NULL OR ml.status = 'pending')
+");
+$stmt->execute([$todayDate, $_SESSION['user_id'], "%$today%"]);
+$medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Count overdue medications
+$overdueCount = 0;
+$currentTimeStamp = strtotime(date('H:i'));
+
+foreach ($medications as $med) {
+    // Skip if no dose time
+    if (empty($med['dose_time'])) {
+        continue;
+    }
+    
+    $doseTime = strtotime($med['dose_time']);
+    $isOverdue = false;
+    
+    // Apply special timing rules
+    if ($med['special_timing'] === 'on_waking') {
+        // Overdue after 9am
+        $isOverdue = $currentTimeStamp > strtotime('09:00');
+    } elseif ($med['special_timing'] === 'before_bed') {
+        // Overdue after 10pm
+        $isOverdue = $currentTimeStamp > strtotime('22:00');
+    } else {
+        // Regular time - overdue after scheduled time
+        $isOverdue = $currentTimeStamp > $doseTime;
+    }
+    
+    if ($isOverdue && ($med['status'] === null || $med['status'] === 'pending')) {
+        $overdueCount++;
+    }
+}
+
 // Fetch user details for profile header (Issue #51)
 $userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
 $userStmt->execute([$_SESSION['user_id']]);
@@ -142,6 +203,25 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             color: #666;
             font-size: 14px;
         }
+        
+        .overdue-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -170,11 +250,21 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         </div>
         
         <div class="dashboard-grid">
-            <a class="tile tile-purple" href="/modules/medications/dashboard.php">
+            <a class="tile tile-purple" href="/modules/medications/dashboard.php" style="position: relative;">
+                <?php if ($overdueCount > 0): ?>
+                    <span class="overdue-badge"><?= $overdueCount ?></span>
+                <?php endif; ?>
                 <div>
                     <span class="tile-icon">💊</span>
                     <div class="tile-title">Medication Management</div>
-                    <div class="tile-desc">Track your medications</div>
+                    <div class="tile-desc">
+                        Track your medications
+                        <?php if ($overdueCount > 0): ?>
+                            <span style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px;">
+                                • <?= $overdueCount ?> overdue
+                            </span>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </a>
             

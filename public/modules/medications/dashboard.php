@@ -37,13 +37,21 @@ $medDoseTimes = [];
 $scheduleByTime = [];
 $todayDate = date('Y-m-d');
 
-// Get medication logs for today
+// Get current date time for filtering
+$currentDateTime = date('Y-m-d H:i:s');
+
+// Get medication logs for today - only future doses OR doses with status
 $stmt = $pdo->prepare("
     SELECT medication_id, scheduled_date_time, status, taken_at, skipped_reason
     FROM medication_logs
-    WHERE user_id = ? AND DATE(scheduled_date_time) = ?
+    WHERE user_id = ? 
+    AND DATE(scheduled_date_time) = ?
+    AND (
+        scheduled_date_time >= ? 
+        OR status IN ('taken', 'skipped')
+    )
 ");
-$stmt->execute([$userId, $todayDate]);
+$stmt->execute([$userId, $todayDate, $currentDateTime]);
 $medLogs = [];
 while ($log = $stmt->fetch()) {
     $key = $log['medication_id'] . '_' . $log['scheduled_date_time'];
@@ -75,6 +83,15 @@ foreach ($todaysMeds as $med) {
             $timeKey = date('H:i', strtotime($doseTime['dose_time']));
             $scheduledDateTime = $todayDate . ' ' . $timeKey . ':00';
             
+            // Skip if this dose time is in the past AND has no log entry
+            $logKey = $med['id'] . '_' . $scheduledDateTime;
+            $hasLog = isset($medLogs[$logKey]);
+            $isPastTime = strtotime($scheduledDateTime) < strtotime($currentDateTime);
+            
+            if ($isPastTime && !$hasLog) {
+                continue; // Skip past doses without logs
+            }
+            
             if (!isset($scheduleByTime[$timeKey])) {
                 $scheduleByTime[$timeKey] = [];
             }
@@ -82,7 +99,6 @@ foreach ($todaysMeds as $med) {
             // Add log status to medication data
             $medWithStatus = $med;
             $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
-            $logKey = $med['id'] . '_' . $scheduledDateTime;
             $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
             $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
             $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
@@ -633,7 +649,31 @@ foreach ($prnMedications as $med) {
                 $currentTime = strtotime(date('H:i'));
                 foreach ($scheduleByTime as $time => $meds): 
                     $scheduleTime = strtotime($time);
-                    $isOverdue = $currentTime > $scheduleTime;
+                    
+                    // Check if this is a special time with custom overdue threshold
+                    $isOverdue = false;
+                    
+                    // Check if any medication in this time slot has special timing
+                    $hasSpecialTiming = false;
+                    $specialTimingType = null;
+                    foreach ($meds as $checkMed) {
+                        if (!empty($checkMed['special_timing'])) {
+                            $hasSpecialTiming = true;
+                            $specialTimingType = $checkMed['special_timing'];
+                            break;
+                        }
+                    }
+                    
+                    if ($hasSpecialTiming && $specialTimingType === 'on_waking') {
+                        // Show overdue after 9am for "On waking"
+                        $isOverdue = $currentTime > strtotime('09:00');
+                    } elseif ($hasSpecialTiming && $specialTimingType === 'before_bed') {
+                        // Show overdue after 10pm for "Before bed"
+                        $isOverdue = $currentTime > strtotime('22:00');
+                    } else {
+                        // Regular time - show overdue immediately after scheduled time
+                        $isOverdue = $currentTime > $scheduleTime;
+                    }
                 ?>
                     <div class="time-group-compact">
                         <div class="time-header-compact"><?= $time ?></div>

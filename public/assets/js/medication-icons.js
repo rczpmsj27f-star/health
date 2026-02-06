@@ -46,21 +46,18 @@ const MedicationIcons = {
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/><line x1="12" y1="4" x2="12" y2="20" stroke="white" stroke-width="1" opacity="0.6"/></svg>',
             supportsTwoColors: false
         },
-        'pill-two-tone': {
-            name: 'Two-Tone Pill ⚫⚪',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M11.29 4.22l-7.07 7.07 7.07 7.07z" opacity="0.85"/></svg>',
-            supportsTwoColors: true
-        },
+
         'pill-half': {
             name: 'Half & Half Pill ⚫⚪',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/><path class="secondary-color" d="M12 4 A8 8 0 0 1 12 20 Z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
-        'capsule': {
-            name: 'Two-Tone Capsule ⚫⚪',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M11.29 4.22l-7.07 7.07 7.07 7.07z" opacity="0.85"/></svg>',
+        'capsule-half': {
+            name: 'Half & Half Capsule ⚫⚪',
+            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M4.22 11.29 L11.29 4.22 L11.29 18.36 L4.22 11.29 Z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
+
         'capsule-small': {
             name: 'Small Capsule',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 11.29l5-5c1.8-1.8 4.7-1.8 6.5 0 1.8 1.8 1.8 4.7 0 6.5l-5 5c-1.8 1.8-4.7 1.8-6.5 0-1.8-1.8-1.8-4.7 0-6.5z"/></svg>',
@@ -71,11 +68,7 @@ const MedicationIcons = {
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11.29l8.5-8.5c3-3 7.87-3 10.87 0 3 3 3 7.87 0 10.87l-8.5 8.5c-3 3-7.87 3-10.87 0-3-3-3-7.87 0-10.87zM14 10L10 14l-1.41-1.41L12.59 8.59z"/></svg>',
             supportsTwoColors: false
         },
-        'capsule-two-tone': {
-            name: 'Two-Tone Capsule ⚫⚪',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M11.29 4.22l-7.07 7.07c-2.68 2.68-2.68 7.02 0 9.7l7.07-7.07z" opacity="0.85"/></svg>',
-            supportsTwoColors: true
-        },
+
         'liquid': {
             name: 'Liquid/Syrup',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h6v6h-1V3H7v5H6V2zm11 4h1v2h-1V6zM7 20c-1.66 0-3-1.34-3-3l2-9h8l2 9c0 1.66-1.34 3-3 3H7zm10-6h-1v-3h-1v3h-1V9h3v5zm1 0h1v-1h-1v1zm0-2h1v-1h-1v1z"/></svg>',
@@ -98,7 +91,7 @@ const MedicationIcons = {
         },
         'cream': {
             name: 'Cream/Ointment',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 2h8v3H8V2zm-1 5h10c1.1 0 2 .9 2 2v11c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2zm1 3v8h8v-8H8z"/></svg>',
+            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M7 6h10c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2z"/><path d="M9 10h6v8H9z" fill="white" opacity="0.3"/></svg>',
             supportsTwoColors: false
         },
         'patch': {

@@ -29,7 +29,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Take control of all pages immediately
+  // Take control of all pages immediately - necessary for the redirect fix to work on already-open pages
   self.clients.claim();
 });
 
@@ -48,7 +48,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Only handle GET requests
+  // Only handle GET requests - non-GET requests fall through to network
+  // (redirects on POST/PUT/DELETE can be problematic and should be handled by the server)
   if (event.request.method !== 'GET') {
     return;
   }
@@ -61,15 +62,8 @@ self.addEventListener('fetch', (event) => {
         }
         
         // Fetch with redirect: 'follow' to fix Safari "Response served by service worker has redirections" error
-        return fetch(event.request, { redirect: 'follow' })
-          .then((response) => {
-            // If the response was redirected, return the final response
-            // This prevents Safari from throwing the WebKitInternal:0 error
-            if (response.redirected) {
-              return response;
-            }
-            return response;
-          });
+        // This ensures redirects are resolved before returning, preventing Safari from throwing WebKitInternal:0 error
+        return fetch(event.request, { redirect: 'follow' });
       })
   );
 });

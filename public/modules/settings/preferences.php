@@ -20,8 +20,8 @@ $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
 // Create default preferences if none exist
 if (!$preferences) {
     $createStmt = $pdo->prepare("
-        INSERT INTO user_preferences (user_id, dark_mode, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
-        VALUES (?, 0, '12h', 10, 1, 0)
+        INSERT INTO user_preferences (user_id, theme_mode, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
+        VALUES (?, 'device', '12h', 10, 1, 0)
     ");
     $createStmt->execute([$userId]);
     
@@ -51,7 +51,12 @@ unset($_SESSION['error'], $_SESSION['success']);
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
 </head>
-<body class="<?= $preferences['dark_mode'] ? 'dark-mode' : '' ?>">
+<body class="<?php 
+$themeMode = $preferences['theme_mode'] ?? 'device';
+if ($themeMode === 'light') echo 'theme-light';
+elseif ($themeMode === 'dark') echo 'theme-dark';
+elseif ($themeMode === 'device') echo 'theme-device';
+?>">
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
 
     <div class="container">
@@ -72,11 +77,22 @@ unset($_SESSION['error'], $_SESSION['success']);
                 <div class="section-header">Appearance</div>
 
                 <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="dark_mode" value="1" <?= $preferences['dark_mode'] ? 'checked' : '' ?>>
-                        <span>Enable Dark Mode</span>
-                    </label>
-                    <p class="help-text">Switch to a dark color scheme for better viewing in low light</p>
+                    <label>Theme Mode</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="theme_mode" value="light" <?= ($preferences['theme_mode'] ?? 'device') === 'light' ? 'checked' : '' ?>>
+                            <span>☀️ Light Mode</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="theme_mode" value="dark" <?= ($preferences['theme_mode'] ?? 'device') === 'dark' ? 'checked' : '' ?>>
+                            <span>🌙 Dark Mode</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="theme_mode" value="device" <?= ($preferences['theme_mode'] ?? 'device') === 'device' ? 'checked' : '' ?>>
+                            <span>📱 Device Mode (Auto)</span>
+                        </label>
+                    </div>
+                    <p class="help-text">Choose your preferred color scheme. Device mode automatically matches your system settings.</p>
                 </div>
 
                 <div class="section-header">Time Display</div>

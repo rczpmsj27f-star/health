@@ -16,7 +16,7 @@ $isAdmin = Auth::isAdmin();
 $today = date('D'); // Mon, Tue, Wed, etc.
 
 $stmt = $pdo->prepare("
-    SELECT DISTINCT m.*, md.dose_amount, md.dose_unit, ms.frequency_type, ms.times_per_day, ms.days_of_week, ms.is_prn
+    SELECT DISTINCT m.*, md.dose_amount, md.dose_unit, ms.frequency_type, ms.times_per_day, ms.days_of_week, ms.is_prn, ms.special_timing, ms.custom_instructions
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -649,6 +649,24 @@ foreach ($prnMedications as $med) {
                                 
                                 <div class="med-info">
                                     <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                    
+                                    <?php if (!empty($med['special_timing'])): ?>
+                                        <div class="special-timing-badge" style="background: #ffd54f; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin-left: 8px;">
+                                            <?php
+                                            switch($med['special_timing']) {
+                                                case 'on_waking': echo '🌅 On Waking'; break;
+                                                case 'before_bed': echo '🌙 Before Bed'; break;
+                                                case 'with_meal': echo '🍽️ With Meal'; break;
+                                            }
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($med['custom_instructions'])): ?>
+                                        <div style="font-size: 11px; color: #666; margin-top: 4px;">
+                                            📝 <?= htmlspecialchars($med['custom_instructions']) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="med-actions">

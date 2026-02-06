@@ -160,12 +160,16 @@ $stmt->execute([
     $medId
 ]);
 
-// Handle dose times for daily medications
+// Handle dose times for daily medications (Issue #102 - only create future doses)
 if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay >= 1) {
-    // First, delete existing dose times
+    // First, delete existing dose times and today's pending logs
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
+    $pdo->prepare("DELETE FROM medication_logs WHERE medication_id = ? AND DATE(scheduled_date_time) = CURDATE() AND status = 'pending'")->execute([$medId]);
     
-    // Then insert new dose times
+    $currentTime = new DateTime();
+    $today = new DateTime('today');
+    
+    // Then insert new dose times and create future logs
     for ($i = 1; $i <= $timesPerDay; $i++) {
         $timeKey = "dose_time_$i";
         if (!empty($_POST[$timeKey])) {
@@ -180,11 +184,23 @@ if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay >= 1) {
                 VALUES (?, ?, ?)
             ");
             $stmt->execute([$medId, $i, $doseTime]);
+            
+            // Create medication log ONLY if the dose time is in the future (Issue #102)
+            $doseDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . $doseTime . ':00');
+            if ($doseDateTime > $currentTime) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
+                    VALUES (?, ?, ?, 'pending')
+                ");
+                $stmt->execute([$medId, $userId, $doseDateTime->format('Y-m-d H:i:s')]);
+            }
         }
     }
 } elseif ($frequencyType !== 'per_day') {
-    // Clear dose times if frequency changed from daily
+    // Clear dose times and today's pending logs if frequency changed from daily
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
+    $pdo->prepare("DELETE FROM medication_logs WHERE medication_id = ? AND DATE(scheduled_date_time) = CURDATE() AND status = 'pending'")->execute([$medId]);
+}
 }
 
 // Update instructions - delete existing and insert new ones

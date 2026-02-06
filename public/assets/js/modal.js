@@ -50,29 +50,34 @@ function showModal(message, type = 'success', duration = 3000, onClose = null) {
     // Determine icon and class based on type
     let icon = '✓';
     let modalClass = 'success-modal';
+    let bodyClass = 'success-modal-body';
     
     switch(type) {
         case 'error':
             icon = '✗';
             modalClass = 'error-modal';
+            bodyClass = 'error-modal-body';
             break;
         case 'confirmation':
             icon = '✓';
             modalClass = 'confirmation-modal';
+            bodyClass = 'confirmation-modal-body';
             break;
         case 'info':
             icon = 'ℹ';
             modalClass = 'info-modal';
+            bodyClass = 'info-modal-body';
             break;
         default:
             icon = '✓';
             modalClass = 'success-modal';
+            bodyClass = 'success-modal-body';
     }
 
     // Create modal HTML
     const modalHTML = `
         <div class="${modalClass}" id="successModal">
-            <div class="modal-content">
+            <div class="${bodyClass}">
                 <div class="modal-icon">${icon}</div>
                 <div class="modal-message">${message}</div>
                 <div class="modal-countdown-bar">

@@ -417,7 +417,7 @@ $medications = $stmt->fetchAll();
     </div>
     
     <!-- Add Stock Modal -->
-    <div id="addStockModal" class="modal">
+    <div id="addStockModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📦 Add Stock</h3>
@@ -449,7 +449,7 @@ $medications = $stmt->fetchAll();
     </div>
     
     <!-- Remove Stock Modal -->
-    <div id="removeStockModal" class="modal">
+    <div id="removeStockModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>➖ Remove Stock</h3>

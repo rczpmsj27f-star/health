@@ -4,16 +4,34 @@ require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 
 $search = $_GET['q'] ?? "";
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$per_page = 15;
+$offset = ($page - 1) * $per_page;
 
+// Get total count for pagination
+if ($search) {
+    $count_stmt = $pdo->prepare("
+        SELECT COUNT(*) FROM users
+        WHERE email LIKE ? OR username LIKE ? OR first_name LIKE ? OR surname LIKE ?
+    ");
+    $count_stmt->execute(["%$search%", "%$search%", "%$search%", "%$search%"]);
+} else {
+    $count_stmt = $pdo->query("SELECT COUNT(*) FROM users");
+}
+$total_users = $count_stmt->fetchColumn();
+$total_pages = ceil($total_users / $per_page);
+
+// Get users for current page
 if ($search) {
     $stmt = $pdo->prepare("
         SELECT * FROM users
         WHERE email LIKE ? OR username LIKE ? OR first_name LIKE ? OR surname LIKE ?
         ORDER BY username ASC
+        LIMIT $per_page OFFSET $offset
     ");
     $stmt->execute(["%$search%", "%$search%", "%$search%", "%$search%"]);
 } else {
-    $stmt = $pdo->query("SELECT * FROM users ORDER BY username ASC");
+    $stmt = $pdo->query("SELECT * FROM users ORDER BY username ASC LIMIT $per_page OFFSET $offset");
 }
 
 $users = $stmt->fetchAll();
@@ -54,11 +72,12 @@ $users = $stmt->fetchAll();
             max-width: 600px;
             margin: 0 auto 12px;
             display: flex;
+            flex-direction: column;
             gap: 6px;
         }
         
         .search-form input {
-            flex: 1;
+            width: 100%;
             padding: 6px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -72,10 +91,10 @@ $users = $stmt->fetchAll();
         }
         
         .search-form button {
-            width: auto;
-            min-width: 70px;
+            width: 100%;
             padding: 7px 12px !important;
             font-size: 13px !important;
+            text-align: center;
         }
 
         .user-list {
@@ -99,7 +118,7 @@ $users = $stmt->fetchAll();
         }
 
         .user-row-header {
-            padding: 8px 10px;
+            padding: 4px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -170,6 +189,17 @@ $users = $stmt->fetchAll();
             padding: 7px 16px !important;
         }
 
+        .pagination-controls {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .pagination-controls .btn {
+            font-size: 13px !important;
+            padding: 7px 16px !important;
+            margin: 0 4px;
+        }
+
         @media (max-width: 768px) {
             .user-info {
                 flex-direction: column;
@@ -182,12 +212,15 @@ $users = $stmt->fetchAll();
             }
 
             .action-buttons {
-                flex-direction: column;
+                flex-wrap: wrap;
                 width: 100%;
             }
 
             .action-buttons .btn {
-                width: 100%;
+                flex: 1;
+                min-width: fit-content;
+                padding: 4px 8px !important;
+                min-height: 28px;
             }
 
             .user-row-header {
@@ -223,7 +256,10 @@ $users = $stmt->fetchAll();
             </div>
         <?php else: ?>
             <div class="user-count">
-                <?= count($users) ?> user<?= count($users) !== 1 ? 's' : '' ?> found
+                Showing <?= count($users) ?> of <?= $total_users ?> user<?= $total_users !== 1 ? 's' : '' ?>
+                <?php if ($total_pages > 1): ?>
+                    (Page <?= $page ?> of <?= $total_pages ?>)
+                <?php endif; ?>
             </div>
             
             <div class="user-list">
@@ -245,6 +281,17 @@ $users = $stmt->fetchAll();
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <?php if ($total_pages > 1): ?>
+                <div class="pagination-controls" style="text-align: center; margin-top: 12px;">
+                    <?php if ($page > 1): ?>
+                        <a class="btn btn-info" href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" style="margin-right: 8px;">Previous Page</a>
+                    <?php endif; ?>
+                    <?php if ($page < $total_pages): ?>
+                        <a class="btn btn-info" href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>">Next Page</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
 
         <div class="page-footer">

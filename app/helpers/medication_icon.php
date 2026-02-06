@@ -115,18 +115,18 @@ function renderMedicationIcon($iconType = 'pill', $color = '#5b21b6', $size = '2
     $iconData = getMedicationIconSVG($iconType);
     $svg = $iconData['svg'];
     
-    // Add stroke to all shape elements for visibility
-    $svg = preg_replace('/<path/', '<path stroke="black" stroke-width="1.5"', $svg);
-    $svg = preg_replace('/<circle/', '<circle stroke="black" stroke-width="1.5"', $svg);
-    $svg = preg_replace('/<rect/', '<rect stroke="black" stroke-width="1.5"', $svg);
-    $svg = preg_replace('/<ellipse/', '<ellipse stroke="black" stroke-width="1.5"', $svg);
+    // Add stroke to all shape elements for visibility (only if not already present)
+    $svg = preg_replace('/<path(?![^>]*stroke)/', '<path stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<circle(?![^>]*stroke)/', '<circle stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<rect(?![^>]*stroke)/', '<rect stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<ellipse(?![^>]*stroke)/', '<ellipse stroke="black" stroke-width="1.5"', $svg);
     
     // Replace colors
     $svg = str_replace('currentColor', $color, $svg);
     
     // If icon supports two colors and secondary color is provided
     if (!empty($secondaryColor) && $iconData['supportsTwoColors']) {
-        $svg = str_replace('class="secondary-color"', 'fill="' . htmlspecialchars($secondaryColor) . '" stroke="black" stroke-width="1.5"', $svg);
+        $svg = preg_replace('/class="secondary-color"/', 'fill="' . htmlspecialchars($secondaryColor) . '" stroke="black" stroke-width="1.5"', $svg);
     }
     
     return sprintf(

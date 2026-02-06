@@ -158,11 +158,11 @@ const MedicationIcons = {
         const icon = this.icons[iconType] || this.icons.pill;
         let svg = icon.svg;
         
-        // Add stroke to all shape elements for visibility
-        svg = svg.replace(/<path/g, '<path stroke="black" stroke-width="1.5"');
-        svg = svg.replace(/<circle/g, '<circle stroke="black" stroke-width="1.5"');
-        svg = svg.replace(/<rect/g, '<rect stroke="black" stroke-width="1.5"');
-        svg = svg.replace(/<ellipse/g, '<ellipse stroke="black" stroke-width="1.5"');
+        // Add stroke to all shape elements for visibility (only if not already present)
+        svg = svg.replace(/<path(?![^>]*stroke)/g, '<path stroke="black" stroke-width="1.5"');
+        svg = svg.replace(/<circle(?![^>]*stroke)/g, '<circle stroke="black" stroke-width="1.5"');
+        svg = svg.replace(/<rect(?![^>]*stroke)/g, '<rect stroke="black" stroke-width="1.5"');
+        svg = svg.replace(/<ellipse(?![^>]*stroke)/g, '<ellipse stroke="black" stroke-width="1.5"');
         
         // Replace colors
         svg = svg.replace(/fill="currentColor"/g, `fill="${color}"`);
@@ -170,7 +170,7 @@ const MedicationIcons = {
         
         // If icon supports two colors and secondary color is provided
         if (secondaryColor && icon.supportsTwoColors) {
-            svg = svg.replace('class="secondary-color"', `fill="${secondaryColor}" stroke="black" stroke-width="1.5"`);
+            svg = svg.replace(/class="secondary-color"/g, `fill="${secondaryColor}" stroke="black" stroke-width="1.5"`);
         }
         
         return `<span class="med-icon" style="width: ${size}; height: ${size}; display: inline-block;">${svg}</span>`;

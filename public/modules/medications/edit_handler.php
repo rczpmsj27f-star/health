@@ -33,14 +33,20 @@ if (empty($medName) || strlen($medName) > 255) {
 
 $icon = $_POST['medication_icon'] ?? 'pill';
 $color = $_POST['medication_color'] ?? '#5b21b6';
+$secondaryColor = !empty($_POST['secondary_color']) ? $_POST['secondary_color'] : null;
 
 // Validate color format (hex color)
 if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color)) {
     $color = '#5b21b6'; // Default to purple if invalid
 }
 
-$stmt = $pdo->prepare("UPDATE medications SET name = ?, icon = ?, color = ? WHERE id = ?");
-$stmt->execute([$medName, $icon, $color, $medId]);
+// Validate secondary color if provided
+if ($secondaryColor && !preg_match('/^#[0-9A-Fa-f]{6}$/', $secondaryColor)) {
+    $secondaryColor = null;
+}
+
+$stmt = $pdo->prepare("UPDATE medications SET name = ?, icon = ?, color = ?, secondary_color = ? WHERE id = ?");
+$stmt->execute([$medName, $icon, $color, $secondaryColor, $medId]);
 
 // Validate and update dose
 $doseAmount = filter_input(INPUT_POST, 'dose_amount', FILTER_VALIDATE_FLOAT);

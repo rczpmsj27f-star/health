@@ -119,11 +119,15 @@ $isAdmin = Auth::isAdmin();
                     </div>
 
                     <div class="color-selector">
-                        <label>Medication Color</label>
-                        <div class="color-grid" id="color-grid">
-                            <input type="color" id="custom_color" value="#5b21b6" title="Custom Color">
-                        </div>
+                        <label>Primary Color</label>
+                        <div class="color-grid" id="color-grid"></div>
                         <input type="hidden" name="medication_color" id="medication_color" value="#5b21b6">
+                    </div>
+
+                    <div class="color-selector" id="secondary-color-selector" style="display: none;">
+                        <label>Secondary Color (for two-tone medications)</label>
+                        <div class="color-grid" id="secondary-color-grid"></div>
+                        <input type="hidden" name="secondary_color" id="secondary_color" value="">
                     </div>
 
                     <div id="icon_preview"></div>
@@ -362,36 +366,62 @@ $isAdmin = Auth::isAdmin();
                 div.addEventListener('click', function() {
                     document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
-                    document.getElementById('medication_icon').value = this.dataset.icon;
+                    const iconKey = this.dataset.icon;
+                    document.getElementById('medication_icon').value = iconKey;
+                    
+                    // Show/hide secondary color selector based on icon type
+                    const iconData = MedicationIcons.icons[iconKey];
+                    const secondaryColorSelector = document.getElementById('secondary-color-selector');
+                    if (iconData && iconData.supportsTwoColor) {
+                        secondaryColorSelector.style.display = 'block';
+                    } else {
+                        secondaryColorSelector.style.display = 'none';
+                        document.getElementById('secondary_color').value = '';
+                    }
+                    
                     updateIconPreview();
                 });
                 iconGrid.appendChild(div);
             });
 
-            // Populate color grid
+            // Populate primary color grid
             const colorGrid = document.getElementById('color-grid');
-            const customColor = document.getElementById('custom_color');
-            
             MedicationIcons.colors.forEach((color, index) => {
                 const div = document.createElement('div');
-                div.className = 'color-option' + (index === 0 ? ' selected' : '');
+                div.className = 'color-option' + (index === 16 ? ' selected' : ''); // Default to Dark Purple
                 div.dataset.color = color.value;
                 div.title = color.name;
                 div.style.backgroundColor = color.value;
+                if (color.value === '#FFFFFF' || color.value === '#FFFFE0' || color.value === '#F5F5DC') {
+                    div.style.border = '1px solid #ccc';
+                }
                 div.addEventListener('click', function() {
                     document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
                     document.getElementById('medication_color').value = this.dataset.color;
-                    customColor.value = this.dataset.color;
                     updateIconPreview();
                 });
-                colorGrid.insertBefore(div, customColor);
+                colorGrid.appendChild(div);
             });
 
-            customColor.addEventListener('change', function() {
-                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-                document.getElementById('medication_color').value = this.value;
-                updateIconPreview();
+            // Populate secondary color grid
+            const secondaryColorGrid = document.getElementById('secondary-color-grid');
+            MedicationIcons.colors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'secondary-color-option';
+                div.dataset.color = color.value;
+                div.title = color.name;
+                div.style.backgroundColor = color.value;
+                if (color.value === '#FFFFFF' || color.value === '#FFFFE0' || color.value === '#F5F5DC') {
+                    div.style.border = '1px solid #ccc';
+                }
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('secondary_color').value = this.dataset.color;
+                    updateIconPreview();
+                });
+                secondaryColorGrid.appendChild(div);
             });
 
             // Initial preview
@@ -401,10 +431,11 @@ $isAdmin = Auth::isAdmin();
         function updateIconPreview() {
             const iconType = document.getElementById('medication_icon')?.value || 'pill';
             const color = document.getElementById('medication_color')?.value || '#5b21b6';
+            const secondaryColor = document.getElementById('secondary_color')?.value || null;
             const preview = document.getElementById('icon_preview');
             
             if (preview) {
-                preview.innerHTML = MedicationIcons.render(iconType, color, '48px');
+                preview.innerHTML = MedicationIcons.render(iconType, color, '48px', secondaryColor);
             }
         }
     // Increment/Decrement times per day

@@ -200,12 +200,26 @@ foreach ($instructions as $i) {
                         <label>Primary Color</label>
                         <div class="color-grid" id="color-grid"></div>
                         <input type="hidden" name="medication_color" id="medication_color" value="<?= htmlspecialchars($med['color'] ?? '#5b21b6') ?>">
+                        <div style="margin-top: 12px;">
+                            <label>Or choose custom color:</label>
+                            <input type="color" id="custom_color_picker" value="<?= htmlspecialchars($med['color'] ?? '#5b21b6') ?>" style="width: 100%; height: 40px; cursor: pointer;">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Use this if the predefined colors above don't match your medication
+                            </small>
+                        </div>
                     </div>
 
                     <div class="color-selector" id="secondary-color-selector" style="display: none;">
                         <label>Secondary Color (for two-tone medications)</label>
                         <div class="color-grid" id="secondary-color-grid"></div>
                         <input type="hidden" name="secondary_color" id="secondary_color" value="<?= htmlspecialchars($med['secondary_color'] ?? '') ?>">
+                        <div style="margin-top: 12px;">
+                            <label>Or choose custom secondary color:</label>
+                            <input type="color" id="custom_secondary_color_picker" value="<?= htmlspecialchars($med['secondary_color'] ?? '#5b21b6') ?>" style="width: 100%; height: 40px; cursor: pointer;">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Use this if the predefined colors above don't match your medication
+                            </small>
+                        </div>
                     </div>
 
                     <div id="icon_preview"></div>
@@ -494,9 +508,22 @@ foreach ($instructions as $i) {
 
             // Show secondary color selector if current icon supports it
             const currentIcon = MedicationIcons.icons[selectedIcon];
-            if (currentIcon && currentIcon.supportsTwoColor) {
+            if (currentIcon && currentIcon.supportsTwoColors) {
                 document.getElementById('secondary-color-selector').style.display = 'block';
             }
+
+            // Custom color picker handlers
+            document.getElementById('custom_color_picker').addEventListener('input', function(e) {
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                document.getElementById('medication_color').value = e.target.value;
+                updateIconPreview();
+            });
+
+            document.getElementById('custom_secondary_color_picker').addEventListener('input', function(e) {
+                document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
+                document.getElementById('secondary_color').value = e.target.value;
+                updateIconPreview();
+            });
 
             // Initial preview
             updateIconPreview();

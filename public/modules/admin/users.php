@@ -228,13 +228,13 @@ $users = $stmt->fetchAll();
                             <div class="user-info">
                                 <div class="user-username"><?= htmlspecialchars($u['username']) ?></div>
                                 <div class="user-last-login">
-                                    Last: <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
+                                    <span aria-label="Last login">Last:</span> <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
                                 </div>
                             </div>
                             <div class="action-buttons">
-                                <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>">View</a>
-                                <a class="btn btn-deny btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>">Reset PW</a>
-                                <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>">Delete</button>
+                                <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>" aria-label="View details for <?= htmlspecialchars($u['username']) ?>">View</a>
+                                <a class="btn btn-deny btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Reset password for <?= htmlspecialchars($u['username']) ?>">Reset PW</a>
+                                <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Delete user <?= htmlspecialchars($u['username']) ?>">Delete</button>
                             </div>
                         </div>
                     </div>

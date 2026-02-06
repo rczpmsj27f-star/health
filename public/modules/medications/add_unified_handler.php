@@ -53,9 +53,13 @@ try {
     $isPrn = !empty($_POST['is_prn']) ? 1 : 0;
     
     $stmt = $pdo->prepare("
-        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn, initial_dose, subsequent_dose, max_doses_per_day, min_hours_between_doses)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn, initial_dose, subsequent_dose, max_doses_per_day, min_hours_between_doses, special_timing, custom_instructions)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
+    
+    // Get special timing fields (Issue #104)
+    $specialTiming = !$isPrn && !empty($_POST['special_timing']) ? $_POST['special_timing'] : null;
+    $customInstructions = !$isPrn && !empty($_POST['custom_instructions']) ? $_POST['custom_instructions'] : null;
     
     $stmt->execute([
         $medId,
@@ -67,7 +71,9 @@ try {
         $isPrn && !empty($_POST['initial_dose']) ? $_POST['initial_dose'] : null,
         $isPrn && !empty($_POST['subsequent_dose']) ? $_POST['subsequent_dose'] : null,
         $isPrn && !empty($_POST['max_doses_per_day']) ? $_POST['max_doses_per_day'] : null,
-        $isPrn && !empty($_POST['min_hours_between_doses']) ? $_POST['min_hours_between_doses'] : null
+        $isPrn && !empty($_POST['min_hours_between_doses']) ? $_POST['min_hours_between_doses'] : null,
+        $specialTiming,
+        $customInstructions
     ]);
     
     // 3b. Insert dose times if times_per_day > 1

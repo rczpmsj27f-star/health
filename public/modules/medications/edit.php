@@ -340,6 +340,34 @@ foreach ($instructions as $i) {
                             </div>
                         </div>
                         
+                        <!-- Special Timing for Once Daily Meds (Issue #104) -->
+                        <div id="special-timing-section" style="display: none; margin-top: 16px;">
+                            <div class="form-group">
+                                <label>When to Take</label>
+                                <select name="special_timing" id="special_timing" class="form-control">
+                                    <option value="">At specific times</option>
+                                    <option value="on_waking" <?= ($schedule['special_timing'] ?? '') === 'on_waking' ? 'selected' : '' ?>>🌅 On Waking</option>
+                                    <option value="before_bed" <?= ($schedule['special_timing'] ?? '') === 'before_bed' ? 'selected' : '' ?>>🌙 Before Bed</option>
+                                    <option value="with_meal" <?= ($schedule['special_timing'] ?? '') === 'with_meal' ? 'selected' : '' ?>>🍽️ With Main Meal</option>
+                                </select>
+                                <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                    Choose a general time or set specific times below
+                                </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Custom Instructions (optional)</label>
+                                <textarea name="custom_instructions" 
+                                          id="custom_instructions"
+                                          rows="2" 
+                                          placeholder="e.g., Take 30 minutes before breakfast"
+                                          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"><?= htmlspecialchars($schedule['custom_instructions'] ?? '') ?></textarea>
+                                <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                    Add any special timing instructions
+                                </small>
+                            </div>
+                        </div>
+                        
                         <div id="time_inputs_container">
                             <!-- Time inputs will be dynamically generated here -->
                         </div>
@@ -648,6 +676,14 @@ foreach ($instructions as $i) {
     function updateTimeInputs() {
         let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
         let container = document.getElementById("time_inputs_container");
+        let specialTimingSection = document.getElementById("special-timing-section");
+        
+        // Show special timing section only when times_per_day = 1
+        if (timesPerDay === 1) {
+            specialTimingSection.style.display = 'block';
+        } else {
+            specialTimingSection.style.display = 'none';
+        }
         
         // Get existing dose times from PHP
         let existingTimes = <?= json_encode($doseTimesArray, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;

@@ -134,10 +134,15 @@ if (!empty($_POST['days_of_week']) && is_array($_POST['days_of_week'])) {
     }
 }
 
+// Get special timing fields (Issue #104)
+$specialTiming = !$isPrn && !empty($_POST['special_timing']) ? $_POST['special_timing'] : null;
+$customInstructions = !$isPrn && !empty($_POST['custom_instructions']) ? $_POST['custom_instructions'] : null;
+
 $stmt = $pdo->prepare("
     UPDATE medication_schedules 
     SET frequency_type = ?, times_per_day = ?, times_per_week = ?, days_of_week = ?, 
-        is_prn = ?, initial_dose = ?, subsequent_dose = ?, max_doses_per_day = ?, min_hours_between_doses = ?
+        is_prn = ?, initial_dose = ?, subsequent_dose = ?, max_doses_per_day = ?, min_hours_between_doses = ?,
+        special_timing = ?, custom_instructions = ?
     WHERE medication_id = ?
 ");
 $stmt->execute([
@@ -150,6 +155,8 @@ $stmt->execute([
     $isPrn && $subsequentDose ? $subsequentDose : null,
     $maxDosesPerDay,
     $minHoursBetweenDoses,
+    $specialTiming,
+    $customInstructions,
     $medId
 ]);
 

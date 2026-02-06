@@ -217,7 +217,7 @@ $users = $stmt->fetchAll();
                             <div class="action-buttons">
                                 <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>">View Details</a>
                                 <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" onclick="return confirm('Force password reset for <?= htmlspecialchars($u['username']) ?>?')">Reset Password</a>
-                                <a class="btn btn-deny" href="/modules/admin/delete_user.php?id=<?= $u['id'] ?>" onclick="return confirm('Are you sure you want to delete <?= htmlspecialchars($u['username']) ?>? This action cannot be undone.')">Delete User</a>
+                                <button class="btn btn-deny" onclick="deleteUser(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')">Delete User</button>
                             </div>
                         </div>
                     </div>
@@ -237,14 +237,34 @@ $users = $stmt->fetchAll();
             
             rows.forEach(header => {
                 header.addEventListener('click', function(e) {
-                    // Don't expand if clicking a link
-                    if (e.target.tagName === 'A') return;
+                    // Don't expand if clicking a link or button
+                    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
                     
                     const row = this.parentElement;
                     row.classList.toggle('expanded');
                 });
             });
         });
+
+        // Delete user function with POST request
+        function deleteUser(userId, username) {
+            if (!confirm('Are you sure you want to delete ' + username + '? This action cannot be undone.')) {
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/modules/admin/delete_user.php';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'id';
+            input.value = userId;
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 </body>
 </html>

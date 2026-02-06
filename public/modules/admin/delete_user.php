@@ -3,13 +3,19 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 
+// Only accept POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    die("Method not allowed");
+}
+
 // Validate ID parameter
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
     http_response_code(400);
     die("Invalid user ID");
 }
 
-$id = (int)$_GET['id'];
+$id = (int)$_POST['id'];
 
 // Prevent self-deletion
 if ($id === $_SESSION['user_id']) {

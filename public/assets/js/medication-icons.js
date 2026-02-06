@@ -54,7 +54,7 @@ const MedicationIcons = {
         },
         'capsule-half': {
             name: 'Half & Half Capsule ⚫⚪',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M4.22 11.29 L11.29 4.22 L11.29 18.36 L4.22 11.29 Z" opacity="0.85"/></svg>',
+            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8C7.79 8 6 9.79 6 12L18 12C18 9.79 16.21 8 14 8L10 8Z"/><path class="secondary-color" d="M6 12L18 12C18 14.21 16.21 16 14 16L10 16C7.79 16 6 14.21 6 12Z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
 

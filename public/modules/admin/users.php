@@ -27,11 +27,20 @@ if ($search) {
         SELECT * FROM users
         WHERE email LIKE ? OR username LIKE ? OR first_name LIKE ? OR surname LIKE ?
         ORDER BY username ASC
-        LIMIT $per_page OFFSET $offset
+        LIMIT ? OFFSET ?
     ");
-    $stmt->execute(["%$search%", "%$search%", "%$search%", "%$search%"]);
+    $stmt->bindValue(1, "%$search%", PDO::PARAM_STR);
+    $stmt->bindValue(2, "%$search%", PDO::PARAM_STR);
+    $stmt->bindValue(3, "%$search%", PDO::PARAM_STR);
+    $stmt->bindValue(4, "%$search%", PDO::PARAM_STR);
+    $stmt->bindValue(5, $per_page, PDO::PARAM_INT);
+    $stmt->bindValue(6, $offset, PDO::PARAM_INT);
+    $stmt->execute();
 } else {
-    $stmt = $pdo->query("SELECT * FROM users ORDER BY username ASC LIMIT $per_page OFFSET $offset");
+    $stmt = $pdo->prepare("SELECT * FROM users ORDER BY username ASC LIMIT ? OFFSET ?");
+    $stmt->bindValue(1, $per_page, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
 }
 
 $users = $stmt->fetchAll();
@@ -255,8 +264,12 @@ $users = $stmt->fetchAll();
                 <p style="color: #666; margin: 0;">No users found.</p>
             </div>
         <?php else: ?>
-            <div class="user-count">
-                Showing <?= count($users) ?> of <?= $total_users ?> user<?= $total_users !== 1 ? 's' : '' ?>
+            <div class="user-count" role="status" aria-live="polite">
+                <?php
+                $start = $offset + 1;
+                $end = min($offset + count($users), $total_users);
+                ?>
+                Showing <?= $start ?>-<?= $end ?> of <?= $total_users ?> user<?= $total_users !== 1 ? 's' : '' ?>
                 <?php if ($total_pages > 1): ?>
                     (Page <?= $page ?> of <?= $total_pages ?>)
                 <?php endif; ?>
@@ -283,12 +296,20 @@ $users = $stmt->fetchAll();
             </div>
 
             <?php if ($total_pages > 1): ?>
-                <div class="pagination-controls" style="text-align: center; margin-top: 12px;">
+                <div class="pagination-controls">
                     <?php if ($page > 1): ?>
-                        <a class="btn btn-info" href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" style="margin-right: 8px;">Previous Page</a>
+                        <?php
+                        $prev_params = ['page' => $page - 1];
+                        if ($search) $prev_params['q'] = $search;
+                        ?>
+                        <a class="btn btn-info" href="?<?= http_build_query($prev_params) ?>" aria-label="Go to previous page (page <?= $page - 1 ?>)">Previous Page</a>
                     <?php endif; ?>
                     <?php if ($page < $total_pages): ?>
-                        <a class="btn btn-info" href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>">Next Page</a>
+                        <?php
+                        $next_params = ['page' => $page + 1];
+                        if ($search) $next_params['q'] = $search;
+                        ?>
+                        <a class="btn btn-info" href="?<?= http_build_query($next_params) ?>" aria-label="Go to next page (page <?= $page + 1 ?>)">Next Page</a>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>

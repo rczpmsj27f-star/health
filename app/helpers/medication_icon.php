@@ -129,7 +129,7 @@ function renderMedicationIcon($iconType = 'pill', $color = '#5b21b6', $size = '2
         $svg = str_replace('class="secondary-color"', 'fill="' . htmlspecialchars($secondaryColor) . '" stroke="black" stroke-width="1.5"', $svg);
     } else {
         // Remove secondary color path if not provided (handles both self-closing and closing tags)
-        $svg = preg_replace('/<path class="secondary-color"[^>]*\/?>(<\/path>)?/', '', $svg);
+        $svg = preg_replace('/<path class="secondary-color"[^>]*>.*?<\/path>|<path class="secondary-color"[^>]*\/>/', '', $svg);
     }
     
     return sprintf(

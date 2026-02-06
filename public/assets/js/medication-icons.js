@@ -172,7 +172,7 @@ const MedicationIcons = {
             svg = svg.replace('class="secondary-color"', `fill="${secondaryColor}" stroke="black" stroke-width="1.5"`);
         } else {
             // Remove secondary color path if no secondary color provided (handles both self-closing and closing tags)
-            svg = svg.replace(/<path class="secondary-color"[^>]*\/?>(<\/path>)?/g, '');
+            svg = svg.replace(/<path class="secondary-color"[^>]*>.*?<\/path>|<path class="secondary-color"[^>]*\/>/g, '');
         }
         
         return `<span class="med-icon" style="width: ${size}; height: ${size}; display: inline-block;">${svg}</span>`;

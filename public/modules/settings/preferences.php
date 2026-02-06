@@ -1,10 +1,16 @@
 <?php
-require_once __DIR__ . '/../../app/core/auth.php';
-require_once __DIR__ . '/../../app/config/database.php';
+session_start();
+require_once __DIR__ . '/../../../app/config/database.php';
+require_once __DIR__ . '/../../../app/core/auth.php';
+require_once __DIR__ . '/../../../config.php';
 
-requireLogin();
+if (empty($_SESSION['user_id'])) {
+    header("Location: /login.php");
+    exit;
+}
 
 $userId = $_SESSION['user_id'];
+$isAdmin = Auth::isAdmin();
 
 // Fetch user preferences
 $stmt = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");

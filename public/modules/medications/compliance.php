@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/medication_icon.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -48,7 +49,7 @@ if ($currentYear == 2026 && $currentMonth < 2) {
 
 // Get all active medications (exclude PRN medications from compliance)
 $stmt = $pdo->prepare("
-    SELECT m.id, m.name, m.end_date, m.created_at, md.dose_amount, md.dose_unit
+    SELECT m.id, m.name, m.icon, m.color, m.secondary_color, m.end_date, m.created_at, md.dose_amount, md.dose_unit
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -159,7 +160,7 @@ $prnData = [];
 if ($medType === 'prn') {
     // Get all active PRN medications
     $stmt = $pdo->prepare("
-        SELECT m.id, m.name, m.end_date, m.created_at, md.dose_amount, md.dose_unit
+        SELECT m.id, m.name, m.icon, m.color, m.secondary_color, m.end_date, m.created_at, md.dose_amount, md.dose_unit
         FROM medications m
         LEFT JOIN medication_doses md ON m.id = md.medication_id
         INNER JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -993,7 +994,7 @@ if ($medType === 'prn') {
                         <div class="compliance-card-header">
                             <div>
                                 <div class="med-name">
-                                    💊 <?= htmlspecialchars($med['name']) ?>
+                                    <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?>
                                     <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                                         <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                     <?php endif; ?>
@@ -1055,7 +1056,7 @@ if ($medType === 'prn') {
                             <!-- Expandable Header -->
                             <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'weekly')">
                                 <div class="expandable-med-title">
-                                    <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                                    <span class="expandable-med-name"><?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?></span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <span class="expandable-med-total">[Total: <?= $weekTotalTaken ?>]</span>
@@ -1187,7 +1188,7 @@ if ($medType === 'prn') {
                     <div class="compliance-section">
                         <div class="med-header">
                             <div class="med-name">
-                                💊 <?= htmlspecialchars($med['name']) ?>
+                                <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?>
                             </div>
                             <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                                 <div class="med-dose">
@@ -1394,7 +1395,7 @@ if ($medType === 'prn') {
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                                 <div>
                                     <div class="med-name">
-                                        💊 <?= htmlspecialchars($med['name']) ?>
+                                        <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?>
                                     </div>
                                     <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                                         <div class="med-dose">
@@ -1641,7 +1642,7 @@ if ($medType === 'prn') {
                                 <div>
                                     <div class="annual-med-name" style="display: flex; align-items: center; gap: 6px;">
                                         <span id="toggle-med-<?= $medId ?>" style="font-weight: bold; color: var(--color-primary);">+</span>
-                                        💊 <?= htmlspecialchars($med['name']) ?>
+                                        <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?>
                                     </div>
                                     <?php if ($med['dose_amount'] && $med['dose_unit']): ?>
                                         <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; margin-left: 24px;">
@@ -1710,7 +1711,7 @@ if ($medType === 'prn') {
                         <!-- Expandable Header -->
                         <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-daily')">
                             <div class="expandable-med-title">
-                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                                <span class="expandable-med-name"><?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?></span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span class="expandable-med-total">[Total: <?= $totalDoses ?>]</span>
@@ -1774,7 +1775,7 @@ if ($medType === 'prn') {
                         <!-- Expandable Header -->
                         <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-weekly')">
                             <div class="expandable-med-title">
-                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                                <span class="expandable-med-name"><?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?></span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span class="expandable-med-total">[Total: <?= $totalDoses ?>]</span>
@@ -1866,7 +1867,7 @@ if ($medType === 'prn') {
                         <!-- Expandable Header -->
                         <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-monthly')">
                             <div class="expandable-med-title">
-                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                                <span class="expandable-med-name"><?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?></span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span class="expandable-med-total">[Total: <?= $totalDoses ?>]</span>
@@ -1948,7 +1949,7 @@ if ($medType === 'prn') {
                         <!-- Expandable Header -->
                         <div class="expandable-med-header" onclick="toggleExpandableMed(<?= $medId ?>, 'prn-annual')">
                             <div class="expandable-med-title">
-                                <span class="expandable-med-name">💊 <?= htmlspecialchars($med['name']) ?></span>
+                                <span class="expandable-med-name"><?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?></span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span class="expandable-med-total">[Total: <?= $totalDosesYear ?>]</span>

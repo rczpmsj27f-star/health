@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/medication_icon.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -131,7 +132,7 @@ $archivedMeds = $stmt->fetchAll();
                             <?php foreach ($scheduledMeds as $m): ?>
                                 <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
                                     <div class="medication-tile-line1">
-                                        <span>💊</span>
+                                        <?= renderMedicationIcon($m['icon'] ?? 'pill', $m['color'] ?? '#5b21b6', '20px', $m['secondary_color'] ?? null) ?>
                                         <span><?= htmlspecialchars($m['name']) ?></span>
                                     </div>
                                     <div class="medication-tile-line2">
@@ -176,7 +177,7 @@ $archivedMeds = $stmt->fetchAll();
                             <?php foreach ($prnMeds as $m): ?>
                                 <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>">
                                     <div class="medication-tile-line1">
-                                        <span>💊</span>
+                                        <?= renderMedicationIcon($m['icon'] ?? 'pill', $m['color'] ?? '#5b21b6', '20px', $m['secondary_color'] ?? null) ?>
                                         <span><?= htmlspecialchars($m['name']) ?></span>
                                     </div>
                                     <div class="medication-tile-line2">
@@ -209,7 +210,7 @@ $archivedMeds = $stmt->fetchAll();
                             <?php foreach ($archivedMeds as $m): ?>
                                 <a class="medication-tile-fullwidth" href="/modules/medications/view.php?id=<?= $m['id'] ?>" style="background: #ffebee; border-left-color: #e57373;">
                                     <div class="medication-tile-line1">
-                                        <span>📦</span>
+                                        <?= renderMedicationIcon($m['icon'] ?? 'pill', $m['color'] ?? '#5b21b6', '20px', $m['secondary_color'] ?? null) ?>
                                         <span><?= htmlspecialchars($m['name']) ?></span>
                                     </div>
                                     <div class="medication-tile-line2">

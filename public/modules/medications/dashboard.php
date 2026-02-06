@@ -579,10 +579,7 @@ foreach ($prnMedications as $med) {
                         <?php foreach ($untimedDailyMeds as $med): ?>
                             <div class="med-item-compact">
                                 <div class="med-info">
-                                    <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6') ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
-                                    <?php if ($med['frequency_type'] === 'per_day' && $med['times_per_day'] > 1): ?>
-                                        <br><small style="color: var(--color-text-secondary);"><?= $med['times_per_day'] ?> times per day</small>
-                                    <?php endif; ?>
+                                    <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                 </div>
                                 
                                 <div class="med-actions">
@@ -628,7 +625,7 @@ foreach ($prnMedications as $med) {
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
                                 <div class="med-info">
-                                    💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                    <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                 </div>
                                 
                                 <div class="med-actions">
@@ -685,7 +682,7 @@ foreach ($prnMedications as $med) {
                 ?>
                 <div class="med-item-compact" style="margin-bottom: 12px;">
                     <div class="med-info">
-                        💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                        <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                         <?php if ($dosesPerAdmin > 1): ?>
                             <span style="color: var(--color-primary); font-weight: 600;">(Take <?= $dosesPerAdmin ?>)</span>
                         <?php endif; ?>

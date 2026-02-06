@@ -74,7 +74,7 @@ $users = $stmt->fetchAll();
         .search-form button {
             width: auto;
             min-width: 70px;
-            padding: 6px 12px !important;
+            padding: 7px 12px !important;
             font-size: 13px !important;
         }
 
@@ -127,6 +127,11 @@ $users = $stmt->fetchAll();
             white-space: nowrap;
         }
 
+        .user-last-login abbr {
+            text-decoration: none;
+            cursor: help;
+        }
+
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -135,10 +140,10 @@ $users = $stmt->fetchAll();
 
         .action-buttons .btn {
             font-size: 11px !important;
-            padding: 4px 8px !important;
+            padding: 6px 10px !important;
             border-radius: 4px !important;
             white-space: nowrap;
-            min-height: 28px;
+            min-height: 32px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -162,7 +167,7 @@ $users = $stmt->fetchAll();
 
         .page-footer .btn {
             font-size: 13px !important;
-            padding: 6px 16px !important;
+            padding: 7px 16px !important;
         }
 
         @media (max-width: 768px) {
@@ -228,7 +233,7 @@ $users = $stmt->fetchAll();
                             <div class="user-info">
                                 <div class="user-username"><?= htmlspecialchars($u['username']) ?></div>
                                 <div class="user-last-login">
-                                    <span aria-label="Last login">Last:</span> <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
+                                    <abbr title="Last login">Last:</abbr> <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
                                 </div>
                             </div>
                             <div class="action-buttons">

@@ -216,8 +216,8 @@ $users = $stmt->fetchAll();
                         <div class="user-actions">
                             <div class="action-buttons">
                                 <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>">View Details</a>
-                                <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" onclick="return confirm('Force password reset for <?= htmlspecialchars($u['username']) ?>?')">Reset Password</a>
-                                <button class="btn btn-deny" onclick="deleteUser(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')">Delete User</button>
+                                <a class="btn btn-deny btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>">Reset Password</a>
+                                <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>">Delete User</button>
                             </div>
                         </div>
                     </div>
@@ -244,27 +244,42 @@ $users = $stmt->fetchAll();
                     row.classList.toggle('expanded');
                 });
             });
+
+            // Reset password confirmation
+            document.querySelectorAll('.btn-reset-password').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const username = this.dataset.username;
+                    if (!confirm('Force password reset for ' + username + '?')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // Delete user confirmation and POST request
+            document.querySelectorAll('.btn-delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const username = this.dataset.username;
+                    
+                    if (!confirm('Are you sure you want to delete ' + username + '? This action cannot be undone.')) {
+                        return;
+                    }
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/modules/admin/delete_user.php';
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'id';
+                    input.value = userId;
+
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            });
         });
-
-        // Delete user function with POST request
-        function deleteUser(userId, username) {
-            if (!confirm('Are you sure you want to delete ' + username + '? This action cannot be undone.')) {
-                return;
-            }
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/modules/admin/delete_user.php';
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'id';
-            input.value = userId;
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        }
     </script>
 </body>
 </html>

@@ -49,7 +49,7 @@ function getMedicationIconSVG($iconType = 'pill') {
             'supportsTwoColors' => true
         ],
         'capsule-half' => [
-            'svg' => '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 12 C6 9.79 7.79 8 10 8 L12 8 L12 16 L10 16 C7.79 16 6 14.21 6 12 Z"/><path class="secondary-color" d="M12 8 L14 8 C16.21 8 18 9.79 18 12 C18 14.21 16.21 16 14 16 L12 16 L12 8 Z"/></svg>',
+            'svg' => '<svg viewBox="0 0 24 24" fill="none"><g stroke="#000" stroke-width="0.5"><path d="M6 12 C6 9.79 7.79 8 10 8 L12 8 L12 16 L10 16 C7.79 16 6 14.21 6 12 Z" fill="currentColor"/><path class="secondary-color" d="M12 8 L14 8 C16.21 8 18 9.79 18 12 C18 14.21 16.21 16 14 16 L12 16 L12 8 Z"/></g></svg>',
             'supportsTwoColors' => true
         ],
 

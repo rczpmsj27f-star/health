@@ -24,14 +24,23 @@ if (!$med) {
     exit;
 }
 
-// Validate and update medication name
+// Validate and update medication name, icon, and color
 $medName = trim($_POST['med_name'] ?? '');
 if (empty($medName) || strlen($medName) > 255) {
     header("Location: /modules/medications/edit.php?id=$medId&error=invalid_name");
     exit;
 }
-$stmt = $pdo->prepare("UPDATE medications SET name = ? WHERE id = ?");
-$stmt->execute([$medName, $medId]);
+
+$icon = $_POST['medication_icon'] ?? 'pill';
+$color = $_POST['medication_color'] ?? '#5b21b6';
+
+// Validate color format (hex color)
+if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color)) {
+    $color = '#5b21b6'; // Default to purple if invalid
+}
+
+$stmt = $pdo->prepare("UPDATE medications SET name = ?, icon = ?, color = ? WHERE id = ?");
+$stmt->execute([$medName, $icon, $color, $medId]);
 
 // Validate and update dose
 $doseAmount = filter_input(INPUT_POST, 'dose_amount', FILTER_VALIDATE_FLOAT);

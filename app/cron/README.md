@@ -103,3 +103,57 @@ php /path/to/health/app/cron/send_medication_reminders.php
 ```
 
 This will output what it's doing and any errors encountered.
+
+## Low Stock Notifications (NEW)
+
+### `check_low_stock.php`
+
+Checks medication stock levels and sends email notifications when running low.
+
+**Features:**
+- Checks all active users with stock notifications enabled
+- Calculates days remaining based on usage pattern
+- Sends email notification when below threshold
+- Prevents duplicate notifications (7-day cooldown)
+- Logs all notifications sent
+- Option to notify linked users
+
+**How it works:**
+1. Queries all users with `stock_notification_enabled = 1`
+2. For each user, checks their medications
+3. Calculates: `days_remaining = current_stock / (doses_per_administration * times_per_day)`
+4. Sends email if `days_remaining <= threshold` AND no notification sent in past 7 days
+5. Logs notification to `stock_notification_log` table
+
+**Cron Setup:**
+
+Daily at 9:00 AM (recommended):
+```bash
+0 9 * * * /usr/bin/php /path/to/health/app/cron/check_low_stock.php >> /path/to/health/app/logs/stock-notifications.log 2>&1
+```
+
+**User Configuration:**
+
+Users can configure their stock notification settings in Settings > Preferences:
+- Enable/disable notifications
+- Set threshold (days remaining before notification)
+- Choose to notify linked users
+
+**Database Tables:**
+
+- `user_preferences` - Stores notification settings
+- `stock_notification_log` - Tracks when notifications are sent
+- `medications` - Contains current stock levels
+
+**Testing:**
+
+```bash
+# Run manually to test
+php /path/to/health/app/cron/check_low_stock.php
+
+# Check logs
+tail -f /path/to/health/app/logs/stock-notifications.log
+
+# Check notification log in database
+SELECT * FROM stock_notification_log ORDER BY notification_sent_at DESC LIMIT 10;
+```

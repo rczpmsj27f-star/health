@@ -34,6 +34,7 @@ if (!isset($isAdmin)) {
             <span class="menu-toggle-icon" id="settings-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="settings-menu">
+            <a href="/modules/settings/preferences.php">⚡ Preferences</a>
             <a href="/settings/notifications">🔔 Notifications</a>
             <?php if ($isAdmin): ?>
             <div class="menu-section nested">

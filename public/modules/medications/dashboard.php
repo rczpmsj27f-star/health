@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/medication_icon.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -184,6 +185,7 @@ foreach ($prnMedications as $med) {
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/medication-icons.js?v=<?= time() ?>"></script>
     <style>
         .page-content {
             max-width: 1200px;
@@ -577,7 +579,7 @@ foreach ($prnMedications as $med) {
                         <?php foreach ($untimedDailyMeds as $med): ?>
                             <div class="med-item-compact">
                                 <div class="med-info">
-                                    💊 <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                    <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6') ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                     <?php if ($med['frequency_type'] === 'per_day' && $med['times_per_day'] > 1): ?>
                                         <br><small style="color: var(--color-text-secondary);"><?= $med['times_per_day'] ?> times per day</small>
                                     <?php endif; ?>

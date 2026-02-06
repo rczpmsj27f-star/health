@@ -112,39 +112,49 @@ $isAdmin = Auth::isAdmin();
 
                 <!-- Icon and Color Selection -->
                 <div id="icon-color-section">
+                    <!-- Icon Selector - Collapsible -->
                     <div class="icon-selector">
-                        <label>Medication Icon</label>
-                        <div class="icon-grid" id="icon-grid"></div>
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Medication Icon</span>
+                            <button type="button" class="btn-toggle-icons" onclick="toggleIconGrid()" id="toggle-icon-btn">
+                                Choose Icon ▼
+                            </button>
+                        </label>
+                        <div class="icon-grid" id="icon-grid" style="display: none; margin-top: 12px;"></div>
                         <input type="hidden" name="medication_icon" id="medication_icon" value="pill">
+                        
+                        <!-- Selected icon preview -->
+                        <div id="selected-icon-display" style="margin-top: 12px; padding: 12px; background: var(--color-bg-light); border-radius: var(--radius-sm); text-align: center;">
+                            <strong>Selected:</strong> <span id="selected-icon-name">Pill/Tablet</span>
+                        </div>
                     </div>
 
+                    <!-- Primary Color Selector -->
                     <div class="color-selector">
                         <label>Primary Color</label>
                         <div class="color-grid" id="color-grid"></div>
                         <input type="hidden" name="medication_color" id="medication_color" value="#5b21b6">
-                        <div style="margin-top: 12px;">
-                            <label>Or choose custom color:</label>
-                            <input type="color" id="custom_color_picker" value="#5b21b6" style="width: 100%; height: 40px; cursor: pointer;">
-                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Use this if the predefined colors above don't match your medication
-                            </small>
-                        </div>
+                        <button type="button" class="custom-color-btn" onclick="openPrimaryColorModal()">
+                            Custom Color...
+                        </button>
                     </div>
 
+                    <!-- Secondary Color Selector (conditional) -->
                     <div class="color-selector" id="secondary-color-selector" style="display: none;">
-                        <label>Secondary Color (for two-tone medications)</label>
+                        <label>Secondary Color (for two-tone effect)</label>
                         <div class="color-grid" id="secondary-color-grid"></div>
                         <input type="hidden" name="secondary_color" id="secondary_color" value="">
-                        <div style="margin-top: 12px;">
-                            <label>Or choose custom secondary color:</label>
-                            <input type="color" id="custom_secondary_color_picker" value="#5b21b6" style="width: 100%; height: 40px; cursor: pointer;">
-                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Use this if the predefined colors above don't match your medication
-                            </small>
-                        </div>
+                        <button type="button" class="custom-color-btn" onclick="openSecondaryColorModal()">
+                            Custom Color...
+                        </button>
                     </div>
 
-                    <div id="icon_preview"></div>
+                    <!-- Preview Section -->
+                    <div id="icon_preview" style="margin-top: 20px;">
+                        <div style="text-align: center; margin-bottom: 8px;">
+                            <strong>Preview:</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -364,8 +374,45 @@ $isAdmin = Auth::isAdmin();
     </div>
 
     <script src="/assets/js/medication-icons.js"></script>
+    <script src="/assets/js/color-picker-modal.js"></script>
     <script src="/assets/js/form-protection.js"></script>
     <script>
+        // Toggle icon grid visibility
+        function toggleIconGrid() {
+            const iconGrid = document.getElementById('icon-grid');
+            const toggleBtn = document.getElementById('toggle-icon-btn');
+            
+            if (iconGrid.style.display === 'none' || iconGrid.style.display === '') {
+                iconGrid.style.display = 'grid';
+                toggleBtn.textContent = 'Hide Icons ▲';
+            } else {
+                iconGrid.style.display = 'none';
+                toggleBtn.textContent = 'Choose Icon ▼';
+            }
+        }
+
+        // Open color modal for primary color
+        function openPrimaryColorModal() {
+            const currentColor = document.getElementById('medication_color').value;
+            ColorPickerModal.open(currentColor, function(selectedColor) {
+                document.getElementById('medication_color').value = selectedColor;
+                // Remove selection from grid colors
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                updateIconPreview();
+            });
+        }
+
+        // Open color modal for secondary color
+        function openSecondaryColorModal() {
+            const currentColor = document.getElementById('secondary_color').value || '#5b21b6';
+            ColorPickerModal.open(currentColor, function(selectedColor) {
+                document.getElementById('secondary_color').value = selectedColor;
+                // Remove selection from grid colors
+                document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
+                updateIconPreview();
+            });
+        }
+
         // Initialize medication icon selector
         document.addEventListener('DOMContentLoaded', function() {
             // Populate icon grid
@@ -383,10 +430,14 @@ $isAdmin = Auth::isAdmin();
                     const iconKey = this.dataset.icon;
                     document.getElementById('medication_icon').value = iconKey;
                     
+                    // Update selected icon display
+                    const iconName = MedicationIcons.icons[iconKey].name;
+                    document.getElementById('selected-icon-name').textContent = iconName;
+                    
                     // Show/hide secondary color selector based on icon type
                     const iconData = MedicationIcons.icons[iconKey];
                     const secondaryColorSelector = document.getElementById('secondary-color-selector');
-                    if (iconData && iconData.supportsTwoColor) {
+                    if (iconData && iconData.supportsTwoColors) {
                         secondaryColorSelector.style.display = 'block';
                     } else {
                         secondaryColorSelector.style.display = 'none';
@@ -436,19 +487,6 @@ $isAdmin = Auth::isAdmin();
                     updateIconPreview();
                 });
                 secondaryColorGrid.appendChild(div);
-            });
-
-            // Custom color picker handlers
-            document.getElementById('custom_color_picker').addEventListener('input', function(e) {
-                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-                document.getElementById('medication_color').value = e.target.value;
-                updateIconPreview();
-            });
-
-            document.getElementById('custom_secondary_color_picker').addEventListener('input', function(e) {
-                document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
-                document.getElementById('secondary_color').value = e.target.value;
-                updateIconPreview();
             });
 
             // Initial preview

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Medication Icon & Color Selector</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <style>
+        body { padding: 20px; }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+            background: var(--color-bg-white);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+        h1 { color: var(--color-primary); margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Medication Icon & Color Selector Test</h1>
+        
+        <!-- Icon Selector - Collapsible -->
+        <div class="icon-selector">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Medication Icon</span>
+                <button type="button" class="btn-toggle-icons" onclick="toggleIconGrid()" id="toggle-icon-btn">
+                    Choose Icon ▼
+                </button>
+            </label>
+            <div class="icon-grid" id="icon-grid" style="display: none; margin-top: 12px;"></div>
+            <input type="hidden" name="medication_icon" id="medication_icon" value="pill">
+            
+            <!-- Selected icon preview -->
+            <div id="selected-icon-display" style="margin-top: 12px; padding: 12px; background: var(--color-bg-light); border-radius: var(--radius-sm); text-align: center;">
+                <strong>Selected:</strong> <span id="selected-icon-name">Pill/Tablet</span>
+            </div>
+        </div>
+
+        <!-- Primary Color Selector -->
+        <div class="color-selector">
+            <label>Primary Color</label>
+            <div class="color-grid" id="color-grid"></div>
+            <input type="hidden" name="medication_color" id="medication_color" value="#5b21b6">
+            <button type="button" class="custom-color-btn" onclick="openPrimaryColorModal()">
+                Custom Color...
+            </button>
+        </div>
+
+        <!-- Secondary Color Selector (conditional) -->
+        <div class="color-selector" id="secondary-color-selector" style="display: none;">
+            <label>Secondary Color (for two-tone effect)</label>
+            <div class="color-grid" id="secondary-color-grid"></div>
+            <input type="hidden" name="secondary_color" id="secondary_color" value="">
+            <button type="button" class="custom-color-btn" onclick="openSecondaryColorModal()">
+                Custom Color...
+            </button>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="icon_preview" style="margin-top: 20px;">
+            <div style="text-align: center; margin-bottom: 8px;">
+                <strong>Preview:</strong>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/medication-icons.js"></script>
+    <script src="/assets/js/color-picker-modal.js"></script>
+    <script>
+        // Toggle icon grid visibility
+        function toggleIconGrid() {
+            const iconGrid = document.getElementById('icon-grid');
+            const toggleBtn = document.getElementById('toggle-icon-btn');
+            
+            if (iconGrid.style.display === 'none' || iconGrid.style.display === '') {
+                iconGrid.style.display = 'grid';
+                toggleBtn.textContent = 'Hide Icons ▲';
+            } else {
+                iconGrid.style.display = 'none';
+                toggleBtn.textContent = 'Choose Icon ▼';
+            }
+        }
+
+        // Open color modal for primary color
+        function openPrimaryColorModal() {
+            const currentColor = document.getElementById('medication_color').value;
+            ColorPickerModal.open(currentColor, function(selectedColor) {
+                document.getElementById('medication_color').value = selectedColor;
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                updateIconPreview();
+            });
+        }
+
+        // Open color modal for secondary color
+        function openSecondaryColorModal() {
+            const currentColor = document.getElementById('secondary_color').value || '#5b21b6';
+            ColorPickerModal.open(currentColor, function(selectedColor) {
+                document.getElementById('secondary_color').value = selectedColor;
+                document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
+                updateIconPreview();
+            });
+        }
+
+        // Initialize medication icon selector
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate icon grid
+            const iconGrid = document.getElementById('icon-grid');
+            Object.keys(MedicationIcons.icons).forEach(key => {
+                const icon = MedicationIcons.icons[key];
+                const div = document.createElement('div');
+                div.className = 'icon-option' + (key === 'pill' ? ' selected' : '');
+                div.dataset.icon = key;
+                div.title = icon.name;
+                div.innerHTML = icon.svg + '<span class="icon-name">' + icon.name + '</span>';
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const iconKey = this.dataset.icon;
+                    document.getElementById('medication_icon').value = iconKey;
+                    
+                    // Update selected icon display
+                    const iconName = MedicationIcons.icons[iconKey].name;
+                    document.getElementById('selected-icon-name').textContent = iconName;
+                    
+                    // Show/hide secondary color selector based on icon type
+                    const iconData = MedicationIcons.icons[iconKey];
+                    const secondaryColorSelector = document.getElementById('secondary-color-selector');
+                    if (iconData && iconData.supportsTwoColors) {
+                        secondaryColorSelector.style.display = 'block';
+                    } else {
+                        secondaryColorSelector.style.display = 'none';
+                        document.getElementById('secondary_color').value = '';
+                    }
+                    
+                    updateIconPreview();
+                });
+                iconGrid.appendChild(div);
+            });
+
+            // Populate primary color grid
+            const colorGrid = document.getElementById('color-grid');
+            MedicationIcons.colors.forEach((color, index) => {
+                const div = document.createElement('div');
+                div.className = 'color-option' + (index === 16 ? ' selected' : ''); // Default to Purple
+                div.dataset.color = color.value;
+                div.title = color.name;
+                div.style.backgroundColor = color.value;
+                if (color.value === '#FFFFFF' || color.value === '#FFFFE0' || color.value === '#F5F5DC') {
+                    div.style.border = '1px solid #ccc';
+                }
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('medication_color').value = this.dataset.color;
+                    updateIconPreview();
+                });
+                colorGrid.appendChild(div);
+            });
+
+            // Populate secondary color grid
+            const secondaryColorGrid = document.getElementById('secondary-color-grid');
+            MedicationIcons.colors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'secondary-color-option';
+                div.dataset.color = color.value;
+                div.title = color.name;
+                div.style.backgroundColor = color.value;
+                if (color.value === '#FFFFFF' || color.value === '#FFFFE0' || color.value === '#F5F5DC') {
+                    div.style.border = '1px solid #ccc';
+                }
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('secondary_color').value = this.dataset.color;
+                    updateIconPreview();
+                });
+                secondaryColorGrid.appendChild(div);
+            });
+
+            // Initial preview
+            updateIconPreview();
+        });
+
+        function updateIconPreview() {
+            const iconType = document.getElementById('medication_icon')?.value || 'pill';
+            const color = document.getElementById('medication_color')?.value || '#5b21b6';
+            const secondaryColor = document.getElementById('secondary_color')?.value || null;
+            const preview = document.getElementById('icon_preview');
+            
+            if (preview) {
+                preview.innerHTML = '<div style="text-align: center; margin-bottom: 8px;"><strong>Preview:</strong></div>' + 
+                    MedicationIcons.render(iconType, color, '64px', secondaryColor);
+            }
+        }
+    </script>
+</body>
+</html>

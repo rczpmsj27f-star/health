@@ -700,10 +700,9 @@ foreach ($prnMedications as $med) {
                     
                     <div class="med-actions">
                         <?php if ($canTake): ?>
-                            <form method="POST" action="/modules/medications/log_prn_handler.php" style="margin: 0; display: inline;">
-                                <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                                <button type="submit" class="btn-taken">✓ Take Dose</button>
-                            </form>
+                            <a href="/modules/medications/prn_calculator.php?medication_id=<?= $med['id'] ?>" class="btn-taken" style="text-decoration: none; display: inline-block;">
+                                ✓ Take Dose
+                            </a>
                         <?php else: ?>
                             <span class="status-skipped">
                                 <span class="status-icon">⊘</span> Not Available

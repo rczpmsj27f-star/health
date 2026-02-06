@@ -59,12 +59,13 @@ unset($_SESSION['error'], $_SESSION['success']);
 
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" required>
+                <input type="password" name="password" id="password" required>
             </div>
 
             <div class="form-group">
                 <label>Confirm Password</label>
-                <input type="password" name="confirm_password" required>
+                <input type="password" name="confirm_password" id="confirm_password" required>
+                <div id="password-match-message" style="display: none; margin-top: 8px; font-size: 14px;"></div>
             </div>
 
             <div class="form-group">
@@ -81,6 +82,42 @@ unset($_SESSION['error'], $_SESSION['success']);
     </div>
     
     <script>
+    // Password confirmation validation
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const matchMessage = document.getElementById('password-match-message');
+    const form = document.querySelector('form');
+
+    function checkPasswordMatch() {
+        if (confirmPassword.value === '') {
+            matchMessage.style.display = 'none';
+            return;
+        }
+
+        matchMessage.style.display = 'block';
+        if (password.value === confirmPassword.value) {
+            matchMessage.textContent = '✓ Passwords match';
+            matchMessage.style.color = '#28a745';
+            confirmPassword.style.borderColor = '#28a745';
+        } else {
+            matchMessage.textContent = '✗ Passwords do not match';
+            matchMessage.style.color = '#dc3545';
+            confirmPassword.style.borderColor = '#dc3545';
+        }
+    }
+
+    password.addEventListener('input', checkPasswordMatch);
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+
+    form.addEventListener('submit', function(e) {
+        if (password.value !== confirmPassword.value) {
+            e.preventDefault();
+            alert('Passwords do not match. Please make sure both password fields are identical.');
+            confirmPassword.focus();
+        }
+    });
+
+    // Service Worker registration
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('Service Worker registered'))

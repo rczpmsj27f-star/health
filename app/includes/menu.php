@@ -15,7 +15,7 @@ if (!isset($isAdmin)) {
     
     <div class="menu-section">
         <div class="menu-section-header" onclick="toggleSubmenu('medications-menu')">
-            <span>💊 Medications</span>
+            <span><a href="/modules/medications/dashboard.php" style="color: inherit; text-decoration: none;">💊 Medications</a></span>
             <span class="menu-toggle-icon" id="medications-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="medications-menu">

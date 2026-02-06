@@ -175,7 +175,7 @@ $isAdmin = Auth::isAdmin();
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Dose Amount *</label>
-                        <input type="number" step="0.01" name="dose_amount" placeholder="e.g., 500" required>
+                        <input type="number" step="0.01" name="dose_amount" placeholder="e.g., 500" inputmode="decimal" required>
                     </div>
 
                     <div class="form-group">
@@ -211,7 +211,7 @@ $isAdmin = Auth::isAdmin();
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tablets per dose (initial)</label>
-                            <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="1" placeholder="e.g., 2">
+                            <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="1" placeholder="e.g., 2" inputmode="numeric">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Recommended number of tablets for the first dose (e.g., 2 paracetamol tablets). This will be the default when logging, but you can adjust it each time.
                             </small>
@@ -219,7 +219,7 @@ $isAdmin = Auth::isAdmin();
                         
                         <div class="form-group">
                             <label>Tablets per dose (subsequent)</label>
-                            <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="1" placeholder="e.g., 2">
+                            <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="1" placeholder="e.g., 2" inputmode="numeric">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Recommended number of tablets for follow-up doses (e.g., 2 paracetamol tablets). This will be the default when logging, but you can adjust it each time.
                             </small>
@@ -227,7 +227,7 @@ $isAdmin = Auth::isAdmin();
                         
                         <div class="form-group">
                             <label>Maximum doses per day</label>
-                            <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" max="24" placeholder="e.g., 4">
+                            <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" max="24" placeholder="e.g., 4" inputmode="numeric">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Maximum number of times you can take this per day
                             </small>
@@ -235,7 +235,7 @@ $isAdmin = Auth::isAdmin();
                         
                         <div class="form-group">
                             <label>Minimum hours between doses</label>
-                            <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0.5" max="24" placeholder="e.g., 4">
+                            <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0.5" max="24" placeholder="e.g., 4" inputmode="decimal">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Minimum time required between doses (e.g., 4 or 4.5)
                             </small>
@@ -257,8 +257,36 @@ $isAdmin = Auth::isAdmin();
                         <label>Times per day *</label>
                         <div class="number-stepper">
                             <button type="button" class="stepper-btn" onclick="decrementTimesPerDay()">−</button>
-                            <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" readonly onchange="updateTimeInputs()">
+                            <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="1" readonly onchange="updateTimeInputs()" inputmode="numeric">
                             <button type="button" class="stepper-btn" onclick="incrementTimesPerDay()">+</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Special Timing for Once Daily Meds (Issue #104) -->
+                    <div id="special-timing-section" style="display: none; margin-top: 16px;">
+                        <div class="form-group">
+                            <label>When to Take</label>
+                            <select name="special_timing" id="special_timing" class="form-control">
+                                <option value="">At specific times</option>
+                                <option value="on_waking">🌅 On Waking</option>
+                                <option value="before_bed">🌙 Before Bed</option>
+                                <option value="with_meal">🍽️ With Main Meal</option>
+                            </select>
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Choose a general time or set specific times below
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Custom Instructions (optional)</label>
+                            <textarea name="custom_instructions" 
+                                      id="custom_instructions"
+                                      rows="2" 
+                                      placeholder="e.g., Take 30 minutes before breakfast"
+                                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Add any special timing instructions
+                            </small>
                         </div>
                     </div>
                     
@@ -270,7 +298,7 @@ $isAdmin = Auth::isAdmin();
                 <div id="weekly" style="display:none;">
                     <div class="form-group">
                         <label>Times per week *</label>
-                        <input type="number" name="times_per_week" min="1" max="7" value="1">
+                        <input type="number" name="times_per_week" min="1" max="7" value="1" inputmode="numeric">
                     </div>
 
                     <div class="form-group">
@@ -320,7 +348,7 @@ $isAdmin = Auth::isAdmin();
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Current Stock (optional)</label>
-                        <input type="number" name="current_stock" min="0" placeholder="e.g., 30 tablets">
+                        <input type="number" name="current_stock" min="0" placeholder="e.g., 30 tablets" inputmode="numeric">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             How many tablets/doses do you currently have?
                         </small>
@@ -570,6 +598,14 @@ $isAdmin = Auth::isAdmin();
     function updateTimeInputs() {
         let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
         let container = document.getElementById("time_inputs_container");
+        let specialTimingSection = document.getElementById("special-timing-section");
+        
+        // Show special timing section only when times_per_day = 1
+        if (timesPerDay === 1) {
+            specialTimingSection.style.display = 'block';
+        } else {
+            specialTimingSection.style.display = 'none';
+        }
         
         if (timesPerDay > 1) {
             let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';

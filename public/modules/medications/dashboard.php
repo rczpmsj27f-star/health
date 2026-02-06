@@ -16,7 +16,7 @@ $isAdmin = Auth::isAdmin();
 $today = date('D'); // Mon, Tue, Wed, etc.
 
 $stmt = $pdo->prepare("
-    SELECT DISTINCT m.*, md.dose_amount, md.dose_unit, ms.frequency_type, ms.times_per_day, ms.days_of_week, ms.is_prn
+    SELECT DISTINCT m.*, md.dose_amount, md.dose_unit, ms.frequency_type, ms.times_per_day, ms.days_of_week, ms.is_prn, ms.special_timing, ms.custom_instructions
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -296,10 +296,25 @@ foreach ($prnMedications as $med) {
             align-items: center;
             flex-wrap: wrap;
             gap: 8px;
+            position: relative;
         }
         
         .med-item-compact:last-child {
             margin-bottom: 0;
+        }
+        
+        .overdue-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #f44336;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1;
         }
         
         .med-info {
@@ -624,8 +639,34 @@ foreach ($prnMedications as $med) {
                         <div class="time-header-compact"><?= $time ?></div>
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
+                                <?php 
+                                // Check if this specific medication dose is overdue and pending
+                                $medIsOverdue = $isOverdue && $med['log_status'] === 'pending';
+                                ?>
+                                <?php if ($medIsOverdue): ?>
+                                    <span class="overdue-badge">⚠️ OVERDUE</span>
+                                <?php endif; ?>
+                                
                                 <div class="med-info">
                                     <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                    
+                                    <?php if (!empty($med['special_timing'])): ?>
+                                        <div class="special-timing-badge" style="background: #ffd54f; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin-left: 8px;">
+                                            <?php
+                                            switch($med['special_timing']) {
+                                                case 'on_waking': echo '🌅 On Waking'; break;
+                                                case 'before_bed': echo '🌙 Before Bed'; break;
+                                                case 'with_meal': echo '🍽️ With Meal'; break;
+                                            }
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($med['custom_instructions'])): ?>
+                                        <div style="font-size: 11px; color: #666; margin-top: 4px;">
+                                            📝 <?= htmlspecialchars($med['custom_instructions']) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="med-actions">
@@ -700,10 +741,9 @@ foreach ($prnMedications as $med) {
                     
                     <div class="med-actions">
                         <?php if ($canTake): ?>
-                            <form method="POST" action="/modules/medications/log_prn_handler.php" style="margin: 0; display: inline;">
-                                <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                                <button type="submit" class="btn-taken">✓ Take Dose</button>
-                            </form>
+                            <a href="/modules/medications/prn_calculator.php?medication_id=<?= $med['id'] ?>" class="btn-taken" style="text-decoration: none; display: inline-block;">
+                                ✓ Take Dose
+                            </a>
                         <?php else: ?>
                             <span class="status-skipped">
                                 <span class="status-icon">⊘</span> Not Available

@@ -53,9 +53,13 @@ try {
     $isPrn = !empty($_POST['is_prn']) ? 1 : 0;
     
     $stmt = $pdo->prepare("
-        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn, initial_dose, subsequent_dose, max_doses_per_day, min_hours_between_doses)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO medication_schedules (medication_id, frequency_type, times_per_day, times_per_week, days_of_week, is_prn, initial_dose, subsequent_dose, max_doses_per_day, min_hours_between_doses, special_timing, custom_instructions)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
+    
+    // Get special timing fields (Issue #104)
+    $specialTiming = !$isPrn && !empty($_POST['special_timing']) ? $_POST['special_timing'] : null;
+    $customInstructions = !$isPrn && !empty($_POST['custom_instructions']) ? $_POST['custom_instructions'] : null;
     
     $stmt->execute([
         $medId,
@@ -67,19 +71,61 @@ try {
         $isPrn && !empty($_POST['initial_dose']) ? $_POST['initial_dose'] : null,
         $isPrn && !empty($_POST['subsequent_dose']) ? $_POST['subsequent_dose'] : null,
         $isPrn && !empty($_POST['max_doses_per_day']) ? $_POST['max_doses_per_day'] : null,
-        $isPrn && !empty($_POST['min_hours_between_doses']) ? $_POST['min_hours_between_doses'] : null
+        $isPrn && !empty($_POST['min_hours_between_doses']) ? $_POST['min_hours_between_doses'] : null,
+        $specialTiming,
+        $customInstructions
     ]);
     
-    // 3b. Insert dose times if times_per_day > 1
-    if (!$isPrn && !empty($_POST['frequency_type']) && $_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day']) && $_POST['times_per_day'] > 1) {
-        for ($i = 1; $i <= $_POST['times_per_day']; $i++) {
-            $timeKey = "dose_time_$i";
-            if (!empty($_POST[$timeKey])) {
+    // 3b. Insert dose times and create future medication logs (Issue #102)
+    if (!$isPrn && !empty($_POST['frequency_type']) && $_POST['frequency_type'] === 'per_day' && !empty($_POST['times_per_day'])) {
+        $timesPerDay = (int)$_POST['times_per_day'];
+        $currentTime = new DateTime();
+        $today = new DateTime('today');
+        
+        if ($timesPerDay > 1) {
+            // Multiple doses per day with specific times
+            for ($i = 1; $i <= $timesPerDay; $i++) {
+                $timeKey = "dose_time_$i";
+                if (!empty($_POST[$timeKey])) {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO medication_dose_times (medication_id, dose_number, dose_time)
+                        VALUES (?, ?, ?)
+                    ");
+                    $stmt->execute([$medId, $i, $_POST[$timeKey]]);
+                    
+                    // Create medication log ONLY if the dose time is in the future (Issue #102)
+                    $doseTime = DateTime::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . $_POST[$timeKey] . ':00');
+                    if ($doseTime > $currentTime) {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
+                            VALUES (?, ?, ?, 'pending')
+                        ");
+                        $stmt->execute([$medId, $userId, $doseTime->format('Y-m-d H:i:s')]);
+                    }
+                }
+            }
+        } elseif ($timesPerDay == 1) {
+            // Once daily - create a pending log for today only if there's a future time
+            // If no specific time is set, default to noon
+            $doseTimeStr = !empty($_POST['dose_time_1']) ? $_POST['dose_time_1'] : '12:00';
+            
+            // Save dose time if provided
+            if (!empty($_POST['dose_time_1'])) {
                 $stmt = $pdo->prepare("
                     INSERT INTO medication_dose_times (medication_id, dose_number, dose_time)
                     VALUES (?, ?, ?)
                 ");
-                $stmt->execute([$medId, $i, $_POST[$timeKey]]);
+                $stmt->execute([$medId, 1, $_POST['dose_time_1']]);
+            }
+            
+            // Create log ONLY if dose time is in the future
+            $doseTime = DateTime::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . $doseTimeStr . ':00');
+            if ($doseTime > $currentTime) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
+                    VALUES (?, ?, ?, 'pending')
+                ");
+                $stmt->execute([$medId, $userId, $doseTime->format('Y-m-d H:i:s')]);
             }
         }
     }

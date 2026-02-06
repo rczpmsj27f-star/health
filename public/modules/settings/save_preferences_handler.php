@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../../app/core/auth.php';
 require_once __DIR__ . '/../../../app/config/database.php';
 
-requireLogin();
+Auth::requireLogin();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: /modules/settings/preferences.php");

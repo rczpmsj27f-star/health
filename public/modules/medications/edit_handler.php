@@ -192,7 +192,7 @@ if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay >= 1) {
                     INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
                     VALUES (?, ?, ?, 'pending')
                 ");
-                $stmt->execute([$medId, $userId, $doseDateTime->format('Y-m-d H:i:s')]);
+                $stmt->execute([$medId, $_SESSION['user_id'], $doseDateTime->format('Y-m-d H:i:s')]);
             }
         }
     }
@@ -200,7 +200,6 @@ if ($frequencyType === 'per_day' && $timesPerDay && $timesPerDay >= 1) {
     // Clear dose times and today's pending logs if frequency changed from daily
     $pdo->prepare("DELETE FROM medication_dose_times WHERE medication_id = ?")->execute([$medId]);
     $pdo->prepare("DELETE FROM medication_logs WHERE medication_id = ? AND DATE(scheduled_date_time) = CURDATE() AND status = 'pending'")->execute([$medId]);
-}
 }
 
 // Update instructions - delete existing and insert new ones

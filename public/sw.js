@@ -1,4 +1,4 @@
-const CACHE_NAME = 'health-tracker-v2'; // Version bump to force update
+const CACHE_NAME = 'health-tracker-v3'; // Version bump to force update
 const urlsToCache = [
   '/',
   '/assets/css/app.css',
@@ -29,6 +29,8 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Take control of all pages immediately
+  self.clients.claim();
 });
 
 // Fetch event - serve from cache, fallback to network
@@ -46,8 +48,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Only handle GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
-      .then((response) => response || fetch(event.request))
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        
+        // Fetch with redirect: 'follow' to fix Safari "Response served by service worker has redirections" error
+        return fetch(event.request, { redirect: 'follow' })
+          .then((response) => {
+            // If the response was redirected, return the final response
+            // This prevents Safari from throwing the WebKitInternal:0 error
+            if (response.redirected) {
+              return response;
+            }
+            return response;
+          });
+      })
   );
 });

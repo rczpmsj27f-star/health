@@ -181,6 +181,15 @@ $users = $stmt->fetchAll();
             transform: none !important;
         }
 
+        .btn-orange {
+            background: #FF9800 !important;
+            color: #ffffff !important;
+        }
+
+        .btn-orange:hover {
+            background: #e68900 !important;
+        }
+
         .user-count {
             text-align: center;
             color: #666;
@@ -287,7 +296,7 @@ $users = $stmt->fetchAll();
                             </div>
                             <div class="action-buttons">
                                 <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>" aria-label="View details for <?= htmlspecialchars($u['username']) ?>">View</a>
-                                <a class="btn btn-deny btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Reset password for <?= htmlspecialchars($u['username']) ?>">Reset PW</a>
+                                <a class="btn btn-orange btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Reset password for <?= htmlspecialchars($u['username']) ?>">Reset PW</a>
                                 <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Delete user <?= htmlspecialchars($u['username']) ?>">Delete</button>
                             </div>
                         </div>

@@ -187,6 +187,25 @@ foreach ($instructions as $i) {
                     <label>Medication Name *</label>
                     <input type="text" name="med_name" id="med_name" autocomplete="off" value="<?= htmlspecialchars($med['name']) ?>" required>
                 </div>
+
+                <!-- Icon and Color Selection -->
+                <div id="icon-color-section">
+                    <div class="icon-selector">
+                        <label>Medication Icon</label>
+                        <div class="icon-grid" id="icon-grid"></div>
+                        <input type="hidden" name="medication_icon" id="medication_icon" value="<?= htmlspecialchars($med['icon'] ?? 'pill') ?>">
+                    </div>
+
+                    <div class="color-selector">
+                        <label>Medication Color</label>
+                        <div class="color-grid" id="color-grid">
+                            <input type="color" id="custom_color" value="<?= htmlspecialchars($med['color'] ?? '#5b21b6') ?>" title="Custom Color">
+                        </div>
+                        <input type="hidden" name="medication_color" id="medication_color" value="<?= htmlspecialchars($med['color'] ?? '#5b21b6') ?>">
+                    </div>
+
+                    <div id="icon_preview"></div>
+                </div>
             </div>
 
             <!-- Section 2: Dosage -->
@@ -390,7 +409,71 @@ foreach ($instructions as $i) {
         </form>
     </div>
 
+    <script src="/assets/js/medication-icons.js"></script>
+    <script src="/assets/js/form-protection.js"></script>
     <script>
+        const selectedIcon = '<?= htmlspecialchars($med['icon'] ?? 'pill') ?>';
+        const selectedColor = '<?= htmlspecialchars($med['color'] ?? '#5b21b6') ?>';
+
+        // Initialize medication icon selector
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate icon grid
+            const iconGrid = document.getElementById('icon-grid');
+            Object.keys(MedicationIcons.icons).forEach(key => {
+                const icon = MedicationIcons.icons[key];
+                const div = document.createElement('div');
+                div.className = 'icon-option' + (key === selectedIcon ? ' selected' : '');
+                div.dataset.icon = key;
+                div.title = icon.name;
+                div.innerHTML = icon.svg + '<span class="icon-name">' + icon.name + '</span>';
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('medication_icon').value = this.dataset.icon;
+                    updateIconPreview();
+                });
+                iconGrid.appendChild(div);
+            });
+
+            // Populate color grid
+            const colorGrid = document.getElementById('color-grid');
+            const customColor = document.getElementById('custom_color');
+            
+            MedicationIcons.colors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-option' + (color.value === selectedColor ? ' selected' : '');
+                div.dataset.color = color.value;
+                div.title = color.name;
+                div.style.backgroundColor = color.value;
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('medication_color').value = this.dataset.color;
+                    customColor.value = this.dataset.color;
+                    updateIconPreview();
+                });
+                colorGrid.insertBefore(div, customColor);
+            });
+
+            customColor.addEventListener('change', function() {
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                document.getElementById('medication_color').value = this.value;
+                updateIconPreview();
+            });
+
+            // Initial preview
+            updateIconPreview();
+        });
+
+        function updateIconPreview() {
+            const iconType = document.getElementById('medication_icon')?.value || 'pill';
+            const color = document.getElementById('medication_color')?.value || '#5b21b6';
+            const preview = document.getElementById('icon_preview');
+            
+            if (preview) {
+                preview.innerHTML = MedicationIcons.render(iconType, color, '48px');
+            }
+        }
     // Increment/Decrement times per day
     function incrementTimesPerDay() {
         let input = document.getElementById("times_per_day");

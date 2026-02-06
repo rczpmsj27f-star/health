@@ -127,7 +127,7 @@ $users = $stmt->fetchAll();
         }
 
         .user-row-header {
-            padding: 4px 10px;
+            padding: 2px 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -164,14 +164,15 @@ $users = $stmt->fetchAll();
             display: flex;
             gap: 4px;
             flex-shrink: 0;
+            flex-wrap: nowrap;
         }
 
         .action-buttons .btn {
-            font-size: 11px !important;
-            padding: 6px 10px !important;
+            font-size: 10px !important;
+            padding: 4px 8px !important;
             border-radius: 4px !important;
             white-space: nowrap;
-            min-height: 32px;
+            min-height: 24px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -220,36 +221,36 @@ $users = $stmt->fetchAll();
 
         @media (max-width: 768px) {
             .user-info {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 4px;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
             }
 
             .user-username {
                 min-width: auto;
+                font-size: 13px;
+            }
+            
+            .user-last-login {
+                font-size: 11px;
             }
 
             .action-buttons {
-                flex-wrap: wrap;
-                width: 100%;
+                flex-wrap: nowrap;
+                width: auto;
             }
 
             .action-buttons .btn {
-                flex: 1;
-                min-width: fit-content;
-                padding: 4px 8px !important;
-                min-height: 28px;
+                flex: none;
+                padding: 3px 6px !important;
+                min-height: 22px;
+                font-size: 10px !important;
             }
 
             .user-row-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .user-row-header {
-                min-height: 40px;
+                flex-direction: row;
+                align-items: center;
+                padding: 2px 6px;
             }
         }
     </style>

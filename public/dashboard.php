@@ -11,6 +11,21 @@ if (empty($_SESSION['user_id'])) {
 // Check if user is admin
 require_once __DIR__ . '/../app/core/auth.php';
 $isAdmin = Auth::isAdmin();
+
+// Fetch user details for profile header (Issue #51)
+require_once __DIR__ . '/../app/config/database.php';
+$userStmt = $pdo->prepare("SELECT first_name, last_name, email, profile_picture FROM users WHERE id = ?");
+$userStmt->execute([$_SESSION['user_id']]);
+$user = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+if (empty($displayName)) {
+    // Fallback to email if no name is set
+    $displayName = explode('@', $user['email'] ?? 'User')[0];
+}
+
+// Default avatar if none set
+$avatarUrl = !empty($user['profile_picture']) ? $user['profile_picture'] : '/assets/images/default-avatar.svg';
 ?>
 <!DOCTYPE html>
 <html>
@@ -129,6 +144,22 @@ $isAdmin = Auth::isAdmin();
     <?php include __DIR__ . '/../app/includes/menu.php'; ?>
 
     <div class="dashboard-container">
+        <!-- User Profile Header (Issue #51) -->
+        <div style="display: flex; align-items: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <img src="<?= htmlspecialchars($avatarUrl) ?>" 
+                 alt="Profile" 
+                 onerror="this.src='/assets/images/default-avatar.svg'"
+                 style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; object-fit: cover; margin-right: 16px; background: white;">
+            <div>
+                <h2 style="margin: 0; font-size: 24px; font-weight: 600;">
+                    Welcome back, <?= htmlspecialchars($displayName) ?>!
+                </h2>
+                <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">
+                    <?= date('l, F j, Y') ?>
+                </p>
+            </div>
+        </div>
+        
         <div class="dashboard-title">
             <h2>Health Tracker Dashboard</h2>
             <p>Welcome back! Manage your health and medications</p>

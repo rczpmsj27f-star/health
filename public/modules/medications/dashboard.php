@@ -296,10 +296,25 @@ foreach ($prnMedications as $med) {
             align-items: center;
             flex-wrap: wrap;
             gap: 8px;
+            position: relative;
         }
         
         .med-item-compact:last-child {
             margin-bottom: 0;
+        }
+        
+        .overdue-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #f44336;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1;
         }
         
         .med-info {
@@ -624,6 +639,14 @@ foreach ($prnMedications as $med) {
                         <div class="time-header-compact"><?= $time ?></div>
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
+                                <?php 
+                                // Check if this medication dose is overdue and pending
+                                $isOverdue = $isOverdue && $med['log_status'] === 'pending';
+                                ?>
+                                <?php if ($isOverdue): ?>
+                                    <span class="overdue-badge">⚠️ OVERDUE</span>
+                                <?php endif; ?>
+                                
                                 <div class="med-info">
                                     <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
                                 </div>

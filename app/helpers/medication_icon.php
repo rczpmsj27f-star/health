@@ -117,3 +117,16 @@ function renderMedicationIcon($iconType = 'pill', $color = '#5b21b6', $size = '2
         $svg
     );
 }
+
+/**
+ * Format medication dose for display
+ * @param float $doseAmount Dose amount
+ * @param string $doseUnit Dose unit
+ * @return string Formatted dose string
+ */
+function formatMedicationDose($doseAmount, $doseUnit) {
+    // Remove trailing zeros and decimal point if not needed
+    $formatted = rtrim(rtrim(number_format($doseAmount, 2, '.', ''), '0'), '.');
+    return htmlspecialchars($formatted . ' ' . $doseUnit);
+}
+

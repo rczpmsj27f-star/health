@@ -18,18 +18,18 @@ if (empty($_SESSION['user_id'])) {
 $isAdmin = Auth::isAdmin();
 
 // Fetch user details for profile header (Issue #51)
-$userStmt = $pdo->prepare("SELECT first_name, last_name, email, profile_picture FROM users WHERE id = ?");
+$userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
 $userStmt->execute([$_SESSION['user_id']]);
 $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 
-$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
 if (empty($displayName)) {
     // Fallback to email if no name is set
     $displayName = explode('@', $user['email'] ?? 'User')[0];
 }
 
 // Default avatar if none set
-$avatarUrl = !empty($user['profile_picture']) ? $user['profile_picture'] : '/assets/images/default-avatar.svg';
+$avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
 ?>
 <!DOCTYPE html>
 <html>

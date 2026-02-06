@@ -54,7 +54,7 @@ const MedicationIcons = {
         },
         'capsule-half': {
             name: 'Half & Half Capsule ⚫⚪',
-            svg: '<svg viewBox="0 0 24 24" fill="none"><g stroke="#000" stroke-width="0.5"><path d="M6 12 C6 9.79 7.79 8 10 8 L12 8 L12 16 L10 16 C7.79 16 6 14.21 6 12 Z" fill="currentColor"/><path class="secondary-color" d="M12 8 L14 8 C16.21 8 18 9.79 18 12 C18 14.21 16.21 16 14 16 L12 16 L12 8 Z"/></g></svg>',
+            svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="0.5"><path d="M 4 12 A 4 4 0 0 1 8 8 L 12 8 L 12 16 L 8 16 A 4 4 0 0 1 4 12 Z" fill="currentColor"/><path class="secondary-color" d="M 12 8 L 16 8 A 4 4 0 0 1 20 12 A 4 4 0 0 1 16 16 L 12 16 Z" fill="currentColor"/></svg>',
             supportsTwoColors: true
         },
 
@@ -76,7 +76,7 @@ const MedicationIcons = {
         },
         'injection': {
             name: 'Injection/Syringe',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3l1 1-1 1-1.5-1.5L17 5l-3-3 1.5-1.5L14 0l1-1 1 1zm-9 5l-2 2-2-2-6 6 2 2-3 3 2 2 3-3 2 2 6-6-2-2 2-2-2-2z"/></svg>',
+            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3l-3-3-1 1 1 1-4 4-3-3-2 2 3 3-8 8c-1.1 1.1-1.1 2.9 0 4s2.9 1.1 4 0l8-8 3 3 2-2-3-3 4-4 1 1 1-1z"/></svg>',
             supportsTwoColors: false
         },
         'inhaler': {

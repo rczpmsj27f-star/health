@@ -55,7 +55,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 $themeMode = $preferences['theme_mode'] ?? 'device';
 if ($themeMode === 'light') echo 'theme-light';
 elseif ($themeMode === 'dark') echo 'theme-dark';
-elseif ($themeMode === 'device') echo 'theme-device';
+// theme_mode === 'device' gets no class (uses media query)
 ?>">
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
 

@@ -784,6 +784,20 @@ if ($medType === 'prn') {
             border-bottom: none;
         }
         
+        .prn-breakdown-clickable {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .prn-breakdown-clickable:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+            padding-left: 8px;
+            padding-right: 8px;
+            margin-left: -8px;
+            margin-right: -8px;
+            border-radius: 4px;
+        }
+        
         .prn-breakdown-date {
             font-size: 14px;
             color: var(--color-text);
@@ -1798,7 +1812,7 @@ if ($medType === 'prn') {
                                         $doses = $dailyBreakdown[$date]['doses'] ?? 0;
                                         $quantity = $dailyBreakdown[$date]['quantity'] ?? 0;
                                     ?>
-                                        <div class="prn-breakdown-item">
+                                        <div class="prn-breakdown-item prn-breakdown-clickable" onclick="window.location.href='?type=prn&view=daily&medId=<?= htmlspecialchars($medId) ?>&date=<?= htmlspecialchars($date) ?>'">
                                             <span class="prn-breakdown-date"><?= $dayLabel ?></span>
                                             <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
                                         </div>
@@ -1881,7 +1895,7 @@ if ($medType === 'prn') {
                                 <div class="prn-daily-breakdown">
                                     <div class="prn-breakdown-title">📈 Weekly Trends</div>
                                     <?php foreach ($weeklyTrends as $week => $doses): ?>
-                                        <div class="prn-breakdown-item">
+                                        <div class="prn-breakdown-item prn-breakdown-clickable" onclick="window.location.href='?type=prn&view=weekly&medId=<?= htmlspecialchars($medId) ?>&month=<?= $currentMonth ?>&year=<?= $currentYear ?>'">
                                             <span class="prn-breakdown-date"><?= $week ?></span>
                                             <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?></span>
                                         </div>
@@ -1970,7 +1984,7 @@ if ($medType === 'prn') {
                                             $doses = $monthlyBreakdown[$m]['doses'];
                                             $quantity = $monthlyBreakdown[$m]['quantity'];
                                     ?>
-                                        <div class="prn-breakdown-item">
+                                        <div class="prn-breakdown-item prn-breakdown-clickable" onclick="window.location.href='?type=prn&view=monthly&medId=<?= htmlspecialchars($medId) ?>&month=<?= $m ?>&year=<?= $currentYear ?>'">
                                             <span class="prn-breakdown-date"><?= $monthNames[$m] ?></span>
                                             <span class="prn-breakdown-value"><?= $doses ?> dose<?= $doses != 1 ? 's' : '' ?> (<?= $quantity ?> <?= $med['dose_unit'] ? htmlspecialchars($med['dose_unit']) : 'units' ?>)</span>
                                         </div>

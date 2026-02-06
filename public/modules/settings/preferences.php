@@ -125,6 +125,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     </div>
 
     <script src="/assets/js/modal.js"></script>
+    <script src="/assets/js/menu.js"></script>
     <script>
     // Show success message if redirected after save
     <?php if ($ok): ?>

@@ -4,6 +4,36 @@
 
 A Progressive Web App (PWA) for medication reminders with push notifications. Never miss a dose!
 
+## Security Setup (REQUIRED)
+
+**⚠️ IMPORTANT**: Before running the application, you must configure database credentials securely.
+
+### Quick Setup
+
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your database credentials:**
+   ```env
+   DB_HOST=localhost
+   DB_USER=your_database_user
+   DB_PASS=your_secure_password
+   DB_NAME=your_database_name
+   ```
+
+3. **Secure the file (Unix/Linux):**
+   ```bash
+   chmod 600 .env
+   ```
+
+**Security Notes:**
+- Never commit `.env` to version control
+- Use strong, unique passwords
+- Different credentials for development and production
+- See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed configuration options
+
 ### Features
 
 - 💊 **Medication Management**: Add medications with scheduled times

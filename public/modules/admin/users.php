@@ -30,57 +30,64 @@ $users = $stmt->fetchAll();
         .page-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 80px 16px 16px 16px;
+            padding: 64px 12px 12px 12px;
         }
         
         .page-title {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
         }
         
         .page-title h2 {
-            margin: 0 0 8px 0;
-            font-size: 28px;
+            margin: 0 0 4px 0;
+            font-size: 22px;
             color: #333;
+        }
+
+        .page-title p {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
         }
         
         .search-form {
             max-width: 600px;
-            margin: 0 auto 24px;
+            margin: 0 auto 12px;
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         
         .search-form input {
             flex: 1;
-            padding: 12px 16px;
+            padding: 6px 10px;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 13px;
         }
         
         .search-form input:focus {
             outline: none;
             border-color: #28a745;
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
         }
         
         .search-form button {
             width: auto;
-            min-width: 100px;
-            padding: 12px 20px;
+            min-width: 70px;
+            padding: 7px 12px !important;
+            font-size: 13px !important;
         }
 
         .user-list {
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .user-row {
             border-bottom: 1px solid #eee;
-            transition: background-color 0.2s;
+            transition: background-color 0.15s;
         }
 
         .user-row:last-child {
@@ -92,76 +99,82 @@ $users = $stmt->fetchAll();
         }
 
         .user-row-header {
-            padding: 16px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
-            user-select: none;
+            gap: 8px;
         }
 
         .user-info {
             flex: 1;
             display: flex;
-            gap: 24px;
+            gap: 16px;
             align-items: center;
+            min-width: 0;
         }
 
         .user-username {
             font-weight: 500;
             color: #333;
-            min-width: 150px;
+            min-width: 120px;
+            font-size: 14px;
         }
 
         .user-last-login {
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            white-space: nowrap;
         }
 
-        .expand-icon {
-            color: #999;
-            font-size: 18px;
-            transition: transform 0.2s;
-        }
-
-        .user-row.expanded .expand-icon {
-            transform: rotate(90deg);
-        }
-
-        .user-actions {
-            display: none;
-            padding: 16px;
-            background-color: #f8f9fa;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .user-row.expanded .user-actions {
-            display: block;
+        .user-last-login abbr {
+            text-decoration: none;
+            cursor: help;
         }
 
         .action-buttons {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 4px;
+            flex-shrink: 0;
         }
 
         .action-buttons .btn {
-            font-size: 14px;
-            padding: 8px 16px;
+            font-size: 11px !important;
+            padding: 6px 10px !important;
+            border-radius: 4px !important;
+            white-space: nowrap;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-buttons .btn:hover {
+            transform: none !important;
         }
 
         .user-count {
             text-align: center;
             color: #666;
-            margin-bottom: 16px;
-            font-size: 14px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .page-footer {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .page-footer .btn {
+            font-size: 13px !important;
+            padding: 7px 16px !important;
         }
 
         @media (max-width: 768px) {
             .user-info {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 8px;
+                gap: 4px;
             }
 
             .user-username {
@@ -170,10 +183,22 @@ $users = $stmt->fetchAll();
 
             .action-buttons {
                 flex-direction: column;
+                width: 100%;
             }
 
             .action-buttons .btn {
                 width: 100%;
+            }
+
+            .user-row-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .user-row-header {
+                min-height: 40px;
             }
         }
     </style>
@@ -208,16 +233,13 @@ $users = $stmt->fetchAll();
                             <div class="user-info">
                                 <div class="user-username"><?= htmlspecialchars($u['username']) ?></div>
                                 <div class="user-last-login">
-                                    Last login: <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
+                                    <abbr title="Last login">Last:</abbr> <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
                                 </div>
                             </div>
-                            <span class="expand-icon">›</span>
-                        </div>
-                        <div class="user-actions">
                             <div class="action-buttons">
-                                <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>">View Details</a>
-                                <a class="btn btn-deny btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>">Reset Password</a>
-                                <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>">Delete User</button>
+                                <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>" aria-label="View details for <?= htmlspecialchars($u['username']) ?>">View</a>
+                                <a class="btn btn-deny btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Reset password for <?= htmlspecialchars($u['username']) ?>">Reset PW</a>
+                                <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Delete user <?= htmlspecialchars($u['username']) ?>">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -231,20 +253,7 @@ $users = $stmt->fetchAll();
     </div>
 
     <script>
-        // Expandable row functionality
         document.addEventListener('DOMContentLoaded', function() {
-            const rows = document.querySelectorAll('.user-row-header');
-            
-            rows.forEach(header => {
-                header.addEventListener('click', function(e) {
-                    // Don't expand if clicking a link or button
-                    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
-                    
-                    const row = this.parentElement;
-                    row.classList.toggle('expanded');
-                });
-            });
-
             // Reset password confirmation
             document.querySelectorAll('.btn-reset-password').forEach(btn => {
                 btn.addEventListener('click', function(e) {

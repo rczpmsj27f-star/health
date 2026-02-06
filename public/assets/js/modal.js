@@ -72,7 +72,7 @@ function showModal(message, type = 'success', duration = 3000, onClose = null) {
     // Create modal HTML
     const modalHTML = `
         <div class="${modalClass}" id="successModal">
-            <div class="modal-content">
+            <div class="success-modal-body">
                 <div class="modal-icon">${icon}</div>
                 <div class="modal-message">${message}</div>
                 <div class="modal-countdown-bar">

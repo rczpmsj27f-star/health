@@ -1,5 +1,72 @@
 # Deployment and Server Configuration Guide
 
+## Environment Configuration
+
+### Database Setup
+
+Before deploying the application, you must configure database credentials using environment variables.
+
+#### Step 1: Create Environment File
+
+Copy the example environment file to create your local configuration:
+
+```bash
+cp .env.example .env
+```
+
+#### Step 2: Configure Database Credentials
+
+Edit `.env` and set your actual database credentials:
+
+```env
+DB_HOST=localhost
+DB_USER=your_database_user
+DB_PASS=your_secure_password
+DB_NAME=your_database_name
+```
+
+#### Step 3: Secure the Environment File
+
+Ensure `.env` has restricted permissions (Unix/Linux):
+
+```bash
+chmod 600 .env
+```
+
+**Security Notes:**
+- Never commit `.env` to version control (already in `.gitignore`)
+- Use different credentials for development and production
+- Rotate passwords regularly
+- Use strong, unique passwords for production databases
+- The exposed password `Bananas9082!` in git history must be changed immediately
+
+### Environment Variables (Alternative)
+
+Instead of using a `.env` file, you can set environment variables directly in your web server configuration:
+
+**Apache (.htaccess or VirtualHost):**
+```apache
+SetEnv DB_HOST "localhost"
+SetEnv DB_USER "your_database_user"
+SetEnv DB_PASS "your_secure_password"
+SetEnv DB_NAME "your_database_name"
+```
+
+**Nginx (with PHP-FPM):**
+```nginx
+location ~ \.php$ {
+    fastcgi_param DB_HOST "localhost";
+    fastcgi_param DB_USER "your_database_user";
+    fastcgi_param DB_PASS "your_secure_password";
+    fastcgi_param DB_NAME "your_database_name";
+}
+```
+
+**Docker:**
+```bash
+docker run -e DB_HOST=localhost -e DB_USER=user -e DB_PASS=pass -e DB_NAME=dbname ...
+```
+
 ## PHP Dependencies (Composer)
 
 This project uses Composer to manage PHP dependencies, primarily PHPMailer for email functionality.

@@ -49,7 +49,7 @@ function getMedicationIconSVG($iconType = 'pill') {
             'supportsTwoColors' => true
         ],
         'capsule-half' => [
-            'svg' => '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M4.22 11.29 L11.29 4.22 L11.29 18.36 L4.22 11.29 Z" opacity="0.85"/></svg>',
+            'svg' => '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 12 C6 9.79 7.79 8 10 8 L12 8 L12 16 L10 16 C7.79 16 6 14.21 6 12 Z"/><path class="secondary-color" d="M12 8 L14 8 C16.21 8 18 9.79 18 12 C18 14.21 16.21 16 14 16 L12 16 L12 8 Z"/></svg>',
             'supportsTwoColors' => true
         ],
 
@@ -114,11 +114,22 @@ function getMedicationIconSVG($iconType = 'pill') {
 function renderMedicationIcon($iconType = 'pill', $color = '#5b21b6', $size = '20px', $secondaryColor = null) {
     $iconData = getMedicationIconSVG($iconType);
     $svg = $iconData['svg'];
+    
+    // Replace currentColor with selected color
     $svg = str_replace('currentColor', $color, $svg);
     
-    // If icon supports two colors and secondary color is provided
+    // Add black stroke for visibility (avoid elements that already have stroke and secondary-color paths)
+    $svg = preg_replace('/<path(?![^>]*stroke)(?![^>]*class="secondary-color")/', '<path stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<circle(?![^>]*stroke)/', '<circle stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<rect(?![^>]*stroke)/', '<rect stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<ellipse(?![^>]*stroke)/', '<ellipse stroke="black" stroke-width="1.5"', $svg);
+    
+    // Handle secondary color for two-tone icons
     if (!empty($secondaryColor) && $iconData['supportsTwoColors']) {
-        $svg = str_replace('class="secondary-color"', 'fill="' . htmlspecialchars($secondaryColor) . '"', $svg);
+        $svg = str_replace('class="secondary-color"', 'fill="' . htmlspecialchars($secondaryColor) . '" stroke="black" stroke-width="1.5"', $svg);
+    } else {
+        // Remove secondary color path if not provided
+        $svg = preg_replace('/<path class="secondary-color"[^>]*><\/path>/', '', $svg);
     }
     
     return sprintf(

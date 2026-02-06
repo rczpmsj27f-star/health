@@ -122,12 +122,26 @@ $isAdmin = Auth::isAdmin();
                         <label>Primary Color</label>
                         <div class="color-grid" id="color-grid"></div>
                         <input type="hidden" name="medication_color" id="medication_color" value="#5b21b6">
+                        <div style="margin-top: 12px;">
+                            <label>Or choose custom color:</label>
+                            <input type="color" id="custom_color_picker" value="#5b21b6" style="width: 100%; height: 40px; cursor: pointer;">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Use this if the predefined colors above don't match your medication
+                            </small>
+                        </div>
                     </div>
 
                     <div class="color-selector" id="secondary-color-selector" style="display: none;">
                         <label>Secondary Color (for two-tone medications)</label>
                         <div class="color-grid" id="secondary-color-grid"></div>
                         <input type="hidden" name="secondary_color" id="secondary_color" value="">
+                        <div style="margin-top: 12px;">
+                            <label>Or choose custom secondary color:</label>
+                            <input type="color" id="custom_secondary_color_picker" value="#5b21b6" style="width: 100%; height: 40px; cursor: pointer;">
+                            <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                                Use this if the predefined colors above don't match your medication
+                            </small>
+                        </div>
                     </div>
 
                     <div id="icon_preview"></div>
@@ -422,6 +436,19 @@ $isAdmin = Auth::isAdmin();
                     updateIconPreview();
                 });
                 secondaryColorGrid.appendChild(div);
+            });
+
+            // Custom color picker handlers
+            document.getElementById('custom_color_picker').addEventListener('input', function(e) {
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                document.getElementById('medication_color').value = e.target.value;
+                updateIconPreview();
+            });
+
+            document.getElementById('custom_secondary_color_picker').addEventListener('input', function(e) {
+                document.querySelectorAll('.secondary-color-option').forEach(o => o.classList.remove('selected'));
+                document.getElementById('secondary_color').value = e.target.value;
+                updateIconPreview();
             });
 
             // Initial preview

@@ -640,10 +640,10 @@ foreach ($prnMedications as $med) {
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
                                 <?php 
-                                // Check if this medication dose is overdue and pending
-                                $isOverdue = $isOverdue && $med['log_status'] === 'pending';
+                                // Check if this specific medication dose is overdue and pending
+                                $medIsOverdue = $isOverdue && $med['log_status'] === 'pending';
                                 ?>
-                                <?php if ($isOverdue): ?>
+                                <?php if ($medIsOverdue): ?>
                                     <span class="overdue-badge">⚠️ OVERDUE</span>
                                 <?php endif; ?>
                                 

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Theme Mode Test</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <style>
+        body {
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .test-section {
+            background: var(--color-bg-white);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        h1, h2 {
+            color: var(--color-text-primary);
+        }
+        p {
+            color: var(--color-text-secondary);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 2px solid var(--color-border);
+            background: var(--color-bg-light);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+        .color-sample {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            margin: 5px;
+            border: 2px solid var(--color-border);
+        }
+        .info-box {
+            background: var(--color-bg-gray);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--color-primary);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-section">
+        <h1>Theme Mode Test</h1>
+        <p>This page tests the three theme modes: Light, Dark, and Device.</p>
+        
+        <div class="button-group">
+            <button onclick="setTheme('light')">☀️ Force Light Mode</button>
+            <button onclick="setTheme('dark')">🌙 Force Dark Mode</button>
+            <button onclick="setTheme('device')">📱 Device Mode (Auto)</button>
+        </div>
+        
+        <div class="info-box">
+            <strong>Current Theme:</strong> <span id="current-theme">None</span><br>
+            <strong>Body Classes:</strong> <span id="body-classes">None</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>CSS Variable Test</h2>
+        <p>These elements use CSS variables that should change based on theme:</p>
+        
+        <div style="margin-top: 15px;">
+            <div><strong>Text Colors:</strong></div>
+            <div style="color: var(--color-text-primary)">Primary Text (var(--color-text-primary))</div>
+            <div style="color: var(--color-text-secondary)">Secondary Text (var(--color-text-secondary))</div>
+            <div style="color: var(--color-text)">Regular Text (var(--color-text))</div>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <div><strong>Background Colors:</strong></div>
+            <span class="color-sample" style="background: var(--color-bg-white)" title="--color-bg-white"></span>
+            <span class="color-sample" style="background: var(--color-bg-light)" title="--color-bg-light"></span>
+            <span class="color-sample" style="background: var(--color-bg-gray)" title="--color-bg-gray"></span>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <div><strong>Border & Shadow:</strong></div>
+            <div style="border: 2px solid var(--color-border); padding: 10px; margin-top: 10px; border-radius: 4px;">
+                Border using var(--color-border)
+            </div>
+            <div style="box-shadow: var(--shadow-lg); padding: 10px; margin-top: 10px; border-radius: 4px; background: var(--color-bg-white);">
+                Shadow using var(--shadow-lg)
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Expected Behavior</h2>
+        <ul>
+            <li><strong>Light Mode:</strong> Body has class "theme-light" - Forces light colors even if system is dark</li>
+            <li><strong>Dark Mode:</strong> Body has class "theme-dark" - Forces dark colors even if system is light</li>
+            <li><strong>Device Mode:</strong> Body has NO theme class - Follows @media (prefers-color-scheme: dark)</li>
+        </ul>
+        
+        <div class="info-box">
+            <strong>Note:</strong> Device mode uses CSS media query to detect your system preference.
+            To test it properly, change your OS/browser dark mode setting.
+        </div>
+    </div>
+    
+    <script>
+        function setTheme(mode) {
+            const body = document.body;
+            body.classList.remove('theme-light', 'theme-dark', 'theme-device');
+            
+            if (mode === 'light') {
+                body.classList.add('theme-light');
+            } else if (mode === 'dark') {
+                body.classList.add('theme-dark');
+            }
+            // For 'device' mode, we don't add any class
+            
+            updateThemeInfo(mode);
+        }
+        
+        function updateThemeInfo(mode) {
+            document.getElementById('current-theme').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+            document.getElementById('body-classes').textContent = document.body.className || '(no classes)';
+        }
+        
+        // Initialize
+        updateThemeInfo('device');
+    </script>
+</body>
+</html>

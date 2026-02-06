@@ -126,9 +126,11 @@ function renderMedicationIcon($iconType = 'pill', $color = '#5b21b6', $size = '2
         $svg = preg_replace('/<path class="secondary-color"[^>]*\/?>/', '', $svg);
     }
     
-    // Add black stroke to the entire SVG (this applies to all paths that don't override)
-    // This is MUCH simpler and more reliable
-    $svg = str_replace('<svg ', '<svg stroke="#000" stroke-width="0.5" ', $svg);
+    // Add black stroke to the entire SVG if not already present
+    // This applies to all paths that don't override
+    if (strpos($svg, 'stroke=') === false) {
+        $svg = str_replace('<svg ', '<svg stroke="#000" stroke-width="0.5" ', $svg);
+    }
     
     return sprintf(
         '<span class="med-icon-inline" style="width: %s; height: %s; display: inline-block; vertical-align: middle;">%s</span>',

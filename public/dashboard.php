@@ -1,19 +1,23 @@
 <?php
-// Include OneSignal configuration
-require_once __DIR__ . '/../config.php';
-
 session_start();
+
+// Include database FIRST
+require_once __DIR__ . '/../app/config/database.php';
+
+// Then include other dependencies
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../app/core/auth.php';
+
+// Check authentication
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
 }
 
 // Check if user is admin
-require_once __DIR__ . '/../app/core/auth.php';
 $isAdmin = Auth::isAdmin();
 
 // Fetch user details for profile header (Issue #51)
-require_once __DIR__ . '/../app/config/database.php';
 $userStmt = $pdo->prepare("SELECT first_name, last_name, email, profile_picture FROM users WHERE id = ?");
 $userStmt->execute([$_SESSION['user_id']]);
 $user = $userStmt->fetch(PDO::FETCH_ASSOC);

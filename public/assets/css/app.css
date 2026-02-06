@@ -1369,20 +1369,66 @@ button[disabled], input[disabled] {
     text-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
 
-#custom_color {
+/* Secondary color options have same styling as primary */
+.secondary-color-option {
     width: 40px;
     height: 40px;
-    border: 2px solid var(--color-border);
     border-radius: 50%;
     cursor: pointer;
-    padding: 0;
+    border: 3px solid transparent;
+    transition: var(--transition);
+    position: relative;
+}
+
+.secondary-color-option:hover {
+    transform: scale(1.1);
+}
+
+.secondary-color-option.selected {
+    border-color: var(--color-text-primary);
+    box-shadow: 0 0 0 2px var(--color-bg-white);
+}
+
+.secondary-color-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+
+.color-selector {
+    margin-bottom: 20px;
+}
+
+.color-selector label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.icon-selector {
+    margin-bottom: 20px;
+}
+
+.icon-selector label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--color-text-primary);
 }
 
 #icon_preview {
-    margin-top: 12px;
-    padding: 16px;
+    margin-top: 20px;
+    padding: 20px;
+    text-align: center;
     background: var(--color-bg-light);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+    border: 2px dashed var(--color-border);
     display: flex;
     align-items: center;
     justify-content: center;

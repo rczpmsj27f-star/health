@@ -15,8 +15,8 @@ try {
 
     // 1. Insert medication
     $stmt = $pdo->prepare("
-        INSERT INTO medications (user_id, nhs_medication_id, name, current_stock, end_date, icon, color)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO medications (user_id, nhs_medication_id, name, current_stock, end_date, icon, color, secondary_color)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -26,7 +26,8 @@ try {
         !empty($_POST['current_stock']) ? $_POST['current_stock'] : null,
         !empty($_POST['end_date']) ? $_POST['end_date'] : null,
         $_POST['medication_icon'] ?? 'pill',
-        $_POST['medication_color'] ?? '#5b21b6'
+        $_POST['medication_color'] ?? '#5b21b6',
+        !empty($_POST['secondary_color']) ? $_POST['secondary_color'] : null
     ]);
     
     $medId = $pdo->lastInsertId();

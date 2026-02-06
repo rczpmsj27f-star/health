@@ -1323,14 +1323,14 @@ button[disabled], input[disabled] {
 .icon-grid .icon-option svg rect {
     fill: white !important;
     stroke: black !important;
-    stroke-width: 0.5 !important;
+    stroke-width: 1 !important;
 }
 
 /* Secondary color paths in icon selector should also be white */
 .icon-grid .icon-option svg path.secondary-color {
     fill: white !important;
     stroke: black !important;
-    stroke-width: 0.5 !important;
+    stroke-width: 1 !important;
     opacity: 0.7 !important;
 }
 

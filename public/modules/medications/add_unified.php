@@ -131,20 +131,30 @@ $isAdmin = Auth::isAdmin();
 
                     <!-- Primary Color Selector -->
                     <div class="color-selector">
-                        <label>Primary Color</label>
-                        <div class="color-grid" id="color-grid"></div>
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Primary Color</span>
+                            <button type="button" class="btn-toggle-icons" onclick="togglePrimaryColorGrid()" id="toggle-primary-color-btn">
+                                Choose Color ▼
+                            </button>
+                        </label>
+                        <div class="color-grid" id="color-grid" style="display: none; margin-top: 12px;"></div>
                         <input type="hidden" name="medication_color" id="medication_color" value="#5b21b6">
-                        <button type="button" class="custom-color-btn" onclick="openPrimaryColorModal()">
+                        <button type="button" class="custom-color-btn" onclick="openPrimaryColorModal()" style="display: none;" id="custom-primary-color-btn">
                             Custom Color...
                         </button>
                     </div>
 
                     <!-- Secondary Color Selector (conditional) -->
                     <div class="color-selector" id="secondary-color-selector" style="display: none;">
-                        <label>Secondary Color (for two-tone effect)</label>
-                        <div class="color-grid" id="secondary-color-grid"></div>
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Secondary Color (for two-tone effect)</span>
+                            <button type="button" class="btn-toggle-icons" onclick="toggleSecondaryColorGrid()" id="toggle-secondary-color-btn">
+                                Choose Color ▼
+                            </button>
+                        </label>
+                        <div class="color-grid" id="secondary-color-grid" style="display: none; margin-top: 12px;"></div>
                         <input type="hidden" name="secondary_color" id="secondary_color" value="">
-                        <button type="button" class="custom-color-btn" onclick="openSecondaryColorModal()">
+                        <button type="button" class="custom-color-btn" onclick="openSecondaryColorModal()" style="display: none;" id="custom-secondary-color-btn">
                             Custom Color...
                         </button>
                     </div>
@@ -388,6 +398,40 @@ $isAdmin = Auth::isAdmin();
             } else {
                 iconGrid.style.display = 'none';
                 toggleBtn.textContent = 'Choose Icon ▼';
+            }
+        }
+
+        // Toggle primary color grid visibility
+        function togglePrimaryColorGrid() {
+            const colorGrid = document.getElementById('color-grid');
+            const toggleBtn = document.getElementById('toggle-primary-color-btn');
+            const customBtn = document.getElementById('custom-primary-color-btn');
+            
+            if (colorGrid.style.display === 'none' || colorGrid.style.display === '') {
+                colorGrid.style.display = 'flex';
+                customBtn.style.display = 'block';
+                toggleBtn.textContent = 'Hide Colors ▲';
+            } else {
+                colorGrid.style.display = 'none';
+                customBtn.style.display = 'none';
+                toggleBtn.textContent = 'Choose Color ▼';
+            }
+        }
+
+        // Toggle secondary color grid visibility
+        function toggleSecondaryColorGrid() {
+            const colorGrid = document.getElementById('secondary-color-grid');
+            const toggleBtn = document.getElementById('toggle-secondary-color-btn');
+            const customBtn = document.getElementById('custom-secondary-color-btn');
+            
+            if (colorGrid.style.display === 'none' || colorGrid.style.display === '') {
+                colorGrid.style.display = 'flex';
+                customBtn.style.display = 'block';
+                toggleBtn.textContent = 'Hide Colors ▲';
+            } else {
+                colorGrid.style.display = 'none';
+                customBtn.style.display = 'none';
+                toggleBtn.textContent = 'Choose Color ▼';
             }
         }
 

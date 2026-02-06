@@ -49,7 +49,7 @@ function getMedicationIconSVG($iconType = 'pill') {
             'supportsTwoColors' => true
         ],
         'capsule-half' => [
-            'svg' => '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M4.22 11.29 L11.29 4.22 L11.29 18.36 L4.22 11.29 Z" opacity="0.85"/></svg>',
+            'svg' => '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M12 4.22 L19.78 12 L12 19.78 Z" opacity="0.85"/></svg>',
             'supportsTwoColors' => true
         ],
 
@@ -114,11 +114,19 @@ function getMedicationIconSVG($iconType = 'pill') {
 function renderMedicationIcon($iconType = 'pill', $color = '#5b21b6', $size = '20px', $secondaryColor = null) {
     $iconData = getMedicationIconSVG($iconType);
     $svg = $iconData['svg'];
+    
+    // Add stroke to all shape elements for visibility (only if not already present)
+    $svg = preg_replace('/<path(?![^>]*stroke)/', '<path stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<circle(?![^>]*stroke)/', '<circle stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<rect(?![^>]*stroke)/', '<rect stroke="black" stroke-width="1.5"', $svg);
+    $svg = preg_replace('/<ellipse(?![^>]*stroke)/', '<ellipse stroke="black" stroke-width="1.5"', $svg);
+    
+    // Replace colors
     $svg = str_replace('currentColor', $color, $svg);
     
     // If icon supports two colors and secondary color is provided
     if (!empty($secondaryColor) && $iconData['supportsTwoColors']) {
-        $svg = str_replace('class="secondary-color"', 'fill="' . htmlspecialchars($secondaryColor) . '"', $svg);
+        $svg = preg_replace('/class="secondary-color"/', 'fill="' . htmlspecialchars($secondaryColor) . '" stroke="black" stroke-width="1.5"', $svg);
     }
     
     return sprintf(

@@ -54,7 +54,7 @@ const MedicationIcons = {
         },
         'capsule-half': {
             name: 'Half & Half Capsule ⚫⚪',
-            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M4.22 11.29 L11.29 4.22 L11.29 18.36 L4.22 11.29 Z" opacity="0.85"/></svg>',
+            svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.22 11.29l7.07-7.07c2.68-2.68 7.02-2.68 9.7 0 2.68 2.68 2.68 7.02 0 9.7l-7.07 7.07c-2.68 2.68-7.02 2.68-9.7 0-2.68-2.68-2.68-7.02 0-9.7z"/><path class="secondary-color" d="M12 4.22 L19.78 12 L12 19.78 Z" opacity="0.85"/></svg>',
             supportsTwoColors: true
         },
 
@@ -156,11 +156,21 @@ const MedicationIcons = {
      */
     render: function(iconType, color = '#5b21b6', size = '24px', secondaryColor = null) {
         const icon = this.icons[iconType] || this.icons.pill;
-        let svg = icon.svg.replace('currentColor', color);
+        let svg = icon.svg;
+        
+        // Add stroke to all shape elements for visibility (only if not already present)
+        svg = svg.replace(/<path(?![^>]*stroke)/g, '<path stroke="black" stroke-width="1.5"');
+        svg = svg.replace(/<circle(?![^>]*stroke)/g, '<circle stroke="black" stroke-width="1.5"');
+        svg = svg.replace(/<rect(?![^>]*stroke)/g, '<rect stroke="black" stroke-width="1.5"');
+        svg = svg.replace(/<ellipse(?![^>]*stroke)/g, '<ellipse stroke="black" stroke-width="1.5"');
+        
+        // Replace colors
+        svg = svg.replace(/fill="currentColor"/g, `fill="${color}"`);
+        svg = svg.replace(/currentColor/g, color);
         
         // If icon supports two colors and secondary color is provided
         if (secondaryColor && icon.supportsTwoColors) {
-            svg = svg.replace('class="secondary-color"', `fill="${secondaryColor}"`);
+            svg = svg.replace(/class="secondary-color"/g, `fill="${secondaryColor}" stroke="black" stroke-width="1.5"`);
         }
         
         return `<span class="med-icon" style="width: ${size}; height: ${size}; display: inline-block;">${svg}</span>`;

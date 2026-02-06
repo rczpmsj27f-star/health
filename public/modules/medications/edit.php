@@ -253,7 +253,7 @@ foreach ($instructions as $i) {
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Dose Amount *</label>
-                        <input type="number" step="0.01" name="dose_amount" value="<?= htmlspecialchars($dose['dose_amount']) ?>" required>
+                        <input type="number" step="0.01" name="dose_amount" value="<?= htmlspecialchars($dose['dose_amount']) ?>" inputmode="decimal" required>
                     </div>
 
                     <div class="form-group">
@@ -289,7 +289,7 @@ foreach ($instructions as $i) {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="initial_dose">Tablets per dose (initial)</label>
-                            <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="<?= htmlspecialchars($schedule['initial_dose'] ?? '1') ?>">
+                            <input type="number" name="initial_dose" id="initial_dose" min="1" max="10" value="<?= htmlspecialchars($schedule['initial_dose'] ?? '1') ?>" inputmode="numeric">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Recommended number of tablets for the first dose (e.g., 2 paracetamol tablets). This will be the default when logging, but you can adjust it each time.
                             </small>
@@ -297,7 +297,7 @@ foreach ($instructions as $i) {
                         
                         <div class="form-group">
                             <label for="subsequent_dose">Tablets per dose (subsequent)</label>
-                            <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="<?= htmlspecialchars($schedule['subsequent_dose'] ?? '1') ?>">
+                            <input type="number" name="subsequent_dose" id="subsequent_dose" min="1" max="10" value="<?= htmlspecialchars($schedule['subsequent_dose'] ?? '1') ?>" inputmode="numeric">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Recommended number of tablets for follow-up doses (e.g., 2 paracetamol tablets). This will be the default when logging, but you can adjust it each time.
                             </small>
@@ -305,7 +305,7 @@ foreach ($instructions as $i) {
                         
                         <div class="form-group">
                             <label for="max_doses_per_day">Max doses per day (optional)</label>
-                            <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" value="<?= htmlspecialchars($schedule['max_doses_per_day'] ?? '') ?>">
+                            <input type="number" name="max_doses_per_day" id="max_doses_per_day" min="1" value="<?= htmlspecialchars($schedule['max_doses_per_day'] ?? '') ?>" inputmode="numeric">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Maximum number of times you can take this per day
                             </small>
@@ -313,7 +313,7 @@ foreach ($instructions as $i) {
 
                         <div class="form-group">
                             <label for="min_hours_between_doses">Min hours between doses (optional)</label>
-                            <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0" value="<?= htmlspecialchars($schedule['min_hours_between_doses'] ?? '') ?>">
+                            <input type="number" step="0.5" name="min_hours_between_doses" id="min_hours_between_doses" min="0" value="<?= htmlspecialchars($schedule['min_hours_between_doses'] ?? '') ?>" inputmode="decimal">
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Minimum time required between doses
                             </small>
@@ -335,7 +335,7 @@ foreach ($instructions as $i) {
                             <label>Times per day *</label>
                             <div class="number-stepper">
                                 <button type="button" class="stepper-btn" onclick="decrementTimesPerDay()">−</button>
-                                <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="<?= htmlspecialchars($schedule['times_per_day'] ?: 1) ?>" readonly>
+                                <input type="number" name="times_per_day" id="times_per_day" min="1" max="6" value="<?= htmlspecialchars($schedule['times_per_day'] ?: 1) ?>" readonly inputmode="numeric">
                                 <button type="button" class="stepper-btn" onclick="incrementTimesPerDay()">+</button>
                             </div>
                         </div>
@@ -348,7 +348,7 @@ foreach ($instructions as $i) {
                     <div id="weekly" style="<?= $schedule['frequency_type'] === 'per_week' ? '' : 'display:none;' ?>">
                         <div class="form-group">
                             <label>Times per week *</label>
-                            <input type="number" name="times_per_week" min="1" max="7" value="<?= htmlspecialchars($schedule['times_per_week'] ?: 1) ?>">
+                            <input type="number" name="times_per_week" min="1" max="7" value="<?= htmlspecialchars($schedule['times_per_week'] ?: 1) ?>" inputmode="numeric">
                         </div>
 
                         <div class="form-group">
@@ -384,7 +384,7 @@ foreach ($instructions as $i) {
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Current Stock (optional)</label>
-                        <input type="number" name="current_stock" min="0" value="<?= htmlspecialchars($med['current_stock'] ?? '') ?>">
+                        <input type="number" name="current_stock" min="0" value="<?= htmlspecialchars($med['current_stock'] ?? '') ?>" inputmode="numeric">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             How many tablets/doses do you currently have?
                         </small>

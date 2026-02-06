@@ -101,7 +101,7 @@ unset($_SESSION['error'], $_SESSION['success']);
                     <label>Stock Notification Threshold (days)</label>
                     <input type="number" name="stock_notification_threshold" 
                            value="<?= htmlspecialchars($preferences['stock_notification_threshold']) ?>" 
-                           min="1" max="90" class="form-control">
+                           min="1" max="90" class="form-control" inputmode="numeric">
                     <p class="help-text">Notify me when I have less than this many days of medication remaining</p>
                 </div>
 

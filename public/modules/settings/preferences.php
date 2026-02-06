@@ -17,11 +17,15 @@ $stmt = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");
 $stmt->execute([$userId]);
 $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// DARK MODE TEMPORARILY DISABLED - 2026-02-06
+// Dark mode implementation incomplete - causing usability issues
+// TODO: Properly implement dark mode with correct text colors
+
 // Create default preferences if none exist
 if (!$preferences) {
     $createStmt = $pdo->prepare("
-        INSERT INTO user_preferences (user_id, theme_mode, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
-        VALUES (?, 'device', '12h', 10, 1, 0)
+        INSERT INTO user_preferences (user_id, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
+        VALUES (?, '12h', 10, 1, 0)
     ");
     $createStmt->execute([$userId]);
     
@@ -51,12 +55,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
 </head>
-<body class="<?php 
-$themeMode = $preferences['theme_mode'] ?? 'device';
-if ($themeMode === 'light') echo 'theme-light';
-elseif ($themeMode === 'dark') echo 'theme-dark';
-// theme_mode === 'device' gets no class (uses media query)
-?>">
+<body>
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
 
     <div class="container">
@@ -74,27 +73,9 @@ elseif ($themeMode === 'dark') echo 'theme-dark';
             <?php endif; ?>
 
             <form method="POST" action="/modules/settings/save_preferences_handler.php" id="preferences-form">
-                <div class="section-header">Appearance</div>
-
-                <div class="form-group">
-                    <label>Theme Mode</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="theme_mode" value="light" <?= ($preferences['theme_mode'] ?? 'device') === 'light' ? 'checked' : '' ?>>
-                            <span>☀️ Light Mode</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="theme_mode" value="dark" <?= ($preferences['theme_mode'] ?? 'device') === 'dark' ? 'checked' : '' ?>>
-                            <span>🌙 Dark Mode</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="theme_mode" value="device" <?= ($preferences['theme_mode'] ?? 'device') === 'device' ? 'checked' : '' ?>>
-                            <span>📱 Device Mode (Auto)</span>
-                        </label>
-                    </div>
-                    <p class="help-text">Choose your preferred color scheme. Device mode automatically matches your system settings.</p>
-                </div>
-
+                <!-- DARK MODE TEMPORARILY DISABLED - 2026-02-06 -->
+                <!-- Theme mode section removed - dark mode causing usability issues -->
+                
                 <div class="section-header">Time Display</div>
 
                 <div class="form-group">

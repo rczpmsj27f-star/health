@@ -675,7 +675,8 @@ foreach ($prnMedications as $med) {
                     <a href="?date=<?= $prevDate ?>" 
                        style="font-size: 28px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; line-height: 1;" 
                        class="nav-arrow"
-                       title="Previous Day">
+                       title="Previous Day"
+                       aria-label="Previous Day">
                         ←
                     </a>
                     
@@ -686,7 +687,8 @@ foreach ($prnMedications as $med) {
                     <a href="?date=<?= $nextDate ?>" 
                        style="font-size: 28px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; line-height: 1;" 
                        class="nav-arrow"
-                       title="Next Day">
+                       title="Next Day"
+                       aria-label="Next Day">
                         →
                     </a>
                 </div>
@@ -1101,11 +1103,18 @@ foreach ($prnMedications as $med) {
     }
 
     function markAsTaken(medId, scheduledDateTime) {
+        // Validate scheduledDateTime format
+        if (!scheduledDateTime || typeof scheduledDateTime !== 'string') {
+            console.error('Invalid scheduledDateTime:', scheduledDateTime);
+            return;
+        }
+        
         // Parse the scheduled date
         const scheduledDate = scheduledDateTime.split(' ')[0]; // Gets YYYY-MM-DD part
         const todayDate = '<?= date("Y-m-d") ?>';
         
         // Show late logging modal ONLY if the scheduled date is in the past
+        // Note: String comparison works reliably because dates are in YYYY-MM-DD format
         const isPastDate = scheduledDate < todayDate;
         
         if (isPastDate) {

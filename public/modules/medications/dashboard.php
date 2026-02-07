@@ -1027,8 +1027,8 @@ foreach ($prnMedications as $med) {
     </style>
     
     <script>
-    // Late logging state
-    let pendingLateLog = null;
+    // Pending logging state (used for both late and early logging)
+    let pendingLog = null;
 
     // Show "Other" text input when selected
     document.getElementById('lateLoggingReason').addEventListener('change', function() {
@@ -1052,7 +1052,7 @@ foreach ($prnMedications as $med) {
 
     function closeLateLoggingModal() {
         document.getElementById('lateLoggingModal').classList.remove('active');
-        pendingLateLog = null;
+        pendingLog = null;
     }
 
     function submitLateLog() {
@@ -1074,9 +1074,9 @@ foreach ($prnMedications as $med) {
         }
         
         // Add reason to pending log and submit
-        if (pendingLateLog) {
-            pendingLateLog.lateReason = reason;
-            submitLogToServer(pendingLateLog);
+        if (pendingLog) {
+            pendingLog.lateReason = reason;
+            submitLogToServer(pendingLog);
         }
         
         closeLateLoggingModal();
@@ -1084,7 +1084,7 @@ foreach ($prnMedications as $med) {
 
     function closeEarlyLoggingModal() {
         document.getElementById('earlyLoggingModal').classList.remove('active');
-        pendingLateLog = null;
+        pendingLog = null;
     }
 
     function submitEarlyLog() {
@@ -1106,9 +1106,9 @@ foreach ($prnMedications as $med) {
         }
         
         // Add reason to pending log and submit
-        if (pendingLateLog) {
-            pendingLateLog.earlyReason = reason;
-            submitLogToServer(pendingLateLog);
+        if (pendingLog) {
+            pendingLog.earlyReason = reason;
+            submitLogToServer(pendingLog);
         }
         
         closeEarlyLoggingModal();
@@ -1171,18 +1171,16 @@ foreach ($prnMedications as $med) {
         
         if (isPastDate) {
             // Show late logging modal
-            pendingLateLog = {
+            pendingLog = {
                 medId: medId,
-                scheduledDateTime: scheduledDateTime,
-                type: 'late'
+                scheduledDateTime: scheduledDateTime
             };
             document.getElementById('lateLoggingModal').classList.add('active');
         } else if (isFutureDate) {
             // Show early logging modal
-            pendingLateLog = {
+            pendingLog = {
                 medId: medId,
-                scheduledDateTime: scheduledDateTime,
-                type: 'early'
+                scheduledDateTime: scheduledDateTime
             };
             document.getElementById('earlyLoggingModal').classList.add('active');
         } else {

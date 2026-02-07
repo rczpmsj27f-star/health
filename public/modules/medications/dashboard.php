@@ -83,6 +83,9 @@ foreach ($todaysMeds as $med) {
         continue;
     }
     
+    // DEBUG: Output medication info
+    echo "<!-- DEBUG: Med ID {$med['id']} ({$med['name']}): special_timing = '" . ($med['special_timing'] ?? 'NULL') . "' -->\n";
+    
     $stmt = $pdo->prepare("
         SELECT dose_number, dose_time 
         FROM medication_dose_times 

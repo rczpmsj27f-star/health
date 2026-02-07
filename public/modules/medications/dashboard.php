@@ -302,6 +302,17 @@ foreach ($prnMedications as $med) {
             font-weight: 600;
         }
         
+        .nav-arrow {
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        
+        .nav-arrow:hover {
+            background: var(--color-bg-light);
+            border-radius: 50%;
+            transform: scale(1.2);
+        }
+        
         .schedule-card {
             background: var(--color-bg-gray);
             border-radius: var(--radius-sm);
@@ -658,24 +669,36 @@ foreach ($prnMedications as $med) {
         <div class="schedule-section">
             <h3>Today's Schedule</h3>
             
-            <!-- Date Navigation -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <a href="?date=<?= $prevDate ?>" class="btn btn-secondary" style="text-decoration: none; padding: 8px 16px;">
-                    ← Previous Day
-                </a>
-                <div style="text-align: center;">
-                    <p class="schedule-date" style="margin: 0; font-weight: bold;">
+            <!-- Compact Date Navigation -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 8px;">
+                    <a href="?date=<?= $prevDate ?>" 
+                       style="font-size: 28px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; line-height: 1;" 
+                       class="nav-arrow"
+                       title="Previous Day"
+                       aria-label="Previous Day">
+                        ←
+                    </a>
+                    
+                    <div style="font-size: 18px; font-weight: 600; color: var(--color-text); min-width: 280px; text-align: center;">
                         <?= date('l j F Y', strtotime($viewDate)) ?>
-                    </p>
-                    <?php if (!$isToday): ?>
-                        <a href="?" class="btn btn-info" style="font-size: 12px; padding: 4px 12px; margin-top: 4px; text-decoration: none; display: inline-block; background: #17a2b8; color: white; border-radius: 4px;">
-                            Return to Today
-                        </a>
-                    <?php endif; ?>
+                    </div>
+                    
+                    <a href="?date=<?= $nextDate ?>" 
+                       style="font-size: 28px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; line-height: 1;" 
+                       class="nav-arrow"
+                       title="Next Day"
+                       aria-label="Next Day">
+                        →
+                    </a>
                 </div>
-                <a href="?date=<?= $nextDate ?>" class="btn btn-secondary" style="text-decoration: none; padding: 8px 16px;">
-                    Next Day →
-                </a>
+                
+                <?php if (!$isToday): ?>
+                    <a href="?" 
+                       style="display: inline-block; font-size: 13px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; border: 1px solid var(--color-primary); border-radius: 4px; margin-top: 4px;">
+                        Return to Today
+                    </a>
+                <?php endif; ?>
             </div>
             
             <?php if (empty($todaysMeds)): ?>
@@ -707,11 +730,10 @@ foreach ($prnMedications as $med) {
                                             <span class="status-icon">⊘</span> Skipped
                                         </span>
                                     <?php else: ?>
-                                        <form method="POST" action="/modules/medications/take_medication_handler.php" style="display: inline;">
-                                            <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                                            <input type="hidden" name="scheduled_date_time" value="<?= $med['scheduled_date_time'] ?>">
-                                            <button type="submit" class="btn-taken">✓ Take</button>
-                                        </form>
+                                        <button type="button" class="btn-taken" 
+                                            onclick="markAsTaken(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                            ✓ Take
+                                        </button>
                                         <button type="button" class="btn-skipped" 
                                             onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
                                             ⊘ Skipped
@@ -1081,9 +1103,21 @@ foreach ($prnMedications as $med) {
     }
 
     function markAsTaken(medId, scheduledDateTime) {
-        const isLateLog = <?= json_encode(!$isToday) ?>;
+        // Validate scheduledDateTime format
+        if (!scheduledDateTime || typeof scheduledDateTime !== 'string') {
+            console.error('Invalid scheduledDateTime:', scheduledDateTime);
+            return;
+        }
         
-        if (isLateLog) {
+        // Parse the scheduled date
+        const scheduledDate = scheduledDateTime.split(' ')[0]; // Gets YYYY-MM-DD part
+        const todayDate = '<?= date("Y-m-d") ?>';
+        
+        // Show late logging modal ONLY if the scheduled date is in the past
+        // Note: String comparison works reliably because dates are in YYYY-MM-DD format
+        const isPastDate = scheduledDate < todayDate;
+        
+        if (isPastDate) {
             // Show late logging modal
             pendingLateLog = {
                 medId: medId,
@@ -1091,7 +1125,7 @@ foreach ($prnMedications as $med) {
             };
             document.getElementById('lateLoggingModal').classList.add('active');
         } else {
-            // Direct submission for same-day logging
+            // Direct submission for same-day or future logging
             submitLogToServer({
                 medId: medId,
                 scheduledDateTime: scheduledDateTime

@@ -48,12 +48,12 @@ const MedicationIcons = {
         },
 
         'pill-half': {
-            name: 'Half & Half Pill ⚫⚪',
+            name: 'Half & Half Pill',
             svg: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/><path class="secondary-color" fill="currentColor" d="M 12 4 A 8 8 0 0 1 12 20 Z"/></svg>',
             supportsTwoColors: true
         },
         'capsule-half': {
-            name: 'Half & Half Capsule ⚫⚪',
+            name: 'Half & Half Capsule',
             svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="0.5"><path d="M 4 12 A 4 4 0 0 1 8 8 L 12 8 L 12 16 L 8 16 A 4 4 0 0 1 4 12 Z" fill="currentColor"/><path class="secondary-color" d="M 12 8 L 16 8 A 4 4 0 0 1 20 12 A 4 4 0 0 1 16 16 L 12 16 Z" fill="currentColor"/></svg>',
             supportsTwoColors: true
         },

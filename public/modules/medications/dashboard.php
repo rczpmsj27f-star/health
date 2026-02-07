@@ -92,20 +92,8 @@ foreach ($todaysMeds as $med) {
         foreach ($doseTimes as $doseTime) {
             // Check if this medication has special timing
             if (!empty($med['special_timing'])) {
-                // Use special timing as the grouping key
-                switch ($med['special_timing']) {
-                    case 'on_waking':
-                        $timeKey = 'On waking';
-                        break;
-                    case 'before_bed':
-                        $timeKey = 'Before bed';
-                        break;
-                    case 'with_meal':
-                        $timeKey = 'With meal';
-                        break;
-                    default:
-                        $timeKey = date('H:i', strtotime($doseTime['dose_time']));
-                }
+                // Group all special timing medications under "Daily Medications"
+                $timeKey = 'Daily Medications';
                 $scheduledDateTime = $todayDate . ' ' . date('H:i:s', strtotime($doseTime['dose_time']));
             } else {
                 // Regular time-based grouping
@@ -129,6 +117,20 @@ foreach ($todaysMeds as $med) {
             // Add log status to medication data
             $medWithStatus = $med;
             $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
+            // Store the special_time label for display
+            if (!empty($med['special_timing'])) {
+                switch ($med['special_timing']) {
+                    case 'on_waking':
+                        $medWithStatus['special_time_label'] = 'On waking';
+                        break;
+                    case 'before_bed':
+                        $medWithStatus['special_time_label'] = 'Before bed';
+                        break;
+                    case 'with_meal':
+                        $medWithStatus['special_time_label'] = 'With meal';
+                        break;
+                }
+            }
             // Safely access log data with null coalescing
             $medWithStatus['log_status'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['status'] ?? 'pending') : 'pending';
             $medWithStatus['taken_at'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['taken_at'] ?? null) : null;
@@ -151,34 +153,11 @@ foreach ($todaysMeds as $med) {
     }
 }
 
-// Sort by time with special handling for special timing labels
+// Sort by time with special handling for "Daily Medications"
 uksort($scheduleByTime, function($a, $b) {
-    // Define order for special times
-    $specialOrder = [
-        'On waking' => 1,
-        'Before bed' => 999,
-        'With meal' => 500
-    ];
-    
-    // Check if both are special times
-    if (isset($specialOrder[$a]) && isset($specialOrder[$b])) {
-        return $specialOrder[$a] - $specialOrder[$b];
-    }
-    
-    // If $a is special and $b is time
-    if (isset($specialOrder[$a]) && !isset($specialOrder[$b])) {
-        // "On waking" comes first, "Before bed" comes last
-        if ($a === 'On waking') return -1;
-        if ($a === 'Before bed') return 1;
-        return 0; // "With meal" sorts with times
-    }
-    
-    // If $b is special and $a is time
-    if (isset($specialOrder[$b]) && !isset($specialOrder[$a])) {
-        if ($b === 'On waking') return 1;
-        if ($b === 'Before bed') return -1;
-        return 0;
-    }
+    // "Daily Medications" always comes first
+    if ($a === 'Daily Medications') return -1;
+    if ($b === 'Daily Medications') return 1;
     
     // Both are regular times - sort chronologically
     return strcmp($a, $b);
@@ -750,92 +729,86 @@ foreach ($prnMedications as $med) {
                 <?php 
                 $currentTime = strtotime(date('H:i'));
                 foreach ($scheduleByTime as $time => $meds): 
-                    // Determine if this is a special time or regular time
-                    $isSpecialTime = !preg_match('/^\d{2}:\d{2}$/', $time);
+                    // Determine if this is "Daily Medications" or a regular time
+                    $isDailyMeds = ($time === 'Daily Medications');
                     
-                    // Check if this is a special time with custom overdue threshold
+                    // Check if this time group is overdue
                     $isOverdue = false;
-                    
-                    if ($isSpecialTime) {
-                        // Special time groups - check based on the label
-                        if ($time === 'On waking') {
-                            // Show overdue after 9am for "On waking"
-                            $isOverdue = $currentTime > strtotime('09:00');
-                        } elseif ($time === 'Before bed') {
-                            // Show overdue after 10pm for "Before bed"
-                            $isOverdue = $currentTime > strtotime('22:00');
-                        } else {
-                            $isOverdue = false; // Other special times
-                        }
-                    } else {
+                    if (!$isDailyMeds) {
                         // Regular time - show overdue immediately after scheduled time
                         $scheduleTime = strtotime($time);
                         $isOverdue = $currentTime > $scheduleTime;
                     }
+                    
+                    $medCount = count($meds);
+                    $groupId = 'time-group-' . md5($time);
                 ?>
-                    <div class="time-group-compact">
-                        <div class="time-header-compact"><?= htmlspecialchars($time) ?></div>
-                        <?php foreach ($meds as $med): ?>
-                            <div class="med-item-compact">
-                                <?php 
-                                // Check if this specific medication dose is overdue and pending
-                                $medIsOverdue = $isOverdue && $med['log_status'] === 'pending';
-                                ?>
-                                <?php if ($medIsOverdue): ?>
-                                    <span class="overdue-badge">⚠️ OVERDUE</span>
-                                <?php endif; ?>
-                                
-                                <div class="med-info">
-                                    <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '20px', $med['secondary_color'] ?? null) ?> <?= htmlspecialchars($med['name']) ?> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
-                                    
-                                    <?php if (!empty($med['special_timing'])): ?>
-                                        <div class="special-timing-badge" style="background: #ffd54f; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin-left: 8px;">
-                                            <?php
-                                            switch($med['special_timing']) {
-                                                case 'on_waking': echo '🌅 On Waking'; break;
-                                                case 'before_bed': echo '🌙 Before Bed'; break;
-                                                case 'with_meal': echo '🍽️ With Meal'; break;
-                                            }
-                                            ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($med['custom_instructions'])): ?>
-                                        <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                            📝 <?= htmlspecialchars($med['custom_instructions']) ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <div class="med-actions">
-                                    <?php if ($med['log_status'] === 'taken'): ?>
-                                        <span class="status-taken">
-                                            <span class="status-icon">✓</span> Taken
-                                        </span>
-                                        <button type="button" class="btn-untake" 
-                                            onclick="untakeMedication(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
-                                            ↶ Untake
-                                        </button>
-                                    <?php elseif ($med['log_status'] === 'skipped'): ?>
-                                        <span class="status-skipped">
-                                            <span class="status-icon">⊘</span> Skipped
-                                        </span>
-                                    <?php else: ?>
-                                        <?php if ($isOverdue): ?>
-                                            <span class="status-overdue">⚠ Overdue</span>
-                                        <?php endif; ?>
-                                        <button type="button" class="btn-taken" 
-                                            onclick="markAsTaken(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
-                                            ✓ Take
-                                        </button>
-                                        <button type="button" class="btn-skipped" 
-                                            onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
-                                            ⊘ Skipped
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
+                    <div class="time-group-collapsible" style="margin-bottom: 16px;">
+                        <!-- Collapsible Header -->
+                        <div class="time-header-collapsible" 
+                             onclick="toggleTimeGroup('<?= $groupId ?>')" 
+                             style="display: flex; justify-content: space-between; align-items: center; background: var(--color-primary); color: white; padding: 12px 16px; border-radius: 8px; cursor: pointer; user-select: none;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="toggle-icon" id="icon-<?= $groupId ?>" style="font-size: 18px;">▼</span>
+                                <strong style="font-size: 18px;"><?= htmlspecialchars($time) ?></strong>
+                                <span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; font-size: 13px;">
+                                    <?= $medCount ?> med<?= $medCount !== 1 ? 's' : '' ?>
+                                </span>
                             </div>
-                        <?php endforeach; ?>
+                            <?php if ($isOverdue): ?>
+                                <span style="background: #dc3545; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    OVERDUE
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <!-- Collapsible Content (expanded by default) -->
+                        <div class="time-group-content" id="<?= $groupId ?>" style="padding: 12px 0;">
+                            <?php foreach ($meds as $med): ?>
+                                <div class="med-item-compact" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <div class="med-info" style="flex: 1;">
+                                        <?= renderMedicationIcon($med['icon'] ?? 'pill', $med['color'] ?? '#5b21b6', '24px', $med['secondary_color'] ?? null) ?>
+                                        <strong><?= htmlspecialchars($med['name']) ?></strong> • 
+                                        <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?>
+                                        
+                                        <?php if (!empty($med['special_time_label'])): ?>
+                                            <span style="color: var(--color-text-secondary); font-size: 13px; font-style: italic;">
+                                                (<?= htmlspecialchars($med['special_time_label']) ?>)
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <div class="med-actions" style="display: flex; gap: 8px;">
+                                        <?php if ($med['log_status'] === 'taken'): ?>
+                                            <span class="status-taken" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px;">
+                                                ✓ Taken <?= $med['taken_at'] ? date('H:i', strtotime($med['taken_at'])) : '' ?>
+                                            </span>
+                                            <button type="button" class="btn-untake" 
+                                                onclick="untakeMedication(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                                ↶ Untake
+                                            </button>
+                                        <?php elseif ($med['log_status'] === 'skipped'): ?>
+                                            <span class="status-skipped" style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px;">
+                                                ⊘ Skipped<?= $med['skipped_reason'] ? ': ' . htmlspecialchars($med['skipped_reason']) : '' ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <button type="button" 
+                                                    class="btn-taken" 
+                                                    onclick="markAsTaken(<?= $med['id'] ?>, '<?= htmlspecialchars($med['scheduled_date_time']) ?>')"
+                                                    style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                                ✓ Take
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn-skipped" 
+                                                    onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($med['scheduled_date_time']) ?>')"
+                                                    style="background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                                ⊘ Skipped
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
                 <?php endif; ?>
@@ -990,6 +963,39 @@ foreach ($prnMedications as $med) {
         </div>
     </div>
     
+    <!-- Early Logging Modal -->
+    <div id="earlyLoggingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⏰ Early Medication</h3>
+            </div>
+            <div class="modal-body">
+                <p>You are taking this medication BEFORE its scheduled date.</p>
+                <p><strong>Why are you taking this medication early?</strong></p>
+                
+                <div class="form-group">
+                    <select id="earlyLoggingReason" class="form-control">
+                        <option value="">-- Select a reason --</option>
+                        <option value="Instructed by doctor">Instructed by doctor</option>
+                        <option value="Going on vacation">Going on vacation</option>
+                        <option value="Adjusting schedule">Adjusting schedule</option>
+                        <option value="Accidentally took early">Accidentally took early</option>
+                        <option value="Other">Other (please specify)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="earlyOtherReasonGroup" style="display: none;">
+                    <label>Please specify:</label>
+                    <input type="text" id="earlyOtherReasonText" class="form-control" placeholder="Enter reason">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEarlyLoggingModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitEarlyLog()">Submit</button>
+            </div>
+        </div>
+    </div>
+    
     <style>
     /* Generic modal styles */
     .modal {
@@ -1021,8 +1027,8 @@ foreach ($prnMedications as $med) {
     </style>
     
     <script>
-    // Late logging state
-    let pendingLateLog = null;
+    // Pending logging state (used for both late and early logging)
+    let pendingLog = null;
 
     // Show "Other" text input when selected
     document.getElementById('lateLoggingReason').addEventListener('change', function() {
@@ -1034,9 +1040,19 @@ foreach ($prnMedications as $med) {
         }
     });
 
+    // Show "Other" text input when selected (Early Logging)
+    document.getElementById('earlyLoggingReason').addEventListener('change', function() {
+        const otherGroup = document.getElementById('earlyOtherReasonGroup');
+        if (this.value === 'Other') {
+            otherGroup.style.display = 'block';
+        } else {
+            otherGroup.style.display = 'none';
+        }
+    });
+
     function closeLateLoggingModal() {
         document.getElementById('lateLoggingModal').classList.remove('active');
-        pendingLateLog = null;
+        pendingLog = null;
     }
 
     function submitLateLog() {
@@ -1058,12 +1074,44 @@ foreach ($prnMedications as $med) {
         }
         
         // Add reason to pending log and submit
-        if (pendingLateLog) {
-            pendingLateLog.lateReason = reason;
-            submitLogToServer(pendingLateLog);
+        if (pendingLog) {
+            pendingLog.lateReason = reason;
+            submitLogToServer(pendingLog);
         }
         
         closeLateLoggingModal();
+    }
+
+    function closeEarlyLoggingModal() {
+        document.getElementById('earlyLoggingModal').classList.remove('active');
+        pendingLog = null;
+    }
+
+    function submitEarlyLog() {
+        const reasonSelect = document.getElementById('earlyLoggingReason');
+        let reason = reasonSelect.value;
+        
+        if (reason === 'Other') {
+            const otherText = document.getElementById('earlyOtherReasonText').value.trim();
+            if (!otherText) {
+                alert('Please specify the reason');
+                return;
+            }
+            reason = 'Other: ' + otherText;
+        }
+        
+        if (!reason) {
+            alert('Please select a reason');
+            return;
+        }
+        
+        // Add reason to pending log and submit
+        if (pendingLog) {
+            pendingLog.earlyReason = reason;
+            submitLogToServer(pendingLog);
+        }
+        
+        closeEarlyLoggingModal();
     }
 
     function submitLogToServer(logData) {
@@ -1076,6 +1124,10 @@ foreach ($prnMedications as $med) {
         
         if (logData.lateReason) {
             formData.append('late_logging_reason', logData.lateReason);
+        }
+        
+        if (logData.earlyReason) {
+            formData.append('early_logging_reason', logData.earlyReason);
         }
         
         // Submit to take_handler
@@ -1113,19 +1165,26 @@ foreach ($prnMedications as $med) {
         const scheduledDate = scheduledDateTime.split(' ')[0]; // Gets YYYY-MM-DD part
         const todayDate = '<?= date("Y-m-d") ?>';
         
-        // Show late logging modal ONLY if the scheduled date is in the past
         // Note: String comparison works reliably because dates are in YYYY-MM-DD format
         const isPastDate = scheduledDate < todayDate;
+        const isFutureDate = scheduledDate > todayDate;
         
         if (isPastDate) {
             // Show late logging modal
-            pendingLateLog = {
+            pendingLog = {
                 medId: medId,
                 scheduledDateTime: scheduledDateTime
             };
             document.getElementById('lateLoggingModal').classList.add('active');
+        } else if (isFutureDate) {
+            // Show early logging modal
+            pendingLog = {
+                medId: medId,
+                scheduledDateTime: scheduledDateTime
+            };
+            document.getElementById('earlyLoggingModal').classList.add('active');
         } else {
-            // Direct submission for same-day or future logging
+            // Direct submission for today's medications (no reason needed)
             submitLogToServer({
                 medId: medId,
                 scheduledDateTime: scheduledDateTime
@@ -1165,6 +1224,19 @@ foreach ($prnMedications as $med) {
                 });
             }
         );
+    }
+    
+    function toggleTimeGroup(groupId) {
+        const content = document.getElementById(groupId);
+        const icon = document.getElementById('icon-' + groupId);
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.textContent = '▼';
+        } else {
+            content.style.display = 'none';
+            icon.textContent = '►';
+        }
     }
     
     function showConfirmModal(title, message, onConfirm) {

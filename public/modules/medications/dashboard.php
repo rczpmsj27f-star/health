@@ -81,8 +81,28 @@ foreach ($todaysMeds as $med) {
     // Group medications by time slot
     if (!empty($doseTimes)) {
         foreach ($doseTimes as $doseTime) {
-            $timeKey = date('H:i', strtotime($doseTime['dose_time']));
-            $scheduledDateTime = $todayDate . ' ' . $timeKey . ':00';
+            // Check if this medication has special timing
+            if (!empty($med['special_timing'])) {
+                // Use special timing as the grouping key
+                switch ($med['special_timing']) {
+                    case 'on_waking':
+                        $timeKey = 'On waking';
+                        break;
+                    case 'before_bed':
+                        $timeKey = 'Before bed';
+                        break;
+                    case 'with_meal':
+                        $timeKey = 'With meal';
+                        break;
+                    default:
+                        $timeKey = date('H:i', strtotime($doseTime['dose_time']));
+                }
+                $scheduledDateTime = $todayDate . ' ' . date('H:i:s', strtotime($doseTime['dose_time']));
+            } else {
+                // Regular time-based grouping
+                $timeKey = date('H:i', strtotime($doseTime['dose_time']));
+                $scheduledDateTime = $todayDate . ' ' . $timeKey . ':00';
+            }
             
             // Skip if this dose time is in the past AND has no log entry
             $logKey = $med['id'] . '_' . $scheduledDateTime;
@@ -122,8 +142,38 @@ foreach ($todaysMeds as $med) {
     }
 }
 
-// Sort by time (earliest first)
-ksort($scheduleByTime);
+// Sort by time with special handling for special timing labels
+uksort($scheduleByTime, function($a, $b) {
+    // Define order for special times
+    $specialOrder = [
+        'On waking' => 1,
+        'Before bed' => 999,
+        'With meal' => 500
+    ];
+    
+    // Check if both are special times
+    if (isset($specialOrder[$a]) && isset($specialOrder[$b])) {
+        return $specialOrder[$a] - $specialOrder[$b];
+    }
+    
+    // If $a is special and $b is time
+    if (isset($specialOrder[$a]) && !isset($specialOrder[$b])) {
+        // "On waking" comes first, "Before bed" comes last
+        if ($a === 'On waking') return -1;
+        if ($a === 'Before bed') return 1;
+        return 0; // "With meal" sorts with times
+    }
+    
+    // If $b is special and $a is time
+    if (isset($specialOrder[$b]) && !isset($specialOrder[$a])) {
+        if ($b === 'On waking') return 1;
+        if ($b === 'Before bed') return -1;
+        return 0;
+    }
+    
+    // Both are regular times - sort chronologically
+    return strcmp($a, $b);
+});
 
 // Get PRN medications
 $stmt = $pdo->prepare("
@@ -650,35 +700,31 @@ foreach ($prnMedications as $med) {
                 <?php 
                 $currentTime = strtotime(date('H:i'));
                 foreach ($scheduleByTime as $time => $meds): 
-                    $scheduleTime = strtotime($time);
+                    // Determine if this is a special time or regular time
+                    $isSpecialTime = !preg_match('/^\d{2}:\d{2}$/', $time);
                     
                     // Check if this is a special time with custom overdue threshold
                     $isOverdue = false;
                     
-                    // Check if any medication in this time slot has special timing
-                    $hasSpecialTiming = false;
-                    $specialTimingType = null;
-                    foreach ($meds as $checkMed) {
-                        if (!empty($checkMed['special_timing'])) {
-                            $hasSpecialTiming = true;
-                            $specialTimingType = $checkMed['special_timing'];
-                            break;
+                    if ($isSpecialTime) {
+                        // Special time groups - check based on the label
+                        if ($time === 'On waking') {
+                            // Show overdue after 9am for "On waking"
+                            $isOverdue = $currentTime > strtotime('09:00');
+                        } elseif ($time === 'Before bed') {
+                            // Show overdue after 10pm for "Before bed"
+                            $isOverdue = $currentTime > strtotime('22:00');
+                        } else {
+                            $isOverdue = false; // Other special times
                         }
-                    }
-                    
-                    if ($hasSpecialTiming && $specialTimingType === 'on_waking') {
-                        // Show overdue after 9am for "On waking"
-                        $isOverdue = $currentTime > strtotime('09:00');
-                    } elseif ($hasSpecialTiming && $specialTimingType === 'before_bed') {
-                        // Show overdue after 10pm for "Before bed"
-                        $isOverdue = $currentTime > strtotime('22:00');
                     } else {
                         // Regular time - show overdue immediately after scheduled time
+                        $scheduleTime = strtotime($time);
                         $isOverdue = $currentTime > $scheduleTime;
                     }
                 ?>
                     <div class="time-group-compact">
-                        <div class="time-header-compact"><?= $time ?></div>
+                        <div class="time-header-compact"><?= htmlspecialchars($time) ?></div>
                         <?php foreach ($meds as $med): ?>
                             <div class="med-item-compact">
                                 <?php 

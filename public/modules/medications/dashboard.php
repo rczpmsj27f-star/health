@@ -709,9 +709,9 @@ foreach ($prnMedications as $med) {
                     <!-- Daily Medications Header -->
                     <div class="time-header-collapsible" 
                          onclick="toggleTimeGroup('daily-medications-parent')" 
-                         style="display: flex; justify-content: space-between; align-items: center; background: var(--color-primary); color: white; padding: 14px 20px; border-radius: 10px; cursor: pointer; user-select: none; font-size: 20px; font-weight: 600;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="toggle-icon" id="icon-daily-medications-parent">▼</span>
+                         style="display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; color: #374151; padding: 8px 12px; border-radius: 6px; cursor: pointer; user-select: none; font-size: 15px; font-weight: 500; border-left: 3px solid #6366f1; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="toggle-icon" id="icon-daily-medications-parent" style="font-size: 14px;">▼</span>
                             <strong>Daily Medications</strong>
                         </div>
                     </div>
@@ -724,11 +724,11 @@ foreach ($prnMedications as $med) {
                         <div class="time-group-nested" style="margin-bottom: 12px;">
                             <div class="time-header-nested" 
                                  onclick="toggleTimeGroup('on-waking')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #8b5cf6; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; user-select: none;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="toggle-icon" id="icon-on-waking">▼</span>
-                                    <strong>On waking</strong>
-                                    <span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="toggle-icon" id="icon-on-waking" style="font-size: 12px;">▼</span>
+                                    <span>On waking</span>
+                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
                                         <?= count($dailyMedications['On waking']) ?> med<?= count($dailyMedications['On waking']) !== 1 ? 's' : '' ?>
                                     </span>
                                 </div>
@@ -746,11 +746,11 @@ foreach ($prnMedications as $med) {
                         <div class="time-group-nested" style="margin-bottom: 12px;">
                             <div class="time-header-nested" 
                                  onclick="toggleTimeGroup('before-bed')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #8b5cf6; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; user-select: none;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="toggle-icon" id="icon-before-bed">▼</span>
-                                    <strong>Before bed</strong>
-                                    <span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="toggle-icon" id="icon-before-bed" style="font-size: 12px;">▼</span>
+                                    <span>Before bed</span>
+                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
                                         <?= count($dailyMedications['Before bed']) ?> med<?= count($dailyMedications['Before bed']) !== 1 ? 's' : '' ?>
                                     </span>
                                 </div>
@@ -768,11 +768,11 @@ foreach ($prnMedications as $med) {
                         <div class="time-group-nested" style="margin-bottom: 12px;">
                             <div class="time-header-nested" 
                                  onclick="toggleTimeGroup('other-instructions')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #8b5cf6; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; user-select: none;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="toggle-icon" id="icon-other-instructions">▼</span>
-                                    <strong>Other instructions</strong>
-                                    <span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="toggle-icon" id="icon-other-instructions" style="font-size: 12px;">▼</span>
+                                    <span>Other instructions</span>
+                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
                                         <?= count($dailyMedications['Other instructions']) ?> med<?= count($dailyMedications['Other instructions']) !== 1 ? 's' : '' ?>
                                     </span>
                                 </div>
@@ -790,11 +790,11 @@ foreach ($prnMedications as $med) {
                         <div class="time-group-nested" style="margin-bottom: 12px;">
                             <div class="time-header-nested" 
                                  onclick="toggleTimeGroup('daily-no-instructions')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #8b5cf6; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; user-select: none;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="toggle-icon" id="icon-daily-no-instructions">▼</span>
-                                    <strong>Daily meds - no instructions</strong>
-                                    <span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="toggle-icon" id="icon-daily-no-instructions" style="font-size: 12px;">▼</span>
+                                    <span>Daily meds - no instructions</span>
+                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
                                         <?= count($dailyMedications['Daily meds - no instructions']) ?> med<?= count($dailyMedications['Daily meds - no instructions']) !== 1 ? 's' : '' ?>
                                     </span>
                                 </div>
@@ -829,16 +829,16 @@ foreach ($prnMedications as $med) {
                     <!-- Time Group Header -->
                     <div class="time-header-collapsible" 
                          onclick="toggleTimeGroup('<?= $groupId ?>')" 
-                         style="display: flex; justify-content: space-between; align-items: center; background: var(--color-primary); color: white; padding: 12px 18px; border-radius: 8px; cursor: pointer; user-select: none;">
+                         style="display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; color: #374151; padding: 8px 12px; border-radius: 6px; cursor: pointer; user-select: none; font-size: 15px; font-weight: 500; border-left: 3px solid #6366f1; margin-bottom: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="toggle-icon" id="icon-<?= $groupId ?>">▼</span>
-                            <strong style="font-size: 18px;"><?= htmlspecialchars($time) ?></strong>
-                            <span style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 12px; font-size: 13px;">
+                            <span class="toggle-icon" id="icon-<?= $groupId ?>" style="font-size: 14px;">▼</span>
+                            <strong><?= htmlspecialchars($time) ?></strong>
+                            <span style="background: #e5e7eb; color: #6b7280; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
                                 <?= $medCount ?> med<?= $medCount !== 1 ? 's' : '' ?>
                             </span>
                         </div>
                         <?php if ($isOverdue): ?>
-                            <span style="background: #dc3545; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                            <span style="background: #fee2e2; color: #dc2626; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;">
                                 OVERDUE
                             </span>
                         <?php endif; ?>

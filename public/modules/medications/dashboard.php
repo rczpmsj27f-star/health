@@ -728,11 +728,10 @@ foreach ($prnMedications as $med) {
                                             <span class="status-icon">⊘</span> Skipped
                                         </span>
                                     <?php else: ?>
-                                        <form method="POST" action="/modules/medications/take_medication_handler.php" style="display: inline;">
-                                            <input type="hidden" name="medication_id" value="<?= $med['id'] ?>">
-                                            <input type="hidden" name="scheduled_date_time" value="<?= $med['scheduled_date_time'] ?>">
-                                            <button type="submit" class="btn-taken">✓ Take</button>
-                                        </form>
+                                        <button type="button" class="btn-taken" 
+                                            onclick="markAsTaken(<?= $med['id'] ?>, '<?= $med['scheduled_date_time'] ?>')">
+                                            ✓ Take
+                                        </button>
                                         <button type="button" class="btn-skipped" 
                                             onclick="showSkipModal(<?= $med['id'] ?>, '<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>', '<?= $med['scheduled_date_time'] ?>')">
                                             ⊘ Skipped

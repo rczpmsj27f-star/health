@@ -165,7 +165,21 @@ foreach ($todaysMeds as $med) {
         $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
         $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
         
-        $dailyMedications['Daily meds - no instructions'][] = $medWithStatus;
+        // Categorize based on special_timing even without dose times
+        if (!empty($med['special_timing'])) {
+            $specialTime = $med['special_timing'];
+            
+            if ($specialTime === 'on_waking') {
+                $dailyMedications['On waking'][] = $medWithStatus;
+            } elseif ($specialTime === 'before_bed') {
+                $dailyMedications['Before bed'][] = $medWithStatus;
+            } else {
+                // Any other special instruction (like 'with_meal')
+                $dailyMedications['Other instructions'][] = $medWithStatus;
+            }
+        } else {
+            $dailyMedications['Daily meds - no instructions'][] = $medWithStatus;
+        }
     }
 }
 

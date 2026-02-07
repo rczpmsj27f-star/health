@@ -68,30 +68,16 @@ while ($log = $stmt->fetch()) {
     $medLogs[$key] = $log;
 }
 
-// Initialize nested structure for daily medications
-$dailyMedications = [
-    'On waking' => [],
-    'Before bed' => [],
-    'Other instructions' => [],
-    'Daily meds - no instructions' => []
-];
-$timedMedications = []; // For specific times like 08:00, 12:00
+// Replace "Other instructions" logic with dynamic grouping
+$dailyMedications = [];
+$timedMedications = [];
 
 foreach ($todaysMeds as $med) {
-    // Skip PRN medications - they're handled separately
-    if ($med['is_prn']) {
-        continue;
-    }
+    if ($med['is_prn']) continue;
     
-    $stmt = $pdo->prepare("
-        SELECT dose_number, dose_time 
-        FROM medication_dose_times 
-        WHERE medication_id = ? 
-        ORDER BY dose_time
-    ");
+    $stmt = $pdo->prepare("SELECT dose_number, dose_time, special_time FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_time");
     $stmt->execute([$med['id']]);
     $doseTimes = $stmt->fetchAll();
-    $medDoseTimes[$med['id']] = $doseTimes;
     
     if (!empty($doseTimes)) {
         foreach ($doseTimes as $doseTime) {
@@ -106,44 +92,28 @@ foreach ($todaysMeds as $med) {
                 continue; // Skip past doses without logs
             }
             
-            // Add medication data with status
             $medWithStatus = $med;
+            $medWithStatus['special_time'] = $doseTime['special_time'] ?? null;
             $medWithStatus['dose_time'] = $doseTime['dose_time'];
             $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
+            $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
+            $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
+            $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
             
-            // Add log data if exists
-            if (isset($medLogs[$logKey])) {
-                $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
-                $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
-                $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
-            } else {
-                $medWithStatus['log_status'] = 'pending';
-                $medWithStatus['taken_at'] = null;
-                $medWithStatus['skipped_reason'] = null;
-            }
-            
-            // Categorize medication
-            if (!empty($med['special_timing'])) {
-                // Has a special time - goes under Daily Medications
-                $specialTime = $med['special_timing'];
-                
-                if ($specialTime === 'on_waking') {
-                    $dailyMedications['On waking'][] = $medWithStatus;
-                } elseif ($specialTime === 'before_bed') {
-                    $dailyMedications['Before bed'][] = $medWithStatus;
-                } else {
-                    // Any other special instruction (like 'with_meal')
-                    $dailyMedications['Other instructions'][] = $medWithStatus;
+            if (!empty($doseTime['special_time'])) {
+                $specialTime = trim($doseTime['special_time']);
+                if (!isset($dailyMedications[$specialTime])) {
+                    $dailyMedications[$specialTime] = [];
                 }
+                $dailyMedications[$specialTime][] = $medWithStatus;
             } else {
-                // No special timing - check if it's a generic daily med or timed med
                 $timeOnly = date('H:i', strtotime($doseTime['dose_time']));
-                
-                // If time is midnight or near it, treat as generic daily
                 if ($timeOnly === '00:00' || $timeOnly === '23:59') {
+                    if (!isset($dailyMedications['Daily meds - no instructions'])) {
+                        $dailyMedications['Daily meds - no instructions'] = [];
+                    }
                     $dailyMedications['Daily meds - no instructions'][] = $medWithStatus;
                 } else {
-                    // Specific time = timed medication
                     if (!isset($timedMedications[$timeOnly])) {
                         $timedMedications[$timeOnly] = [];
                     }
@@ -164,23 +134,39 @@ foreach ($todaysMeds as $med) {
         
         // Categorize based on special_timing even without dose times
         if (!empty($med['special_timing'])) {
-            $specialTime = $med['special_timing'];
+            $specialTime = trim($med['special_timing']);
             
             if ($specialTime === 'on_waking') {
-                $dailyMedications['On waking'][] = $medWithStatus;
+                $specialTime = 'On waking';
             } elseif ($specialTime === 'before_bed') {
-                $dailyMedications['Before bed'][] = $medWithStatus;
-            } else {
-                // Any other special instruction (like 'with_meal')
-                $dailyMedications['Other instructions'][] = $medWithStatus;
+                $specialTime = 'Before bed';
+            } elseif ($specialTime === 'with_meal') {
+                $specialTime = 'With meals';
             }
+            
+            if (!isset($dailyMedications[$specialTime])) {
+                $dailyMedications[$specialTime] = [];
+            }
+            $dailyMedications[$specialTime][] = $medWithStatus;
         } else {
+            if (!isset($dailyMedications['Daily meds - no instructions'])) {
+                $dailyMedications['Daily meds - no instructions'] = [];
+            }
             $dailyMedications['Daily meds - no instructions'][] = $medWithStatus;
         }
     }
 }
 
-// Sort timed medications by time
+// Sort daily medications
+$preferredOrder = ['On waking', 'With breakfast', 'With lunch', 'With dinner', 'Before bed', 'Daily meds - no instructions'];
+uksort($dailyMedications, function($a, $b) use ($preferredOrder) {
+    $posA = array_search($a, $preferredOrder);
+    $posB = array_search($b, $preferredOrder);
+    if ($posA !== false && $posB !== false) return $posA - $posB;
+    if ($posA !== false) return -1;
+    if ($posB !== false) return 1;
+    return strcmp($a, $b);
+});
 ksort($timedMedications);
 
 // Get PRN medications
@@ -733,93 +719,33 @@ foreach ($prnMedications as $med) {
                     <!-- Daily Medications Content (expandable) -->
                     <div class="time-group-content" id="daily-medications-parent" style="padding: 12px 0 0 20px;">
                         
-                        <!-- NESTED: On waking -->
-                        <?php if (!empty($dailyMedications['On waking'])): ?>
-                        <div class="time-group-nested" style="margin-bottom: 12px;">
-                            <div class="time-header-nested" 
-                                 onclick="toggleTimeGroup('on-waking')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="toggle-icon" id="icon-on-waking" style="font-size: 12px;">▼</span>
-                                    <span>On waking</span>
-                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
-                                        <?= count($dailyMedications['On waking']) ?> med<?= count($dailyMedications['On waking']) !== 1 ? 's' : '' ?>
-                                    </span>
+                        <!-- DYNAMIC: Loop through all daily medication groups -->
+                        <?php foreach ($dailyMedications as $groupName => $meds): ?>
+                            <?php if (!empty($meds)): ?>
+                                <?php 
+                                    // Generate a unique ID for this group
+                                    $groupId = strtolower(preg_replace('/[^a-z0-9]+/', '-', $groupName));
+                                ?>
+                                <div class="time-group-nested" style="margin-bottom: 12px;">
+                                    <div class="time-header-nested" 
+                                         onclick="toggleTimeGroup('<?= $groupId ?>')" 
+                                         style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span class="toggle-icon" id="icon-<?= $groupId ?>" style="font-size: 12px;">▼</span>
+                                            <span><?= htmlspecialchars($groupName) ?></span>
+                                            <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
+                                                <?= count($meds) ?> med<?= count($meds) !== 1 ? 's' : '' ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="time-group-content" id="<?= $groupId ?>" style="padding: 8px 0;">
+                                        <?php foreach ($meds as $med): ?>
+                                            <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
+                                        <?php endforeach; ?>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="time-group-content" id="on-waking" style="padding: 8px 0;">
-                                <?php foreach ($dailyMedications['On waking'] as $med): ?>
-                                    <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        
-                        <!-- NESTED: Before bed -->
-                        <?php if (!empty($dailyMedications['Before bed'])): ?>
-                        <div class="time-group-nested" style="margin-bottom: 12px;">
-                            <div class="time-header-nested" 
-                                 onclick="toggleTimeGroup('before-bed')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="toggle-icon" id="icon-before-bed" style="font-size: 12px;">▼</span>
-                                    <span>Before bed</span>
-                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
-                                        <?= count($dailyMedications['Before bed']) ?> med<?= count($dailyMedications['Before bed']) !== 1 ? 's' : '' ?>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="time-group-content" id="before-bed" style="padding: 8px 0;">
-                                <?php foreach ($dailyMedications['Before bed'] as $med): ?>
-                                    <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        
-                        <!-- NESTED: Other instructions -->
-                        <?php if (!empty($dailyMedications['Other instructions'])): ?>
-                        <div class="time-group-nested" style="margin-bottom: 12px;">
-                            <div class="time-header-nested" 
-                                 onclick="toggleTimeGroup('other-instructions')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="toggle-icon" id="icon-other-instructions" style="font-size: 12px;">▼</span>
-                                    <span>Other instructions</span>
-                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
-                                        <?= count($dailyMedications['Other instructions']) ?> med<?= count($dailyMedications['Other instructions']) !== 1 ? 's' : '' ?>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="time-group-content" id="other-instructions" style="padding: 8px 0;">
-                                <?php foreach ($dailyMedications['Other instructions'] as $med): ?>
-                                    <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        
-                        <!-- NESTED: Daily meds - no instructions -->
-                        <?php if (!empty($dailyMedications['Daily meds - no instructions'])): ?>
-                        <div class="time-group-nested" style="margin-bottom: 12px;">
-                            <div class="time-header-nested" 
-                                 onclick="toggleTimeGroup('daily-no-instructions')" 
-                                 style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <span class="toggle-icon" id="icon-daily-no-instructions" style="font-size: 12px;">▼</span>
-                                    <span>Daily meds - no instructions</span>
-                                    <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
-                                        <?= count($dailyMedications['Daily meds - no instructions']) ?> med<?= count($dailyMedications['Daily meds - no instructions']) !== 1 ? 's' : '' ?>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="time-group-content" id="daily-no-instructions" style="padding: 8px 0;">
-                                <?php foreach ($dailyMedications['Daily meds - no instructions'] as $med): ?>
-                                    <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
                         
                     </div>
                 </div>

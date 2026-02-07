@@ -12,8 +12,17 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
-// Get today's medications
-$today = date('D'); // Mon, Tue, Wed, etc.
+// Get date from query parameter or default to today
+$viewDate = $_GET['date'] ?? date('Y-m-d');
+$viewDate = date('Y-m-d', strtotime($viewDate)); // Validate format
+$isToday = $viewDate === date('Y-m-d');
+
+// Calculate navigation dates
+$prevDate = date('Y-m-d', strtotime($viewDate . ' -1 day'));
+$nextDate = date('Y-m-d', strtotime($viewDate . ' +1 day'));
+
+// Get today's medications (adjust for view date)
+$today = date('D', strtotime($viewDate)); // Mon, Tue, Wed, etc.
 
 $stmt = $pdo->prepare("
     SELECT DISTINCT m.*, md.dose_amount, md.dose_unit, ms.frequency_type, ms.times_per_day, ms.days_of_week, ms.is_prn, ms.special_timing, ms.custom_instructions
@@ -35,13 +44,13 @@ $todaysMeds = $stmt->fetchAll();
 // Get dose times for each medication and build schedule by time
 $medDoseTimes = [];
 $scheduleByTime = [];
-$todayDate = date('Y-m-d');
+$todayDate = $viewDate; // Use the view date instead of today
 
 // Get current date time for filtering
 $currentDateTime = date('Y-m-d H:i:s');
 $currentDateTimeStamp = strtotime($currentDateTime); // Compute once for reuse
 
-// Get medication logs for today - only future doses OR doses with status
+// Get medication logs for the view date
 $stmt = $pdo->prepare("
     SELECT medication_id, scheduled_date_time, status, taken_at, skipped_reason
     FROM medication_logs
@@ -648,7 +657,26 @@ foreach ($prnMedications as $med) {
         <!-- Today's Schedule Section -->
         <div class="schedule-section">
             <h3>Today's Schedule</h3>
-            <p class="schedule-date"><?= date('l j F Y') ?></p>
+            
+            <!-- Date Navigation -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <a href="?date=<?= $prevDate ?>" class="btn btn-secondary" style="text-decoration: none; padding: 8px 16px;">
+                    ← Previous Day
+                </a>
+                <div style="text-align: center;">
+                    <p class="schedule-date" style="margin: 0; font-weight: bold;">
+                        <?= date('l j F Y', strtotime($viewDate)) ?>
+                    </p>
+                    <?php if (!$isToday): ?>
+                        <a href="?" class="btn btn-info" style="font-size: 12px; padding: 4px 12px; margin-top: 4px; text-decoration: none; display: inline-block; background: #17a2b8; color: white; border-radius: 4px;">
+                            Return to Today
+                        </a>
+                    <?php endif; ?>
+                </div>
+                <a href="?date=<?= $nextDate ?>" class="btn btn-secondary" style="text-decoration: none; padding: 8px 16px;">
+                    Next Day →
+                </a>
+            </div>
             
             <?php if (empty($todaysMeds)): ?>
                 <div class="no-meds">
@@ -908,6 +936,38 @@ foreach ($prnMedications as $med) {
         </div>
     </div>
     
+    <!-- Late Logging Modal -->
+    <div id="lateLoggingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⏰ Late Logging</h3>
+            </div>
+            <div class="modal-body">
+                <p>You are logging this medication for a different date than today.</p>
+                <p><strong>Why are you logging this late?</strong></p>
+                
+                <div class="form-group">
+                    <select id="lateLoggingReason" class="form-control">
+                        <option value="">-- Select a reason --</option>
+                        <option value="Did not have phone with me">Did not have phone with me</option>
+                        <option value="Forgot to log">Forgot to log</option>
+                        <option value="Skipped and logged late">Skipped and logged late</option>
+                        <option value="Other">Other (please specify)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="otherReasonGroup" style="display: none;">
+                    <label>Please specify:</label>
+                    <input type="text" id="otherReasonText" class="form-control" placeholder="Enter reason">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeLateLoggingModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitLateLog()">Submit</button>
+            </div>
+        </div>
+    </div>
+    
     <style>
     /* Generic modal styles */
     .modal {
@@ -939,17 +999,70 @@ foreach ($prnMedications as $med) {
     </style>
     
     <script>
-    function markAsTaken(medId, scheduledDateTime) {
+    // Late logging state
+    let pendingLateLog = null;
+
+    // Show "Other" text input when selected
+    document.getElementById('lateLoggingReason').addEventListener('change', function() {
+        const otherGroup = document.getElementById('otherReasonGroup');
+        if (this.value === 'Other') {
+            otherGroup.style.display = 'block';
+        } else {
+            otherGroup.style.display = 'none';
+        }
+    });
+
+    function closeLateLoggingModal() {
+        document.getElementById('lateLoggingModal').classList.remove('active');
+        pendingLateLog = null;
+    }
+
+    function submitLateLog() {
+        const reasonSelect = document.getElementById('lateLoggingReason');
+        let reason = reasonSelect.value;
+        
+        if (reason === 'Other') {
+            const otherText = document.getElementById('otherReasonText').value.trim();
+            if (!otherText) {
+                alert('Please specify the reason');
+                return;
+            }
+            reason = 'Other: ' + otherText;
+        }
+        
+        if (!reason) {
+            alert('Please select a reason');
+            return;
+        }
+        
+        // Add reason to pending log and submit
+        if (pendingLateLog) {
+            pendingLateLog.lateReason = reason;
+            submitLogToServer(pendingLateLog);
+        }
+        
+        closeLateLoggingModal();
+    }
+
+    function submitLogToServer(logData) {
+        // Build form data
+        const formData = new URLSearchParams({
+            'medication_id': logData.medId,
+            'scheduled_date_time': logData.scheduledDateTime,
+            'ajax': '1'
+        });
+        
+        if (logData.lateReason) {
+            formData.append('late_logging_reason', logData.lateReason);
+        }
+        
+        // Submit to take_handler
         fetch('/modules/medications/take_medication_handler.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: new URLSearchParams({
-                'medication_id': medId,
-                'scheduled_date_time': scheduledDateTime,
-                'ajax': '1'
-            })
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -965,6 +1078,25 @@ foreach ($prnMedications as $med) {
             showErrorModal('An error occurred. Please try again.');
             console.error('Error:', error);
         });
+    }
+
+    function markAsTaken(medId, scheduledDateTime) {
+        const isLateLog = <?= $isToday ? 'false' : 'true' ?>;
+        
+        if (isLateLog) {
+            // Show late logging modal
+            pendingLateLog = {
+                medId: medId,
+                scheduledDateTime: scheduledDateTime
+            };
+            document.getElementById('lateLoggingModal').classList.add('active');
+        } else {
+            // Direct submission for same-day logging
+            submitLogToServer({
+                medId: medId,
+                scheduledDateTime: scheduledDateTime
+            });
+        }
     }
     
     function untakeMedication(medId, scheduledDateTime) {

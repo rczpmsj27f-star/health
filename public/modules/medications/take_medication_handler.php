@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $userId = $_SESSION['user_id'];
 $medicationId = $_POST['medication_id'] ?? null;
 $scheduledDateTime = $_POST['scheduled_date_time'] ?? null;
+$lateLoggingReason = $_POST['late_logging_reason'] ?? null;
 
 if (!$medicationId || !$scheduledDateTime) {
     $errorMsg = "Invalid medication or schedule information.";
@@ -66,10 +67,10 @@ try {
         // Update existing log
         $stmt = $pdo->prepare("
             UPDATE medication_logs 
-            SET status = 'taken', taken_at = NOW(), skipped_reason = NULL, updated_at = NOW()
+            SET status = 'taken', taken_at = NOW(), skipped_reason = NULL, late_logging_reason = ?, updated_at = NOW()
             WHERE id = ?
         ");
-        $stmt->execute([$existingLog['id']]);
+        $stmt->execute([$lateLoggingReason, $existingLog['id']]);
         
         // Only decrement stock if previously not taken
         if ($existingLog['status'] !== 'taken' && $medication['current_stock'] !== null && $medication['current_stock'] > 0) {
@@ -86,10 +87,10 @@ try {
     } else {
         // Create new log entry
         $stmt = $pdo->prepare("
-            INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status, taken_at)
-            VALUES (?, ?, ?, 'taken', NOW())
+            INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status, taken_at, late_logging_reason)
+            VALUES (?, ?, ?, 'taken', NOW(), ?)
         ");
-        $stmt->execute([$medicationId, $userId, $scheduledDateTime]);
+        $stmt->execute([$medicationId, $userId, $scheduledDateTime, $lateLoggingReason]);
         
         // Decrement stock by 1 if stock tracking is enabled
         if ($medication['current_stock'] !== null && $medication['current_stock'] > 0) {

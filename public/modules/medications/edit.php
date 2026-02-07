@@ -475,7 +475,7 @@ foreach ($instructions as $i) {
         </form>
     </div>
 
-    <script src="/assets/js/medication-icons.js"></script>
+    <script src="/assets/js/medication-icons.js?v=<?= time() ?>"></script>
     <script src="/assets/js/color-picker-modal.js"></script>
     <script src="/assets/js/form-protection.js"></script>
     <script>

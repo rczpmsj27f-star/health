@@ -45,9 +45,8 @@ try {
             echo "✓ Success\n";
         } catch (PDOException $e) {
             // Check if error is "already exists" which is okay
-            if (strpos($e->getMessage(), 'already exists') !== false || 
-                strpos($e->getMessage(), 'Duplicate') !== false ||
-                strpos($e->getMessage(), 'duplicate') !== false) {
+            if (stripos($e->getMessage(), 'already exists') !== false || 
+                stripos($e->getMessage(), 'duplicate') !== false) {
                 echo "⚠ Already exists (skipping)\n";
             } else {
                 throw $e;

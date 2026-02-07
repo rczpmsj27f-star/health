@@ -29,7 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $userId = $_SESSION['user_id'];
 $medicationId = $_POST['medication_id'] ?? null;
 $scheduledDateTime = $_POST['scheduled_date_time'] ?? null;
-$lateLoggingReason = $_POST['late_logging_reason'] ?? null;
+
+// Sanitize and validate late_logging_reason
+$lateLoggingReason = null;
+if (!empty($_POST['late_logging_reason'])) {
+    $lateLoggingReason = trim($_POST['late_logging_reason']);
+    // Limit to VARCHAR(255) constraint
+    if (strlen($lateLoggingReason) > 255) {
+        $lateLoggingReason = substr($lateLoggingReason, 0, 255);
+    }
+}
 
 if (!$medicationId || !$scheduledDateTime) {
     $errorMsg = "Invalid medication or schedule information.";

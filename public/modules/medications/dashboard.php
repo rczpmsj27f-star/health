@@ -1081,7 +1081,7 @@ foreach ($prnMedications as $med) {
     }
 
     function markAsTaken(medId, scheduledDateTime) {
-        const isLateLog = <?= $isToday ? 'false' : 'true' ?>;
+        const isLateLog = <?= json_encode(!$isToday) ?>;
         
         if (isLateLog) {
             // Show late logging modal

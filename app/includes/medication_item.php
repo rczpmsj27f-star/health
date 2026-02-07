@@ -11,7 +11,7 @@
     <div class="med-actions" style="display: flex; gap: 8px;">
         <?php if ($med['log_status'] === 'taken'): ?>
             <span class="status-taken" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">
-                ✓ Taken <?= $med['taken_at'] ? date('H:i', strtotime($med['taken_at'])) : '' ?>
+                ✓ Taken <?= $med['taken_at'] && strtotime($med['taken_at']) ? date('H:i', strtotime($med['taken_at'])) : '' ?>
             </span>
         <?php elseif ($med['log_status'] === 'skipped'): ?>
             <span class="status-skipped" style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">

@@ -110,9 +110,17 @@ foreach ($todaysMeds as $med) {
             $medWithStatus = $med;
             $medWithStatus['dose_time'] = $doseTime['dose_time'];
             $medWithStatus['scheduled_date_time'] = $scheduledDateTime;
-            $medWithStatus['log_status'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['status'] ?? 'pending') : 'pending';
-            $medWithStatus['taken_at'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['taken_at'] ?? null) : null;
-            $medWithStatus['skipped_reason'] = isset($medLogs[$logKey]) ? ($medLogs[$logKey]['skipped_reason'] ?? null) : null;
+            
+            // Add log data if exists
+            if (isset($medLogs[$logKey])) {
+                $medWithStatus['log_status'] = $medLogs[$logKey]['status'] ?? 'pending';
+                $medWithStatus['taken_at'] = $medLogs[$logKey]['taken_at'] ?? null;
+                $medWithStatus['skipped_reason'] = $medLogs[$logKey]['skipped_reason'] ?? null;
+            } else {
+                $medWithStatus['log_status'] = 'pending';
+                $medWithStatus['taken_at'] = null;
+                $medWithStatus['skipped_reason'] = null;
+            }
             
             // Categorize medication
             if (!empty($med['special_timing'])) {
@@ -685,7 +693,14 @@ foreach ($prnMedications as $med) {
             <?php else: ?>
                 <?php
                 $currentTime = strtotime(date('H:i'));
-                $hasDailyMeds = !empty(array_filter($dailyMedications, fn($group) => !empty($group)));
+                // Check if any daily medication group has medications
+                $hasDailyMeds = false;
+                foreach ($dailyMedications as $group) {
+                    if (!empty($group)) {
+                        $hasDailyMeds = true;
+                        break;
+                    }
+                }
                 ?>
                 
                 <!-- DAILY MEDICATIONS SECTION (Parent Collapsible) -->
@@ -802,7 +817,13 @@ foreach ($prnMedications as $med) {
                     $scheduleTime = strtotime($time);
                     $isOverdue = $currentTime > $scheduleTime;
                     $medCount = count($meds);
-                    $groupId = 'time-' . str_replace(':', '-', $time);
+                    // Sanitize time for use in HTML ID - ensure it's HH:MM format
+                    if (preg_match('/^\d{2}:\d{2}$/', $time)) {
+                        $groupId = 'time-' . str_replace(':', '-', $time);
+                    } else {
+                        // Fallback for unexpected format
+                        $groupId = 'time-' . md5($time);
+                    }
                 ?>
                 <div class="time-group-collapsible" style="margin-bottom: 16px;">
                     <!-- Time Group Header -->

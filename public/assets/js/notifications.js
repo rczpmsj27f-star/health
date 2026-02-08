@@ -113,11 +113,16 @@ function markAllRead() {
 }
 
 // Enhanced nudge with better UX
-function sendNudge(medicationId, toUserId) {
+async function sendNudge(medicationId, toUserId) {
     const button = event.target;
     const originalText = button.innerHTML;
     
-    if (!confirm('Send a gentle reminder to take this medication?')) {
+    const confirmed = await confirmAction(
+        'Send a gentle reminder to take this medication?',
+        'Send Reminder'
+    );
+    
+    if (!confirmed) {
         return;
     }
     
@@ -143,13 +148,13 @@ function sendNudge(medicationId, toUserId) {
                 button.style.background = '';
             }, 3000);
         } else {
-            alert('Error: ' + data.error);
+            showAlert('Error: ' + data.error, 'Error');
             button.innerHTML = originalText;
             button.disabled = false;
         }
     })
     .catch(error => {
-        alert('Network error. Please try again.');
+        showAlert('Network error. Please try again.', 'Error');
         button.innerHTML = originalText;
         button.disabled = false;
     });

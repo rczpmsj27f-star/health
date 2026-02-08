@@ -10,14 +10,17 @@ if (empty($_SESSION['pending_2fa_user_id'])) {
     exit;
 }
 
-$code = preg_replace('/[^0-9]/', '', $_POST['code'] ?? '');
-$userId = $_SESSION['pending_2fa_user_id'];
+$code = $_POST['code'] ?? '';
 
-if (strlen($code) !== 6) {
-    $_SESSION['2fa_error'] = "Invalid code format.";
+// Validate code format before sanitization
+if (!preg_match('/^[0-9]{6}$/', $code)) {
+    $_SESSION['2fa_error'] = "Authentication code must be exactly 6 digits.";
     header("Location: /verify-2fa.php");
     exit;
 }
+
+$code = preg_replace('/[^0-9]/', '', $code);
+$userId = $_SESSION['pending_2fa_user_id'];
 
 // Get user's secret
 $stmt = $pdo->prepare("SELECT two_factor_secret, two_factor_backup_codes FROM users WHERE id = ?");
@@ -39,7 +42,7 @@ $valid = $google2fa->verifyKey($user['two_factor_secret'], $code);
 // Also check backup codes if TOTP fails
 if (!$valid && !empty($user['two_factor_backup_codes'])) {
     $backupCodes = json_decode($user['two_factor_backup_codes'], true);
-    if (is_array($backupCodes) && in_array($code, $backupCodes)) {
+    if (is_array($backupCodes) && in_array($code, $backupCodes, true)) {
         $valid = true;
         // Remove used backup code
         $backupCodes = array_diff($backupCodes, [$code]);

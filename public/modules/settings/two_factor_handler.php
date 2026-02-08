@@ -12,13 +12,16 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $action = $_POST['action'] ?? '';
-$code = preg_replace('/[^0-9]/', '', $_POST['code'] ?? '');
+$code = $_POST['code'] ?? '';
 
-if (strlen($code) !== 6) {
-    $_SESSION['error'] = "Invalid code format.";
+// Validate code format before sanitization
+if (!preg_match('/^[0-9]{6}$/', $code)) {
+    $_SESSION['error'] = "Authentication code must be exactly 6 digits.";
     header("Location: two_factor.php");
     exit;
 }
+
+$code = preg_replace('/[^0-9]/', '', $code);
 
 // Get user's 2FA secret
 $stmt = $pdo->prepare("SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?");
@@ -43,10 +46,10 @@ if (!$valid) {
 }
 
 if ($action === 'enable') {
-    // Generate backup codes
+    // Generate backup codes - using 10-99999999 range for consistent 8-digit codes
     $backupCodes = [];
     for ($i = 0; $i < 10; $i++) {
-        $backupCodes[] = str_pad(random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
+        $backupCodes[] = str_pad((string)random_int(10000000, 99999999), 8, '0', STR_PAD_LEFT);
     }
     
     // Enable 2FA and save backup codes

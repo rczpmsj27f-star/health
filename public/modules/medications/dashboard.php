@@ -691,18 +691,37 @@ foreach ($prnMedications as $med) {
         }
         ?>
 
-        <?php if ($linkedUser && $linkedUser['status'] === 'active' && $linkedUserHasMeds): ?>
-        <!-- Tab Switcher -->
+        <?php if ($linkedUser && $linkedUser['status'] === 'active' && $linkedUserHasMeds): 
+            // Get profile pictures for both users
+            $myPicStmt = $pdo->prepare("SELECT profile_picture_path FROM users WHERE id = ?");
+            $myPicStmt->execute([$_SESSION['user_id']]);
+            $myPicResult = $myPicStmt->fetch();
+            $myPic = !empty($myPicResult['profile_picture_path']) ? $myPicResult['profile_picture_path'] : '/assets/images/default-avatar.svg';
+            
+            $theirPicStmt = $pdo->prepare("SELECT profile_picture_path FROM users WHERE id = ?");
+            $theirPicStmt->execute([$linkedUser['linked_user_id']]);
+            $theirPicResult = $theirPicStmt->fetch();
+            $theirPic = !empty($theirPicResult['profile_picture_path']) ? $theirPicResult['profile_picture_path'] : '/assets/images/default-avatar.svg';
+        ?>
+        <!-- Tab Switcher with Profile Pictures -->
         <div style="background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 12px;">
             <a href="/modules/medications/dashboard.php<?= isset($_GET['date']) ? '?date=' . urlencode($_GET['date']) : '' ?>" 
                class="tab-button <?= !$viewingLinkedUser ? 'active' : '' ?>"
-               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; <?= !$viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
-                💊 My Medications
+               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; <?= !$viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
+                <img src="<?= htmlspecialchars($myPic) ?>" 
+                     alt="My profile" 
+                     onerror="this.src='/assets/images/default-avatar.svg'"
+                     style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 2px solid <?= !$viewingLinkedUser ? 'white' : 'var(--color-border)' ?>;">
+                My Medications
             </a>
             <a href="/modules/medications/dashboard.php?view=linked<?= isset($_GET['date']) ? '&date=' . urlencode($_GET['date']) : '' ?>" 
                class="tab-button <?= $viewingLinkedUser ? 'active' : '' ?>"
-               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; <?= $viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
-                👥 Manage <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Meds
+               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; <?= $viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
+                <img src="<?= htmlspecialchars($theirPic) ?>" 
+                     alt="<?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s profile" 
+                     onerror="this.src='/assets/images/default-avatar.svg'"
+                     style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 2px solid <?= $viewingLinkedUser ? 'white' : 'var(--color-border)' ?>;">
+                Manage <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Meds
             </a>
         </div>
         <?php endif; ?>

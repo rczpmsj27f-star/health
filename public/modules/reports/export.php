@@ -20,7 +20,6 @@ $sanitizedFilename = preg_replace('/[^a-zA-Z0-9._-]/', '', $baseFilename);
 $stmt = $pdo->prepare("
     SELECT 
         m.name as medication,
-        m.dosage,
         ml.scheduled_date_time,
         ml.taken_at,
         ml.status,
@@ -39,12 +38,11 @@ if ($format === 'csv') {
     header('Content-Disposition: attachment; filename="' . $sanitizedFilename . '.csv"');
     
     $output = fopen('php://output', 'w');
-    fputcsv($output, ['Medication', 'Dosage', 'Scheduled Time', 'Status', 'Taken At', 'Reason']);
+    fputcsv($output, ['Medication', 'Scheduled Time', 'Status', 'Taken At', 'Reason']);
     
     foreach ($data as $row) {
         fputcsv($output, [
             $row['medication'],
-            $row['dosage'],
             $row['scheduled_date_time'],
             $row['status'],
             $row['taken_at'] ?? '',

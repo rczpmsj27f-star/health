@@ -709,22 +709,6 @@ foreach ($prnMedications as $med) {
         </div>
         <?php endif; ?>
         
-        <!-- Report Links -->
-        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-            <a href="/modules/reports/compliance.php<?= $viewingLinkedUser ? '?view=linked' : '' ?>" 
-               class="btn btn-secondary" style="text-decoration: none;">
-                📊 Compliance Report
-            </a>
-            <?php if ($linkedUser && $linkedUser['status'] === 'active'): ?>
-            <a href="/modules/reports/activity.php" class="btn btn-secondary" style="text-decoration: none;">
-                📰 Activity Feed
-            </a>
-            <?php endif; ?>
-            <a href="/modules/reports/export.php?format=csv" class="btn btn-secondary" style="text-decoration: none;">
-                💾 Export CSV
-            </a>
-        </div>
-        
         <!-- Today's Schedule Section -->
         <div class="schedule-section">
             <h3>Today's Schedule</h3>
@@ -934,6 +918,36 @@ foreach ($prnMedications as $med) {
                 <div class="tile-title">Medication Stock</div>
                 <div class="tile-desc">Manage your stock levels</div>
             </a>
+        </div>
+        
+        <!-- Reports & Compliance Section -->
+        <div style="background: white; border-radius: 10px; padding: 24px; margin-top: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 20px; margin-bottom: 16px;">
+                📊 Reports & Compliance
+            </h3>
+            <p style="color: var(--color-text-secondary); margin-bottom: 20px;">
+                View medication adherence, activity history, and export your data.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <a href="/modules/reports/compliance.php<?= $viewingLinkedUser ? '?view=linked' : '' ?>" 
+                   class="btn btn-primary" 
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                    📊 Compliance Report
+                </a>
+                <?php if ($linkedUser && $linkedUser['status'] === 'active'): ?>
+                <a href="/modules/reports/activity.php" 
+                   class="btn btn-primary" 
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                    📰 Activity Feed
+                </a>
+                <?php endif; ?>
+                <a href="/modules/reports/export.php?format=csv" 
+                   class="btn btn-secondary" 
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                    💾 Export CSV
+                </a>
+            </div>
         </div>
     </div>
     

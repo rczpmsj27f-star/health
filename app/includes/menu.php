@@ -81,8 +81,8 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
 .notification-dropdown {
     position: fixed;
     top: 60px;
-    right: 50%;
-    transform: translateX(50%);
+    left: 50%;
+    transform: translateX(-50%);
     width: min(400px, calc(100vw - 32px));
     max-height: calc(100vh - 80px);
     background: white;
@@ -98,13 +98,6 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
         left: 16px;
         transform: none;
         width: auto;
-    }
-}
-
-@media (min-width: 769px) {
-    .notification-dropdown {
-        right: 16px;
-        transform: none;
     }
 }
 

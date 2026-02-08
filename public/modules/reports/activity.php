@@ -126,8 +126,10 @@ $allActivities = array_merge($activities, $crudActivities);
 
 // Sort by time
 usort($allActivities, function($a, $b) {
-    $timeA = $a['activity_time'] ?? $a['created_at'] ?? $a['taken_at'];
-    $timeB = $b['activity_time'] ?? $b['created_at'] ?? $b['taken_at'];
+    // For CRUD activities, use activity_time
+    // For log activities, use created_at (which is always available)
+    $timeA = $a['activity_time'] ?? $a['created_at'] ?? '';
+    $timeB = $b['activity_time'] ?? $b['created_at'] ?? '';
     return strtotime($timeB) - strtotime($timeA);
 });
 
@@ -228,7 +230,8 @@ $allActivities = array_slice($allActivities, 0, 50);
                         // Log activity (taken/skipped)
                         $borderColor = $activity['status'] === 'taken' ? '#10b981' : '#ef4444';
                         $activityText = $activity['status'] === 'taken' ? 'took' : 'skipped';
-                        $displayTime = $activity['taken_at'] ?? $activity['scheduled_date_time'];
+                        // Use taken_at if available, otherwise use created_at (when log was created)
+                        $displayTime = $activity['taken_at'] ?? $activity['created_at'];
                     }
                 ?>
                 <div style="padding: 16px; margin-bottom: 12px; border-left: 4px solid <?= $borderColor ?>; background: var(--color-bg-light); border-radius: 0 6px 6px 0;">

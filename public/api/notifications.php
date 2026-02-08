@@ -98,10 +98,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'error' => 'Server error',
-        'message' => $e->getMessage(),
-        'debug' => [
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ]
+        'message' => 'An error occurred while processing your request'
     ]);
 }

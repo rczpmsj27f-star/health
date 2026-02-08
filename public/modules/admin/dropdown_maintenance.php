@@ -29,7 +29,7 @@ if ($selected_category_id) {
         $opt_stmt = $pdo->prepare("
             SELECT * FROM dropdown_options 
             WHERE category_id = ? 
-            ORDER BY display_order ASC, option_label ASC
+            ORDER BY display_order ASC, option_value ASC
         ");
         $opt_stmt->execute([$selected_category_id]);
         $options = $opt_stmt->fetchAll();
@@ -129,15 +129,21 @@ if ($selected_category_id) {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--color-border);
+            padding: 16px 20px;
+            background: var(--color-primary);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            margin: -24px -24px 20px -24px;
         }
         
         .section-title {
             font-size: 20px;
             font-weight: 600;
-            color: var(--color-text-primary);
+            color: white;
             margin: 0;
+        }
+        
+        .section-header p {
+            color: rgba(255, 255, 255, 0.9);
         }
         
         .options-table {
@@ -188,8 +194,8 @@ if ($selected_category_id) {
         }
         
         .btn-add {
-            background: var(--color-primary);
-            color: white;
+            background: white;
+            color: var(--color-primary);
             border: none;
             padding: 10px 20px;
             border-radius: var(--radius-sm);
@@ -200,7 +206,9 @@ if ($selected_category_id) {
         }
         
         .btn-add:hover {
-            background: var(--color-primary-hover);
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         
         .modal {
@@ -352,8 +360,7 @@ if ($selected_category_id) {
                         <tr>
                             <th style="width: 60px;">Order</th>
                             <th style="width: 60px;">Icon</th>
-                            <th>Label</th>
-                            <th>Value</th>
+                            <th>Option</th>
                             <th style="width: 80px;">Status</th>
                             <th style="width: 150px;">Actions</th>
                         </tr>
@@ -363,8 +370,7 @@ if ($selected_category_id) {
                             <tr class="<?= $option['is_active'] ? '' : 'option-inactive' ?>">
                                 <td><?= $option['display_order'] ?></td>
                                 <td><?= htmlspecialchars($option['icon_emoji'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($option['option_label']) ?></td>
-                                <td><code><?= htmlspecialchars($option['option_value']) ?></code></td>
+                                <td><?= htmlspecialchars($option['option_value']) ?></td>
                                 <td>
                                     <?php if ($option['is_active']): ?>
                                         <span class="badge badge-success">Active</span>
@@ -375,14 +381,14 @@ if ($selected_category_id) {
                                 <td class="option-actions">
                                     <button class="btn-icon" onclick="editOption(<?= htmlspecialchars(json_encode($option)) ?>)" title="Edit">✏️</button>
                                     <button class="btn-icon" onclick="toggleActive(<?= $option['id'] ?>, <?= $option['is_active'] ? 'false' : 'true' ?>)" title="<?= $option['is_active'] ? 'Deactivate' : 'Activate' ?>">
-                                        <?= $option['is_active'] ? '👁️' : '🚫' ?>
+                                        <?= $option['is_active'] ? '⚡' : '🔌' ?>
                                     </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                         <?php if (empty($options)): ?>
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--color-text-secondary);">
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--color-text-secondary);">
                                     No options yet. Click "Add Option" to create one.
                                 </td>
                             </tr>
@@ -406,15 +412,10 @@ if ($selected_category_id) {
                 <input type="hidden" id="action" name="action" value="add">
                 
                 <div class="form-group">
-                    <label>Label *</label>
-                    <input type="text" id="option_label" name="option_label" required placeholder="e.g., Take with water">
-                </div>
-                
-                <div class="form-group">
-                    <label>Value *</label>
+                    <label>Option Text *</label>
                     <input type="text" id="option_value" name="option_value" required placeholder="e.g., Take with water">
                     <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                        This is what gets stored in the database
+                        This text is used both for display and database storage
                     </small>
                 </div>
                 
@@ -454,7 +455,6 @@ if ($selected_category_id) {
             document.getElementById('action').value = 'edit';
             document.getElementById('option_id').value = option.id;
             document.getElementById('category_id').value = option.category_id;
-            document.getElementById('option_label').value = option.option_label;
             document.getElementById('option_value').value = option.option_value;
             document.getElementById('icon_emoji').value = option.icon_emoji || '';
             document.getElementById('display_order').value = option.display_order;
@@ -487,21 +487,44 @@ if ($selected_category_id) {
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message || 'Operation successful');
+                    await ConfirmModal.show({
+                        title: 'Success',
+                        message: result.message || 'Operation successful',
+                        confirmText: 'OK',
+                        cancelText: null
+                    });
                     location.reload();
                 } else {
-                    alert(result.message || 'Operation failed');
+                    await ConfirmModal.show({
+                        title: 'Error',
+                        message: result.message || 'Operation failed',
+                        confirmText: 'OK',
+                        cancelText: null
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                await ConfirmModal.show({
+                    title: 'Error',
+                    message: 'An error occurred. Please try again.',
+                    confirmText: 'OK',
+                    cancelText: null
+                });
             }
         });
         
         async function toggleActive(optionId, newState) {
-            if (!confirm('Are you sure you want to ' + (newState ? 'activate' : 'deactivate') + ' this option?')) {
-                return;
-            }
+            const action = newState ? 'activate' : 'deactivate';
+            const confirmed = await ConfirmModal.show({
+                title: (newState ? 'Activate' : 'Deactivate') + ' Option',
+                message: 'Are you sure you want to ' + action + ' this option?' + 
+                         (newState ? ' It will become visible in forms.' : ' It will be hidden from forms but preserved for data integrity.'),
+                confirmText: newState ? 'Activate' : 'Deactivate',
+                cancelText: 'Cancel',
+                danger: !newState
+            });
+            
+            if (!confirmed) return;
             
             const formData = new FormData();
             formData.append('action', 'toggle_active');
@@ -519,11 +542,21 @@ if ($selected_category_id) {
                 if (result.success) {
                     location.reload();
                 } else {
-                    alert(result.message || 'Operation failed');
+                    await ConfirmModal.show({
+                        title: 'Error',
+                        message: result.message || 'Operation failed',
+                        confirmText: 'OK',
+                        cancelText: null
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                await ConfirmModal.show({
+                    title: 'Error',
+                    message: 'An error occurred. Please try again.',
+                    confirmText: 'OK',
+                    cancelText: null
+                });
             }
         }
     </script>

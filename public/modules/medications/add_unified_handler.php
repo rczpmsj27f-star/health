@@ -9,6 +9,29 @@ if (empty($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
+// Validate start_date is provided
+if (empty($_POST['start_date'])) {
+    $_SESSION['error'] = "Start date is required. Please specify when you started taking this medication.";
+    header("Location: /modules/medications/add_unified.php");
+    exit;
+}
+
+// Validate start_date format
+$startDate = $_POST['start_date'];
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
+    $_SESSION['error'] = "Invalid start date format. Please use YYYY-MM-DD.";
+    header("Location: /modules/medications/add_unified.php");
+    exit;
+}
+
+// Validate start_date is not in the future
+$today = date('Y-m-d');
+if ($startDate > $today) {
+    $_SESSION['error'] = "Start date cannot be in the future.";
+    header("Location: /modules/medications/add_unified.php");
+    exit;
+}
+
 try {
     // Start transaction
     $pdo->beginTransaction();
@@ -24,7 +47,7 @@ try {
         $_POST['nhs_med_id'] ?: null,
         $_POST['med_name'],
         !empty($_POST['current_stock']) ? $_POST['current_stock'] : null,
-        !empty($_POST['start_date']) ? $_POST['start_date'] : null,
+        $startDate, // Required field, validated above
         !empty($_POST['end_date']) ? $_POST['end_date'] : null,
         $_POST['medication_icon'] ?? 'pill',
         $_POST['medication_color'] ?? '#5b21b6',

@@ -246,12 +246,32 @@ if (isset($_POST['current_stock'])) {
     }
 }
 
-// Update start_date if provided
-if (isset($_POST['start_date'])) {
-    $startDate = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
-    $stmt = $pdo->prepare("UPDATE medications SET start_date = ? WHERE id = ?");
-    $stmt->execute([$startDate, $medId]);
+// Update start_date - REQUIRED field
+if (!isset($_POST['start_date']) || empty($_POST['start_date'])) {
+    $_SESSION['error'] = "Start date is required. Please specify when you started taking this medication.";
+    header("Location: /modules/medications/edit.php?id=$medId");
+    exit;
 }
+
+$startDate = $_POST['start_date'];
+
+// Validate start_date format
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
+    $_SESSION['error'] = "Invalid start date format. Please use YYYY-MM-DD.";
+    header("Location: /modules/medications/edit.php?id=$medId");
+    exit;
+}
+
+// Validate start_date is not in the future
+$today = date('Y-m-d');
+if ($startDate > $today) {
+    $_SESSION['error'] = "Start date cannot be in the future.";
+    header("Location: /modules/medications/edit.php?id=$medId");
+    exit;
+}
+
+$stmt = $pdo->prepare("UPDATE medications SET start_date = ? WHERE id = ?");
+$stmt->execute([$startDate, $medId]);
 
 // Update end_date if provided
 if (isset($_POST['end_date'])) {

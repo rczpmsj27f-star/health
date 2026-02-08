@@ -344,10 +344,10 @@ $isAdmin = Auth::isAdmin();
                     </div>
 
                     <div class="form-group">
-                        <label>Start Date (optional)</label>
-                        <input type="date" name="start_date" value="<?= date('Y-m-d') ?>">
+                        <label>Start Date *</label>
+                        <input type="date" name="start_date" value="<?= date('Y-m-d') ?>" required>
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                            When did you start taking this medication? Defaults to today - adjust if different.
+                            When did you start taking this medication? *
                         </small>
                     </div>
 

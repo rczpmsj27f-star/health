@@ -57,6 +57,7 @@ $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Count overdue medications
 $overdueCount = 0;
+$firstOverdueMedId = null;
 $currentTimeStamp = strtotime(date('H:i'));
 
 foreach ($medications as $med) {
@@ -85,6 +86,9 @@ foreach ($medications as $med) {
     // and taken medications are excluded via NOT EXISTS subquery (lines 47-53)
     if ($isOverdue) {
         $overdueCount++;
+        if ($firstOverdueMedId === null) {
+            $firstOverdueMedId = $med['id'];
+        }
     }
 }
 
@@ -239,7 +243,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 
     <div class="dashboard-container">
         <!-- User Profile Header (Issue #51) -->
-        <div style="display: flex; align-items: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; margin: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <img src="<?= htmlspecialchars($avatarUrl) ?>" 
                  alt="Profile" 
                  onerror="this.src='/assets/images/default-avatar.svg'"
@@ -270,9 +274,17 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
                     <div class="tile-desc">
                         Track your medications
                         <?php if ($overdueCount > 0): ?>
-                            <span style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px;">
-                                • <?= $overdueCount ?> overdue
-                            </span>
+                            <?php if ($overdueCount === 1 && $firstOverdueMedId): ?>
+                                <a href="/modules/medications/view.php?id=<?= $firstOverdueMedId ?>" 
+                                   style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px; text-decoration: underline;">
+                                    • <?= $overdueCount ?> overdue - View now
+                                </a>
+                            <?php else: ?>
+                                <a href="/modules/medications/dashboard.php" 
+                                   style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px; text-decoration: underline;">
+                                    • <?= $overdueCount ?> overdue
+                                </a>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>

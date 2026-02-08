@@ -42,54 +42,13 @@ $doseTimes = $stmt->fetchAll();
 
     <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
         <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-            <div>
-                <h2 style="color: var(--color-primary); font-size: 28px; margin: 0 0 8px 0;">
-                    💊 <?= htmlspecialchars($medication['name']) ?>
-                </h2>
-                <p style="color: var(--color-text-secondary); margin: 0;">
-                    Added <?= date('M d, Y', strtotime($medication['created_at'])) ?>
-                </p>
-            </div>
-            
-            <!-- Compact Action Buttons -->
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <a href="/modules/medications/edit.php?id=<?= $medication['id'] ?>" 
-                   class="btn btn-primary" 
-                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
-                    ✏️ Edit
-                </a>
-                <a href="/modules/reports/history.php?medication_id=<?= $medication['id'] ?>" 
-                   class="btn btn-secondary" 
-                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
-                    📜 History
-                </a>
-                
-                <!-- Archive/Unarchive Button -->
-                <?php 
-                $isArchived = !empty($medication['archived']) && $medication['archived'] == 1;
-                ?>
-                <a href="/modules/medications/archive_handler.php?id=<?= $medication['id'] ?>&action=<?= $isArchived ? 'unarchive' : 'archive' ?>" 
-                   class="btn btn-secondary" 
-                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;"
-                   onclick="return confirm('Are you sure you want to <?= $isArchived ? 'unarchive' : 'archive' ?> this medication?')">
-                    <?= $isArchived ? '📤 Unarchive' : '📦 Archive' ?>
-                </a>
-                
-                <!-- Delete Button -->
-                <a href="/modules/medications/delete_handler.php?id=<?= $medication['id'] ?>" 
-                   class="btn btn-danger" 
-                   style="padding: 8px 16px; font-size: 14px; text-decoration: none; background: #dc2626;"
-                   onclick="return confirm('Are you sure you want to DELETE this medication? This action cannot be undone.')">
-                    🗑️ Delete
-                </a>
-                
-                <a href="/modules/medications/dashboard.php" 
-                   class="btn btn-secondary" 
-                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
-                    ← Back
-                </a>
-            </div>
+        <div style="margin-bottom: 24px;">
+            <h2 style="color: var(--color-primary); font-size: 28px; margin: 0 0 8px 0;">
+                💊 <?= htmlspecialchars($medication['name']) ?>
+            </h2>
+            <p style="color: var(--color-text-secondary); margin: 0;">
+                Added <?= date('M d, Y', strtotime($medication['created_at'])) ?>
+            </p>
         </div>
         
         <!-- Medication Details Card -->
@@ -165,7 +124,7 @@ $doseTimes = $stmt->fetchAll();
         </div>
         
         <!-- Notes Card -->
-        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
             <h3 style="margin-top: 0; color: var(--color-primary); font-size: 18px; margin-bottom: 16px;">
                 📝 Notes
             </h3>
@@ -179,6 +138,45 @@ $doseTimes = $stmt->fetchAll();
                     </div>
                 </div>
             <?php endif; ?>
+        </div>
+        
+        <!-- Action Buttons Section -->
+        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px;">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 18px; margin-bottom: 16px;">
+                ⚡ Actions
+            </h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <a href="/modules/medications/edit.php?id=<?= $medication['id'] ?>" 
+                   class="btn btn-primary" 
+                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box;">
+                    ✏️ Edit
+                </a>
+                <a href="/modules/reports/history.php?medication_id=<?= $medication['id'] ?>" 
+                   class="btn btn-secondary" 
+                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box;">
+                    📜 History
+                </a>
+                <?php 
+                $isArchived = !empty($medication['archived']) && $medication['archived'] == 1;
+                ?>
+                <a href="/modules/medications/archive_handler.php?id=<?= $medication['id'] ?>&action=<?= $isArchived ? 'unarchive' : 'archive' ?>" 
+                   class="btn btn-secondary" 
+                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box;"
+                   onclick="return confirm('Are you sure you want to <?= $isArchived ? 'unarchive' : 'archive' ?> this medication?')">
+                    <?= $isArchived ? '📤 Unarchive' : '📦 Archive' ?>
+                </a>
+                <a href="/modules/medications/delete_handler.php?id=<?= $medication['id'] ?>" 
+                   class="btn btn-danger" 
+                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box; background: #dc2626;"
+                   onclick="return confirm('Are you sure you want to DELETE this medication? This action cannot be undone.')">
+                    🗑️ Delete
+                </a>
+                <a href="/modules/medications/dashboard.php" 
+                   class="btn btn-secondary" 
+                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box;">
+                    ← Back
+                </a>
+            </div>
         </div>
     </div>
 </body>

@@ -101,30 +101,40 @@ class NotificationHelper {
      * Get unread notification count
      */
     public function getUnreadCount($userId) {
-        $stmt = $this->pdo->prepare("
-            SELECT COUNT(*) as count FROM notifications 
-            WHERE user_id = ? AND is_read = 0
-        ");
-        $stmt->execute([$userId]);
-        $result = $stmt->fetch();
-        return (int)($result['count'] ?? 0);
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) as count FROM notifications 
+                WHERE user_id = ? AND is_read = 0
+            ");
+            $stmt->execute([$userId]);
+            $result = $stmt->fetch();
+            return (int)($result['count'] ?? 0);
+        } catch (PDOException $e) {
+            error_log("NotificationHelper::getUnreadCount error: " . $e->getMessage());
+            return 0;
+        }
     }
     
     /**
      * Get recent notifications
      */
     public function getRecent($userId, $limit = 10) {
-        $stmt = $this->pdo->prepare("
-            SELECT n.*, u.first_name as related_user_name, m.name as medication_name
-            FROM notifications n
-            LEFT JOIN users u ON n.related_user_id = u.id
-            LEFT JOIN medications m ON n.related_medication_id = m.id
-            WHERE n.user_id = ?
-            ORDER BY n.created_at DESC
-            LIMIT ?
-        ");
-        $stmt->execute([$userId, $limit]);
-        return $stmt->fetchAll();
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT n.*, u.first_name as related_user_name, m.name as medication_name
+                FROM notifications n
+                LEFT JOIN users u ON n.related_user_id = u.id
+                LEFT JOIN medications m ON n.related_medication_id = m.id
+                WHERE n.user_id = ?
+                ORDER BY n.created_at DESC
+                LIMIT ?
+            ");
+            $stmt->execute([$userId, $limit]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("NotificationHelper::getRecent error: " . $e->getMessage());
+            return [];
+        }
     }
     
     /**

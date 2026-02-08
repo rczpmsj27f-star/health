@@ -169,8 +169,8 @@ class LinkedUserHelper {
                 link_id, user_id, can_view_medications, can_view_schedule, 
                 can_mark_taken, can_add_medications, can_edit_medications, 
                 can_delete_medications, notify_on_medication_taken,
-                notify_on_overdue, receive_nudges
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                notify_on_overdue, receive_nudges, can_export_data
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 can_view_medications = VALUES(can_view_medications),
                 can_view_schedule = VALUES(can_view_schedule),
@@ -180,7 +180,8 @@ class LinkedUserHelper {
                 can_delete_medications = VALUES(can_delete_medications),
                 notify_on_medication_taken = VALUES(notify_on_medication_taken),
                 notify_on_overdue = VALUES(notify_on_overdue),
-                receive_nudges = VALUES(receive_nudges)
+                receive_nudges = VALUES(receive_nudges),
+                can_export_data = VALUES(can_export_data)
         ");
         
         return $stmt->execute([
@@ -193,7 +194,8 @@ class LinkedUserHelper {
             $permissions['can_delete_medications'] ?? 0,
             $permissions['notify_on_medication_taken'] ?? 0,
             $permissions['notify_on_overdue'] ?? 0,
-            $permissions['receive_nudges'] ?? 1
+            $permissions['receive_nudges'] ?? 1,
+            $permissions['can_export_data'] ?? 0
         ]);
     }
     

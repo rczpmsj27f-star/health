@@ -16,6 +16,10 @@ $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
 $viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
 $targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
 
+// Check permissions
+$myPermissions = null;
+$canExportLinkedUser = false;
+
 if ($viewingLinkedUser) {
     $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
     if (!$myPermissions || !$myPermissions['can_view_schedule']) {
@@ -23,6 +27,10 @@ if ($viewingLinkedUser) {
         header("Location: /modules/medications/dashboard.php");
         exit;
     }
+    $canExportLinkedUser = !empty($myPermissions['can_export_data']);
+} elseif ($linkedUser && $linkedUser['status'] === 'active') {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    $canExportLinkedUser = !empty($myPermissions['can_export_data']);
 }
 
 // Date range (default: last 30 days)
@@ -133,16 +141,18 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
                style="text-decoration: none; padding: 10px 16px;">
                 📊 Compliance
             </a>
-            <a href="/modules/reports/activity.php" 
+            <a href="/modules/reports/activity.php<?= $viewingLinkedUser ? '?view=linked' : '' ?>" 
                class="btn btn-secondary" 
                style="text-decoration: none; padding: 10px 16px;">
                 📰 Activity Feed
             </a>
-            <a href="/modules/reports/export.php?format=csv" 
+            <?php if (!$viewingLinkedUser || $canExportLinkedUser): ?>
+            <a href="/modules/reports/export.php?format=csv<?= $viewingLinkedUser ? '&export_user=linked' : '' ?>" 
                class="btn btn-secondary" 
                style="text-decoration: none; padding: 10px 16px;">
                 💾 Export CSV
             </a>
+            <?php endif; ?>
         </div>
         
         <!-- Date Range Filter -->
@@ -239,11 +249,13 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
                     📰 Activity Feed
                 </a>
                 <?php endif; ?>
-                <a href="/modules/reports/export.php?format=csv" 
+                <?php if (!$viewingLinkedUser || $canExportLinkedUser): ?>
+                <a href="/modules/reports/export.php?format=csv<?= $viewingLinkedUser ? '&export_user=linked' : '' ?>" 
                    class="btn btn-secondary" 
                    style="text-decoration: none; text-align: center; display: block; padding: 14px;">
                     💾 Export CSV
                 </a>
+                <?php endif; ?>
                 <!-- Export JSON removed - only CSV export needed -->
             </div>
         </div>

@@ -37,7 +37,8 @@ $permissions = [
     'can_delete_medications' => isset($_POST['can_delete_medications']) ? 1 : 0,
     'notify_on_medication_taken' => isset($_POST['notify_on_medication_taken']) ? 1 : 0,
     'notify_on_overdue' => isset($_POST['notify_on_overdue']) ? 1 : 0,
-    'receive_nudges' => isset($_POST['receive_nudges']) ? 1 : 0
+    'receive_nudges' => isset($_POST['receive_nudges']) ? 1 : 0,
+    'can_export_data' => isset($_POST['can_export_data']) ? 1 : 0
 ];
 
 try {

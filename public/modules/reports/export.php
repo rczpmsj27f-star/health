@@ -2,10 +2,29 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/LinkedUserHelper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
+}
+
+// Check for linked user and permissions
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+$canExportLinkedUser = false;
+
+if ($linkedUser && $linkedUser['status'] === 'active') {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    $canExportLinkedUser = !empty($myPermissions['can_export_data']);
+}
+
+// Get user filter
+$exportUser = $_GET['export_user'] ?? 'me';
+$targetUserId = $_SESSION['user_id'];
+
+if ($exportUser === 'linked' && $canExportLinkedUser) {
+    $targetUserId = $linkedUser['linked_user_id'];
 }
 
 $format = $_GET['format'] ?? 'csv';
@@ -13,7 +32,8 @@ $startDate = $_GET['start_date'] ?? date('Y-m-d', strtotime('-90 days'));
 $endDate = $_GET['end_date'] ?? date('Y-m-d');
 
 // Sanitize filename
-$baseFilename = 'medication-history-' . date('Y-m-d');
+$userLabel = $exportUser === 'linked' && $canExportLinkedUser ? 'linked-user' : 'my';
+$baseFilename = 'medication-history-' . $userLabel . '-' . date('Y-m-d');
 $sanitizedFilename = preg_replace('/[^a-zA-Z0-9._-]/', '', $baseFilename);
 
 // Get data
@@ -30,7 +50,7 @@ $stmt = $pdo->prepare("
     AND ml.scheduled_date_time BETWEEN ? AND ?
     ORDER BY ml.scheduled_date_time DESC
 ");
-$stmt->execute([$_SESSION['user_id'], $startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+$stmt->execute([$targetUserId, $startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 $data = $stmt->fetchAll();
 
 if ($format === 'csv') {

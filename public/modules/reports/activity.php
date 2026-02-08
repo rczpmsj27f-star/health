@@ -84,6 +84,19 @@ $stmt->execute($params);
 $activities = $stmt->fetchAll();
 
 // Get medication CRUD activity (add, edit, delete)
+// Build CRUD query with user filter
+$crudUserIds = [];
+if ($userFilter === 'me') {
+    $crudUserIds = [$_SESSION['user_id']];
+} elseif ($userFilter === 'partner' && $linkedUser) {
+    $crudUserIds = [$linkedUser['linked_user_id']];
+} else {
+    // Default to both users if linked user exists, otherwise just current user
+    $crudUserIds = $linkedUser ? [$_SESSION['user_id'], $linkedUser['linked_user_id']] : [$_SESSION['user_id']];
+}
+
+$crudPlaceholders = implode(',', array_fill(0, count($crudUserIds), '?'));
+
 $stmtCrud = $pdo->prepare("
     SELECT 
         'medication_added' as activity_type,
@@ -94,7 +107,7 @@ $stmtCrud = $pdo->prepare("
         m.created_at as activity_time
     FROM medications m
     JOIN users u ON m.user_id = u.id
-    WHERE m.user_id IN (?, ?)
+    WHERE m.user_id IN ($crudPlaceholders)
     AND m.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
     
     UNION ALL
@@ -108,17 +121,17 @@ $stmtCrud = $pdo->prepare("
         m.updated_at as activity_time
     FROM medications m
     JOIN users u ON m.user_id = u.id
-    WHERE m.user_id IN (?, ?)
+    WHERE m.user_id IN ($crudPlaceholders)
     AND m.updated_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
     AND m.updated_at != m.created_at
     
     ORDER BY activity_time DESC
     LIMIT 20
 ");
-$stmtCrud->execute([
-    $_SESSION['user_id'], $linkedUser['linked_user_id'], $daysFilter,
-    $_SESSION['user_id'], $linkedUser['linked_user_id'], $daysFilter
-]);
+
+// Build parameters for CRUD query
+$crudParams = array_merge($crudUserIds, [$daysFilter], $crudUserIds, [$daysFilter]);
+$stmtCrud->execute($crudParams);
 $crudActivities = $stmtCrud->fetchAll();
 
 // Merge medication logs and CRUD activities

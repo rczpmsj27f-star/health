@@ -33,7 +33,8 @@ if (!$theirPermissions) {
         'can_delete_medications' => 0,
         'notify_on_medication_taken' => 0,
         'notify_on_overdue' => 0,
-        'receive_nudges' => 1  // Enabled by default for basic reminders
+        'receive_nudges' => 1,  // Enabled by default for basic reminders
+        'can_export_data' => 0
     ];
 }
 
@@ -182,7 +183,7 @@ unset($_SESSION['success_msg']);
                     </label>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--color-bg-light);">
                     <div style="flex: 1;">
                         <strong style="display: block; color: var(--color-text); margin-bottom: 4px;">Delete medications</strong>
                         <small style="color: var(--color-text-secondary); font-size: 13px;">They can remove medications from your profile</small>
@@ -190,6 +191,18 @@ unset($_SESSION['success_msg']);
                     <label class="toggle-switch">
                         <input type="checkbox" name="can_delete_medications" value="1" 
                                <?= $theirPermissions['can_delete_medications'] ? 'checked' : '' ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0;">
+                    <div style="flex: 1;">
+                        <strong style="display: block; color: var(--color-text); margin-bottom: 4px;">Export my medication data</strong>
+                        <small style="color: var(--color-text-secondary); font-size: 13px;">They can download your medication history</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="can_export_data" value="1" 
+                               <?= $theirPermissions['can_export_data'] ? 'checked' : '' ?>>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>

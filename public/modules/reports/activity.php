@@ -16,45 +16,38 @@ $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
 // Initialize TimeFormatter with current user's preferences
 $timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
-if (!$linkedUser || $linkedUser['status'] !== 'active') {
-    $_SESSION['error_msg'] = "No active linked user";
-    header("Location: /modules/medications/dashboard.php");
-    exit;
+// Determine target user based on view parameter
+$viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser && $linkedUser['status'] === 'active';
+$targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Get target user's name for display
+$targetUserName = 'You';
+if ($viewingLinkedUser) {
+    $targetUserName = $linkedUser['linked_user_name'];
 }
 
 // Get filter values
 $statusFilter = $_GET['status'] ?? '';
 $daysFilter = (int)($_GET['days'] ?? 30);
-$userFilter = $_GET['user_filter'] ?? '';
 
 // Validate status filter - only allow specific values
 if ($statusFilter && !in_array($statusFilter, ['taken', 'skipped'], true)) {
     $statusFilter = '';
 }
 
-// Validate user filter - only allow specific values
-if ($userFilter && !in_array($userFilter, ['me', 'partner'], true)) {
-    $userFilter = '';
-}
-
 // Build WHERE conditions safely
 // Note: Only hardcoded SQL strings are added to $whereClauses, never user input.
 // All dynamic values use prepared statement parameters (?).
-$whereClauses = ["m.user_id IN (?, ?)"];
-$params = [$_SESSION['user_id'], $linkedUser['linked_user_id']];
+$whereClauses = ["m.user_id = ?"];
+$params = [$targetUserId];
 
 if ($statusFilter) {
     $whereClauses[] = "ml.status = ?";
     $params[] = $statusFilter;
 }
 
-if ($userFilter === 'me') {
-    $whereClauses[] = "m.user_id = ?";
-    $params[] = $_SESSION['user_id'];
-} elseif ($userFilter === 'partner') {
-    $whereClauses[] = "m.user_id = ?";
-    $params[] = $linkedUser['linked_user_id'];
-}
+// Note: user_filter is no longer needed since we're already filtering by targetUserId
+// based on the view parameter from the user switcher
 
 $whereSQL = implode(' AND ', $whereClauses);
 
@@ -84,19 +77,7 @@ $stmt->execute($params);
 $activities = $stmt->fetchAll();
 
 // Get medication CRUD activity (add, edit, delete)
-// Build CRUD query with user filter
-$crudUserIds = [];
-if ($userFilter === 'me') {
-    $crudUserIds = [$_SESSION['user_id']];
-} elseif ($userFilter === 'partner' && $linkedUser) {
-    $crudUserIds = [$linkedUser['linked_user_id']];
-} else {
-    // Default to both users if linked user exists, otherwise just current user
-    $crudUserIds = $linkedUser ? [$_SESSION['user_id'], $linkedUser['linked_user_id']] : [$_SESSION['user_id']];
-}
-
-$crudPlaceholders = implode(',', array_fill(0, count($crudUserIds), '?'));
-
+// Use targetUserId to show only the current view's user activities
 $stmtCrud = $pdo->prepare("
     SELECT 
         'medication_added' as activity_type,
@@ -107,7 +88,7 @@ $stmtCrud = $pdo->prepare("
         m.created_at as activity_time
     FROM medications m
     JOIN users u ON m.user_id = u.id
-    WHERE m.user_id IN ($crudPlaceholders)
+    WHERE m.user_id = ?
     AND m.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
     
     UNION ALL
@@ -121,7 +102,7 @@ $stmtCrud = $pdo->prepare("
         m.updated_at as activity_time
     FROM medications m
     JOIN users u ON m.user_id = u.id
-    WHERE m.user_id IN ($crudPlaceholders)
+    WHERE m.user_id = ?
     AND m.updated_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
     AND m.updated_at != m.created_at
     
@@ -130,7 +111,7 @@ $stmtCrud = $pdo->prepare("
 ");
 
 // Build parameters for CRUD query
-$crudParams = array_merge($crudUserIds, [$daysFilter], $crudUserIds, [$daysFilter]);
+$crudParams = [$targetUserId, $daysFilter, $targetUserId, $daysFilter];
 $stmtCrud->execute($crudParams);
 $crudActivities = $stmtCrud->fetchAll();
 
@@ -180,13 +161,17 @@ $allActivities = array_slice($allActivities, 0, 50);
             📰 Activity Feed
         </h2>
         <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
-            Feed for your medications
+            <?= $viewingLinkedUser ? "Feed for " . htmlspecialchars($targetUserName) . "'s medications" : "Feed for your medications" ?>
         </p>
         
         <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <!-- Filters -->
         <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+                <?php if ($viewingLinkedUser): ?>
+                <input type="hidden" name="view" value="linked">
+                <?php endif; ?>
+                
                 <div>
                     <label style="display: block; font-weight: 500; margin-bottom: 8px;">Status</label>
                     <select name="status" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
@@ -203,17 +188,6 @@ $allActivities = array_slice($allActivities, 0, 50);
                         <option value="30" <?= ($_GET['days'] ?? '30') == '30' ? 'selected' : '' ?>>Last 30 days</option>
                         <option value="60" <?= ($_GET['days'] ?? '30') == '60' ? 'selected' : '' ?>>Last 60 days</option>
                         <option value="90" <?= ($_GET['days'] ?? '30') == '90' ? 'selected' : '' ?>>Last 90 days</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label style="display: block; font-weight: 500; margin-bottom: 8px;">User</label>
-                    <select name="user_filter" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
-                        <option value="">Both Users</option>
-                        <option value="me" <?= ($_GET['user_filter'] ?? '') === 'me' ? 'selected' : '' ?>>My Activity</option>
-                        <option value="partner" <?= ($_GET['user_filter'] ?? '') === 'partner' ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Activity
-                        </option>
                     </select>
                 </div>
                 

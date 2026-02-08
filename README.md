@@ -4,6 +4,15 @@
 
 A Progressive Web App (PWA) for medication reminders with push notifications. Never miss a dose!
 
+### 📱 iOS Native App Available
+
+This application is also available as a native iOS app for the Apple App Store. The iOS app wraps the web application using Capacitor, providing a native app experience.
+
+**iOS App Documentation:**
+- **[IOS_QUICKSTART.md](IOS_QUICKSTART.md)** - Quick setup guide for iOS development
+- **[IOS_README.md](IOS_README.md)** - iOS app overview and features
+- **[IOS_DEPLOYMENT.md](IOS_DEPLOYMENT.md)** - Complete App Store deployment guide
+
 ## Security Setup (REQUIRED)
 
 **⚠️ IMPORTANT**: Before running the application, you must configure database credentials securely.

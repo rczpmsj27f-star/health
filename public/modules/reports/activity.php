@@ -245,9 +245,9 @@ $allActivities = array_slice($allActivities, 0, 50);
                         // Log activity (taken/skipped)
                         $borderColor = $activity['status'] === 'taken' ? '#10b981' : '#ef4444';
                         $activityText = $activity['status'] === 'taken' ? 'took' : 'skipped';
-                        // Use taken_at if available, otherwise use created_at, finally fallback to scheduled_date_time
-                        // All medication logs should have scheduled_date_time, so this should always have a value
-                        $displayTime = $activity['taken_at'] ?? $activity['created_at'] ?? $activity['scheduled_date_time'] ?? date('Y-m-d H:i:s');
+                        // Use taken_at if available, otherwise use created_at, finally fallback to scheduled_date_time, or null
+                        // All medication logs should have scheduled_date_time, so null should be rare
+                        $displayTime = $activity['taken_at'] ?? $activity['created_at'] ?? $activity['scheduled_date_time'] ?? null;
                     }
                 ?>
                 <div style="padding: 16px; margin-bottom: 12px; border-left: 4px solid <?= $borderColor ?>; background: var(--color-bg-light); border-radius: 0 6px 6px 0;">

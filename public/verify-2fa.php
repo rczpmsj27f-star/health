@@ -1,15 +1,24 @@
 <?php
 session_start();
-$err = $_SESSION['error'] ?? null;
-$ok  = $_SESSION['success'] ?? null;
-unset($_SESSION['error'], $_SESSION['success']);
+require_once __DIR__ . '/../app/config/database.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PragmaRX\Google2FA\Google2FA;
+
+if (empty($_SESSION['pending_2fa_user_id'])) {
+    header("Location: /login.php");
+    exit;
+}
+
+$error = $_SESSION['2fa_error'] ?? null;
+unset($_SESSION['2fa_error']);
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login – Health Tracker</title>
+    <title>Two-Factor Authentication – Health Tracker</title>
     
     <!-- PWA Support -->
     <link rel="manifest" href="/manifest.json">
@@ -62,11 +71,6 @@ unset($_SESSION['error'], $_SESSION['success']);
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
         .form-group {
             margin-bottom: 20px;
         }
@@ -82,8 +86,10 @@ unset($_SESSION['error'], $_SESSION['success']);
             padding: 12px 16px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 24px;
             box-sizing: border-box;
+            letter-spacing: 8px;
+            text-align: center;
             transition: border-color 0.3s;
         }
         .form-group input:focus {
@@ -91,23 +97,16 @@ unset($_SESSION['error'], $_SESSION['success']);
             border-color: #28a745;
             box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
         }
-        .login-footer {
+        .back-link {
+            margin-top: 16px;
             text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
         }
-        .login-footer p {
-            margin: 0;
-            color: #666;
-            font-size: 14px;
-        }
-        .login-footer a {
+        .back-link a {
             color: #28a745;
             text-decoration: none;
-            font-weight: 500;
+            font-size: 14px;
         }
-        .login-footer a:hover {
+        .back-link a:hover {
             text-decoration: underline;
         }
     </style>
@@ -115,33 +114,26 @@ unset($_SESSION['error'], $_SESSION['success']);
 <body>
     <div class="login-card">
         <div class="login-header">
-            <h2>Welcome Back</h2>
-            <p>Please login to your account</p>
+            <h2>Two-Factor Authentication</h2>
+            <p>Enter the code from your authenticator app or a backup code</p>
         </div>
-
-        <?php if ($err): ?>
-            <div class="alert alert-error"><?= htmlspecialchars($err) ?></div>
+        
+        <?php if ($error): ?>
+            <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
-        <?php if ($ok): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($ok) ?></div>
-        <?php endif; ?>
-
-        <form method="POST" action="login_handler.php">
+        
+        <form method="POST" action="/verify-2fa-handler.php">
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" required autocomplete="username">
+                <label>Authentication Code (6-digit TOTP or 8-digit backup code)</label>
+                <input type="text" name="code" pattern="[0-9]{6,8}" maxlength="8" 
+                       inputmode="numeric" autocomplete="one-time-code" required
+                       autofocus>
             </div>
-
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
-
-            <button class="btn btn-accept" type="submit" style="margin-top: 10px; cursor: pointer;">Login</button>
+            <button type="submit" class="btn btn-accept" style="margin-top: 10px; cursor: pointer;">Verify</button>
         </form>
-
-        <div class="login-footer">
-            <p>Don't have an account? <a href="/register">Create an account</a></p>
+        
+        <div class="back-link">
+            <a href="/login.php">← Back to Login</a>
         </div>
     </div>
     

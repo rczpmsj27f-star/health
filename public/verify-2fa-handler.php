@@ -12,14 +12,13 @@ if (empty($_SESSION['pending_2fa_user_id'])) {
 
 $code = $_POST['code'] ?? '';
 
-// Validate code format before sanitization - accept both 6-digit TOTP and 8-digit backup codes
+// Validate code format - accept both 6-digit TOTP and 8-digit backup codes
 if (!preg_match('/^[0-9]{6}$/', $code) && !preg_match('/^[0-9]{8}$/', $code)) {
     $_SESSION['2fa_error'] = "Authentication code must be 6 or 8 digits.";
     header("Location: /verify-2fa.php");
     exit;
 }
 
-$code = preg_replace('/[^0-9]/', '', $code);
 $userId = $_SESSION['pending_2fa_user_id'];
 
 // Get user's secret

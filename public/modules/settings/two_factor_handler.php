@@ -14,14 +14,12 @@ if (empty($_SESSION['user_id'])) {
 $action = $_POST['action'] ?? '';
 $code = $_POST['code'] ?? '';
 
-// Validate code format before sanitization - accept both 6-digit TOTP and 8-digit backup codes
+// Validate code format - accept both 6-digit TOTP and 8-digit backup codes
 if (!preg_match('/^[0-9]{6}$/', $code) && !preg_match('/^[0-9]{8}$/', $code)) {
     $_SESSION['error'] = "Authentication code must be 6 or 8 digits.";
     header("Location: two_factor.php");
     exit;
 }
-
-$code = preg_replace('/[^0-9]/', '', $code);
 
 // Get user's 2FA secret and backup codes
 $stmt = $pdo->prepare("SELECT two_factor_enabled, two_factor_secret, two_factor_backup_codes FROM users WHERE id = ?");
@@ -63,7 +61,7 @@ if ($action === 'enable') {
     // Generate backup codes - using 10000000-99999999 range for consistent 8-digit codes
     $backupCodes = [];
     for ($i = 0; $i < 10; $i++) {
-        $backupCodes[] = str_pad((string)random_int(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+        $backupCodes[] = (string)random_int(10000000, 99999999);
     }
     
     // Enable 2FA and save backup codes

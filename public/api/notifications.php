@@ -74,6 +74,7 @@ try {
     echo json_encode(['error' => 'Invalid request method']);
     
 } catch (Exception $e) {
-    error_log("Notifications API error: " . $e->getMessage());
-    echo json_encode(['error' => 'Server error occurred']);
+    $errorId = uniqid('notif_err_', true);
+    error_log("Notifications API error [$errorId]: " . $e->getMessage());
+    echo json_encode(['error' => 'Server error occurred', 'error_id' => $errorId]);
 }

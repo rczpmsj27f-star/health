@@ -38,6 +38,8 @@ if ($userFilter && !in_array($userFilter, ['me', 'partner'], true)) {
 }
 
 // Build WHERE conditions safely
+// Note: Only hardcoded SQL strings are added to $whereClauses, never user input.
+// All dynamic values use prepared statement parameters (?).
 $whereClauses = ["m.user_id IN (?, ?)"];
 $params = [$_SESSION['user_id'], $linkedUser['linked_user_id']];
 

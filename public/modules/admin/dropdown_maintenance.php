@@ -348,7 +348,7 @@ if ($selected_category_id) {
                 <div class="section-header">
                     <div>
                         <h3 class="section-title"><?= htmlspecialchars($selected_category['category_name']) ?></h3>
-                        <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--color-text-secondary);">
+                        <p style="margin: 4px 0 0 0; font-size: 13px;">
                             <?= htmlspecialchars($selected_category['description'] ?? '') ?>
                         </p>
                     </div>

@@ -50,7 +50,7 @@ class LinkedUserHelper {
             INSERT INTO user_links (user_a_id, user_b_id, invite_code, invited_by, expires_at, status)
             VALUES (?, ?, ?, ?, ?, 'pending_a')
         ");
-        $stmt->execute([$inviterId, $inviterId, $code, $inviterId, $expiresAt]);
+        $stmt->execute([$inviterId, null, $code, $inviterId, $expiresAt]);
         
         return [
             'link_id' => $this->pdo->lastInsertId(),

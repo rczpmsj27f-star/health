@@ -124,8 +124,8 @@ unset($_SESSION['2fa_error']);
         
         <form method="POST" action="/verify-2fa-handler.php">
             <div class="form-group">
-                <label>Authentication Code</label>
-                <input type="text" name="code" pattern="[0-9]{6}" maxlength="6" 
+                <label>Authentication Code (6-digit TOTP or 8-digit backup code)</label>
+                <input type="text" name="code" pattern="[0-9]{6,8}" maxlength="8" 
                        inputmode="numeric" autocomplete="one-time-code" required
                        autofocus>
             </div>

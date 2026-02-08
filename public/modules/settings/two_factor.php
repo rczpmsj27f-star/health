@@ -237,7 +237,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
                 <input type="hidden" name="action" value="enable">
                 <div class="form-group">
                     <label>Enter the 6-digit code from your authenticator app to verify:</label>
-                    <input type="text" name="code" pattern="[0-9]{6}" maxlength="6" 
+                    <input type="text" name="code" pattern="[0-9]{6,8}" maxlength="8" 
                            inputmode="numeric" autocomplete="one-time-code" required>
                 </div>
                 <button type="submit" class="btn btn-accept">Enable Two-Factor Authentication</button>
@@ -270,8 +270,8 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
             <form method="POST" action="two_factor_handler.php">
                 <input type="hidden" name="action" value="disable">
                 <div class="form-group">
-                    <label>Authentication Code:</label>
-                    <input type="text" name="code" pattern="[0-9]{6}" maxlength="6" 
+                    <label>Authentication Code (6-digit TOTP or 8-digit backup code):</label>
+                    <input type="text" name="code" pattern="[0-9]{6,8}" maxlength="8" 
                            inputmode="numeric" autocomplete="one-time-code" required>
                 </div>
                 <button type="submit" class="btn btn-cancel">Disable Two-Factor Authentication</button>

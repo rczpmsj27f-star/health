@@ -27,7 +27,17 @@ $statusFilter = $_GET['status'] ?? '';
 $daysFilter = (int)($_GET['days'] ?? 30);
 $userFilter = $_GET['user_filter'] ?? '';
 
-// Build WHERE conditions
+// Validate status filter - only allow specific values
+if ($statusFilter && !in_array($statusFilter, ['taken', 'skipped'], true)) {
+    $statusFilter = '';
+}
+
+// Validate user filter - only allow specific values
+if ($userFilter && !in_array($userFilter, ['me', 'partner'], true)) {
+    $userFilter = '';
+}
+
+// Build WHERE conditions safely
 $whereClauses = ["m.user_id IN (?, ?)"];
 $params = [$_SESSION['user_id'], $linkedUser['linked_user_id']];
 

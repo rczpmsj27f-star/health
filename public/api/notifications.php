@@ -75,5 +75,5 @@ try {
     
 } catch (Exception $e) {
     error_log("Notifications API error: " . $e->getMessage());
-    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Server error occurred']);
 }

@@ -26,9 +26,9 @@ if ($linkedUser && $linkedUser['status'] === 'active'):
     $theirPic = '/assets/images/default-avatar.svg';
     
     foreach ($userProfiles as $profile) {
-        if ($profile['id'] == $_SESSION['user_id'] && !empty($profile['profile_picture_path'])) {
+        if ($profile['id'] === $_SESSION['user_id'] && !empty($profile['profile_picture_path'])) {
             $myPic = $profile['profile_picture_path'];
-        } elseif ($profile['id'] == $linkedUser['linked_user_id'] && !empty($profile['profile_picture_path'])) {
+        } elseif ($profile['id'] === $linkedUser['linked_user_id'] && !empty($profile['profile_picture_path'])) {
             $theirPic = $profile['profile_picture_path'];
         }
     }

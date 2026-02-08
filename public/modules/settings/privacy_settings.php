@@ -22,6 +22,8 @@ if (!$linkedUser) {
 $theirPermissions = $linkedHelper->getPermissions($linkedUser['id'], $linkedUser['linked_user_id']);
 
 if (!$theirPermissions) {
+    // Default permissions: all disabled except receive_nudges
+    // receive_nudges defaults to 1 (enabled) to allow basic communication between linked users
     $theirPermissions = [
         'can_view_medications' => 0,
         'can_view_schedule' => 0,
@@ -31,7 +33,7 @@ if (!$theirPermissions) {
         'can_delete_medications' => 0,
         'notify_on_medication_taken' => 0,
         'notify_on_overdue' => 0,
-        'receive_nudges' => 1
+        'receive_nudges' => 1  // Enabled by default for basic reminders
     ];
 }
 

@@ -10,12 +10,19 @@ if (empty($_SESSION['user_id'])) {
 
 $linkedHelper = new LinkedUserHelper($pdo);
 
-$linkId = $_POST['link_id'] ?? 0;
-$theirUserId = $_POST['their_user_id'] ?? 0;
+// Validate and sanitize input
+$linkId = filter_input(INPUT_POST, 'link_id', FILTER_VALIDATE_INT);
+$theirUserId = filter_input(INPUT_POST, 'their_user_id', FILTER_VALIDATE_INT);
+
+if (!$linkId || !$theirUserId || $linkId <= 0 || $theirUserId <= 0) {
+    $_SESSION['error_msg'] = "Invalid request parameters";
+    header("Location: /modules/settings/linked_users.php");
+    exit;
+}
 
 // Verify the link belongs to the current user
 $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
-if (!$linkedUser || $linkedUser['id'] != $linkId) {
+if (!$linkedUser || $linkedUser['id'] !== $linkId) {
     $_SESSION['error_msg'] = "Unauthorized: This link does not belong to you";
     header("Location: /modules/settings/linked_users.php");
     exit;

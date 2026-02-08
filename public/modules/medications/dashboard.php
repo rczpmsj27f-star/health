@@ -4,6 +4,7 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/helpers/medication_icon.php";
 require_once "../../../app/core/TimeFormatter.php";
+require_once "../../../app/helpers/dropdown_helper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -984,15 +985,7 @@ foreach ($prnMedications as $med) {
                     
                     <div class="form-group">
                         <label>Reason *</label>
-                        <select name="skipped_reason" id="skipped_reason" required>
-                            <option value="">Select a reason...</option>
-                            <option value="Unwell">Unwell</option>
-                            <option value="Forgot">Forgot</option>
-                            <option value="Did not have them with me">Did not have them with me</option>
-                            <option value="Lost">Lost</option>
-                            <option value="Side effects">Side effects</option>
-                            <option value="Other">Other</option>
-                        </select>
+                        <?= renderDropdown($pdo, 'skipped_reasons', 'skipped_reason', '', ['id' => 'skipped_reason', 'required' => 'required']) ?>
                     </div>
                 </div>
                 
@@ -1027,13 +1020,7 @@ foreach ($prnMedications as $med) {
                 <p><strong>Why are you logging this late?</strong></p>
                 
                 <div class="form-group">
-                    <select id="lateLoggingReason" class="form-control">
-                        <option value="">-- Select a reason --</option>
-                        <option value="Did not have phone with me">Did not have phone with me</option>
-                        <option value="Forgot to log">Forgot to log</option>
-                        <option value="Skipped and logged late">Skipped and logged late</option>
-                        <option value="Other">Other (please specify)</option>
-                    </select>
+                    <?= renderDropdown($pdo, 'late_logging_reasons', 'lateLoggingReason', '', ['id' => 'lateLoggingReason', 'class' => 'form-control']) ?>
                 </div>
                 
                 <div class="form-group" id="otherReasonGroup" style="display: none;">

@@ -1,5 +1,7 @@
 <?php
 session_start();
+require_once "../../../app/config/database.php";
+require_once "../../../app/helpers/dropdown_helper.php";
 $medId = $_GET['med'];
 ?>
 <!DOCTYPE html>
@@ -24,20 +26,7 @@ $medId = $_GET['med'];
         <form method="POST" action="/modules/medications/add_instructions_handler.php">
             <input type="hidden" name="med_id" value="<?= htmlspecialchars($medId) ?>">
 
-            <div class="checkbox-group">
-                <label>
-                    <input type="checkbox" name="instructions[]" value="Take with water">
-                    Take with water
-                </label>
-                <label>
-                    <input type="checkbox" name="instructions[]" value="Take on empty stomach">
-                    Take on empty stomach
-                </label>
-                <label>
-                    <input type="checkbox" name="instructions[]" value="Take with food">
-                    Take with food
-                </label>
-            </div>
+            <?= renderCheckboxGroup($pdo, 'special_instructions', 'instructions', []) ?>
 
             <div class="form-group">
                 <label>Other Instructions (optional)</label>

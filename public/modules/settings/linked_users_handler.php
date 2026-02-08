@@ -37,6 +37,9 @@ try {
             
         case 'revoke_invite':
             $linkId = $_POST['link_id'] ?? 0;
+            if (!is_numeric($linkId) || $linkId <= 0) {
+                throw new Exception("Invalid invite ID");
+            }
             if ($linkedHelper->revokeInvite($linkId, $_SESSION['user_id'])) {
                 $_SESSION['success_msg'] = "Invite code revoked successfully";
             } else {
@@ -46,6 +49,9 @@ try {
             
         case 'unlink':
             $linkId = $_POST['link_id'] ?? 0;
+            if (!is_numeric($linkId) || $linkId <= 0) {
+                throw new Exception("Invalid link ID");
+            }
             if ($linkedHelper->unlinkUsers($linkId)) {
                 $_SESSION['success_msg'] = "Successfully unlinked";
             } else {

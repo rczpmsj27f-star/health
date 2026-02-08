@@ -115,7 +115,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
                            style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; font-size: 18px; letter-spacing: 2px; text-transform: uppercase;"
                            required>
                     <small style="display: block; margin-top: 8px; color: var(--color-text-secondary);">
-                        Code format: ABC1234XYZ (10 characters)
+                        Code format: ABCD123456 (10 characters)
                     </small>
                 </div>
                 <button type="submit" class="btn btn-primary">

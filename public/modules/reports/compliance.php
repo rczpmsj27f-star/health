@@ -134,6 +134,7 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
             Track medication adherence, view activity, and analyze patterns
         </p>
         
+        <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <!-- Quick Navigation -->
         <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
             <a href="#compliance-report" 

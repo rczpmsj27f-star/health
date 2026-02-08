@@ -183,6 +183,11 @@ $allActivities = array_slice($allActivities, 0, 50);
             Feed for your medications
         </p>
         
+        <?php 
+        // For activity page, we need a custom switcher since it uses user_filter parameter
+        // But we can still use the same component with slight modifications
+        include __DIR__ . '/../../../app/includes/user_switcher.php'; 
+        ?>
         <!-- Filters -->
         <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">

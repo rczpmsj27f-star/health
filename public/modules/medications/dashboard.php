@@ -1035,6 +1035,32 @@ foreach ($prnMedications as $med) {
         </div>
     </div>
     
+    <!-- Early Logging Modal -->
+    <div id="earlyLoggingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🕐 Early Logging</h3>
+            </div>
+            <div class="modal-body">
+                <p>You are taking this medication early (for a future date).</p>
+                <p><strong>Why are you taking this early?</strong></p>
+                
+                <div class="form-group">
+                    <?= renderDropdown($pdo, 'early_logging_reasons', 'earlyLoggingReason', '', ['id' => 'earlyLoggingReason', 'class' => 'form-control']) ?>
+                </div>
+                
+                <div class="form-group" id="earlyOtherReasonGroup" style="display: none;">
+                    <label>Please specify:</label>
+                    <input type="text" id="earlyOtherReasonText" class="form-control" placeholder="Enter reason">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEarlyLoggingModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitEarlyLog()">Submit</button>
+            </div>
+        </div>
+    </div>
+    
     <style>
     /* Generic modal styles */
     .modal {
@@ -1068,6 +1094,8 @@ foreach ($prnMedications as $med) {
     <script>
     // Late logging state
     let pendingLateLog = null;
+    // Early logging state
+    let pendingEarlyLog = null;
 
     // Toggle function for collapsible time groups
     function toggleTimeGroup(groupId) {
@@ -1095,9 +1123,24 @@ foreach ($prnMedications as $med) {
         }
     });
 
+    // Show "Other" text input for early logging when selected
+    document.getElementById('earlyLoggingReason').addEventListener('change', function() {
+        const otherGroup = document.getElementById('earlyOtherReasonGroup');
+        if (this.value === 'Other') {
+            otherGroup.style.display = 'block';
+        } else {
+            otherGroup.style.display = 'none';
+        }
+    });
+
     function closeLateLoggingModal() {
         document.getElementById('lateLoggingModal').classList.remove('active');
         pendingLateLog = null;
+    }
+
+    function closeEarlyLoggingModal() {
+        document.getElementById('earlyLoggingModal').classList.remove('active');
+        pendingEarlyLog = null;
     }
 
     function submitLateLog() {
@@ -1127,6 +1170,33 @@ foreach ($prnMedications as $med) {
         closeLateLoggingModal();
     }
 
+    function submitEarlyLog() {
+        const reasonSelect = document.getElementById('earlyLoggingReason');
+        let reason = reasonSelect.value;
+        
+        if (reason === 'Other') {
+            const otherText = document.getElementById('earlyOtherReasonText').value.trim();
+            if (!otherText) {
+                showAlert('Please specify the reason', 'Missing Information');
+                return;
+            }
+            reason = 'Other: ' + otherText;
+        }
+        
+        if (!reason) {
+            showAlert('Please select a reason', 'Missing Information');
+            return;
+        }
+        
+        // Add reason to pending log and submit
+        if (pendingEarlyLog) {
+            pendingEarlyLog.earlyReason = reason;
+            submitLogToServer(pendingEarlyLog);
+        }
+        
+        closeEarlyLoggingModal();
+    }
+
     function submitLogToServer(logData) {
         // Build form data
         const formData = new URLSearchParams({
@@ -1137,6 +1207,10 @@ foreach ($prnMedications as $med) {
         
         if (logData.lateReason) {
             formData.append('late_logging_reason', logData.lateReason);
+        }
+        
+        if (logData.earlyReason) {
+            formData.append('early_logging_reason', logData.earlyReason);
         }
         
         // Add for_user_id if viewing linked user
@@ -1182,6 +1256,7 @@ foreach ($prnMedications as $med) {
         // Show late logging modal ONLY if the scheduled date is in the past
         // Note: String comparison works reliably because dates are in YYYY-MM-DD format
         const isPastDate = scheduledDate < todayDate;
+        const isFutureDate = scheduledDate > todayDate;
         
         if (isPastDate) {
             // Show late logging modal
@@ -1190,8 +1265,15 @@ foreach ($prnMedications as $med) {
                 scheduledDateTime: scheduledDateTime
             };
             document.getElementById('lateLoggingModal').classList.add('active');
+        } else if (isFutureDate) {
+            // Show early logging modal
+            pendingEarlyLog = {
+                medId: medId,
+                scheduledDateTime: scheduledDateTime
+            };
+            document.getElementById('earlyLoggingModal').classList.add('active');
         } else {
-            // Direct submission for same-day or future logging
+            // Direct submission for same-day logging
             submitLogToServer({
                 medId: medId,
                 scheduledDateTime: scheduledDateTime

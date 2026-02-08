@@ -79,6 +79,16 @@ if (!empty($_POST['late_logging_reason'])) {
     }
 }
 
+// Sanitize and validate early_logging_reason
+$earlyLoggingReason = null;
+if (!empty($_POST['early_logging_reason'])) {
+    $earlyLoggingReason = trim($_POST['early_logging_reason']);
+    // Limit to VARCHAR(255) constraint
+    if (strlen($earlyLoggingReason) > 255) {
+        $earlyLoggingReason = substr($earlyLoggingReason, 0, 255);
+    }
+}
+
 if (!$medicationId || !$scheduledDateTime) {
     $errorMsg = "Invalid medication or schedule information.";
     if ($isAjax) {
@@ -89,6 +99,17 @@ if (!$medicationId || !$scheduledDateTime) {
     $_SESSION['error'] = $errorMsg;
     header("Location: /modules/medications/dashboard.php");
     exit;
+}
+
+// Check if this is a future date (early logging) and normalize to today's date
+// This ensures overdue detection queries will find the log entry
+$scheduledDate = date('Y-m-d', strtotime($scheduledDateTime));
+$todayDate = date('Y-m-d');
+
+if ($scheduledDate > $todayDate) {
+    // This is early logging - use today's date with the original time
+    $scheduledTime = date('H:i:s', strtotime($scheduledDateTime));
+    $scheduledDateTime = $todayDate . ' ' . $scheduledTime;
 }
 
 try {
@@ -115,10 +136,10 @@ try {
         // Update existing log
         $stmt = $pdo->prepare("
             UPDATE medication_logs 
-            SET status = 'taken', taken_at = NOW(), skipped_reason = NULL, late_logging_reason = ?, updated_at = NOW()
+            SET status = 'taken', taken_at = NOW(), skipped_reason = NULL, late_logging_reason = ?, early_logging_reason = ?, updated_at = NOW()
             WHERE id = ?
         ");
-        $stmt->execute([$lateLoggingReason, $existingLog['id']]);
+        $stmt->execute([$lateLoggingReason, $earlyLoggingReason, $existingLog['id']]);
         
         // Only decrement stock if previously not taken
         if ($existingLog['status'] !== 'taken' && $medication['current_stock'] !== null && $medication['current_stock'] > 0) {
@@ -135,10 +156,10 @@ try {
     } else {
         // Create new log entry
         $stmt = $pdo->prepare("
-            INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status, taken_at, late_logging_reason)
-            VALUES (?, ?, ?, 'taken', NOW(), ?)
+            INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status, taken_at, late_logging_reason, early_logging_reason)
+            VALUES (?, ?, ?, 'taken', NOW(), ?, ?)
         ");
-        $stmt->execute([$medicationId, $userId, $scheduledDateTime, $lateLoggingReason]);
+        $stmt->execute([$medicationId, $userId, $scheduledDateTime, $lateLoggingReason, $earlyLoggingReason]);
         
         // Decrement stock by 1 if stock tracking is enabled
         if ($medication['current_stock'] !== null && $medication['current_stock'] > 0) {

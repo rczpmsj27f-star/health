@@ -131,10 +131,10 @@ usort($allActivities, function($a, $b) {
     $timeA = $a['activity_time'] ?? $a['created_at'] ?? '';
     $timeB = $b['activity_time'] ?? $b['created_at'] ?? '';
     
-    // Handle empty strings or invalid dates
-    if (empty($timeA) || empty($timeB)) {
-        return 0;
-    }
+    // Push empty timestamps to the end
+    if (empty($timeA) && empty($timeB)) return 0;
+    if (empty($timeA)) return 1;  // A goes after B
+    if (empty($timeB)) return -1; // B goes after A
     
     return strtotime($timeB) - strtotime($timeA);
 });

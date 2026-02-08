@@ -211,7 +211,7 @@ function loadNotifications() {
                     <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
                     <div>Failed to load notifications</div>
                     <div style="font-size: 12px; margin-top: 8px; color: var(--color-text-secondary);">
-                        ${error.message}
+                        ${escapeHtml(error.message)}
                     </div>
                     <button onclick="loadNotifications()" style="margin-top: 12px; padding: 8px 16px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
                         Retry

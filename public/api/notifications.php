@@ -54,7 +54,7 @@ try {
                 
             default:
                 http_response_code(400);
-                echo json_encode(['error' => 'Invalid action: ' . $action]);
+                echo json_encode(['error' => 'Invalid action']);
         }
         exit;
     }
@@ -85,7 +85,7 @@ try {
                 
             default:
                 http_response_code(400);
-                echo json_encode(['error' => 'Invalid action: ' . $action]);
+                echo json_encode(['error' => 'Invalid action']);
         }
         exit;
     }

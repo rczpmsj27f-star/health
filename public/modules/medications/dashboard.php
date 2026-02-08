@@ -933,29 +933,6 @@ foreach ($prnMedications as $med) {
                 <div class="tile-desc">Manage your stock levels</div>
             </a>
         </div>
-        
-        <!-- Activity and Compliance Section -->
-        <div id="compliance" style="background: white; border-radius: 10px; padding: 24px; margin-top: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 20px; margin-bottom: 16px;">
-                📊 Activity and Compliance
-            </h3>
-            <p style="color: var(--color-text-secondary); margin-bottom: 20px;">
-                Track your medication adherence, view activity history, and analyze patterns.
-            </p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-                <a href="/modules/reports/compliance.php<?= $viewingLinkedUser ? '?view=linked' : '' ?>" 
-                   class="btn btn-primary" 
-                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
-                    📊 View Compliance Report
-                </a>
-                <a href="/modules/reports/activity.php" 
-                   class="btn btn-secondary" 
-                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
-                    📰 Activity Feed
-                </a>
-            </div>
-        </div>
     </div>
     
     <!-- Skip Medication Modal -->

@@ -296,12 +296,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="menu-toggle-icon" id="medications-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="medications-menu">
-            <a href="/modules/medications/compliance.php">Compliance</a>
+            <a href="/modules/medications/compliance.php">Compliance Calendar</a>
             <a href="/modules/medications/log_prn.php">Log PRN</a>
             <a href="/medications/stock">Medication Stock</a>
             <a href="/medications">My Medications</a>
         </div>
     </div>
+    
+    <a href="/modules/reports/compliance.php" 
+       class="<?= strpos($_SERVER['PHP_SELF'], '/modules/reports/compliance.php') !== false ? 'active' : '' ?>">
+        📊 Activity & Compliance
+    </a>
     
     <a href="/profile">👤 My Profile</a>
     

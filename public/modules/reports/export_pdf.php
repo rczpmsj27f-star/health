@@ -461,15 +461,16 @@ function generateManualChart($pdf, $pdo, $userId, $user, $startDate, $endDate, $
             }
             $pdf->Ln();
         } else {
-            // Multiple dose times - iterate through each time
+            // Multiple dose times - show each time on its own row
             foreach ($times as $idx => $time) {
-                $timeLabel = date('g:iA', strtotime($time['dose_time']));
+                $timeStr = date('g:i A', strtotime($time['dose_time']));
                 
-                // Show medication name only on first row, time label on subsequent rows
                 if ($idx === 0) {
-                    $pdf->Cell(50, 7, htmlspecialchars($med['name']), 1, 0, 'L');
+                    // First row: medication name with time
+                    $pdf->Cell(50, 7, htmlspecialchars($med['name']) . ' - ' . $timeStr, 1, 0, 'L');
                 } else {
-                    $pdf->Cell(50, 7, '  ' . $timeLabel, 1, 0, 'L');
+                    // Subsequent rows: indented time only
+                    $pdf->Cell(50, 7, '    ' . $timeStr, 1, 0, 'L');
                 }
                 
                 for ($i = 0; $i < min($days, 14); $i++) {
@@ -517,12 +518,15 @@ function generatePRNUsage($pdf, $pdo, $userId, $user, $startDate, $endDate) {
     foreach ($prnMeds as $med) {
         // Get PRN logs for this medication
         $stmt = $pdo->prepare("
-            SELECT taken_at, dosage, reason, notes
-            FROM prn_medication_logs
-            WHERE medication_id = ? AND taken_at BETWEEN ? AND ?
+            SELECT taken_at, quantity_taken, status
+            FROM medication_logs
+            WHERE medication_id = ? 
+            AND user_id = ?
+            AND taken_at BETWEEN ? AND ?
+            AND status = 'taken'
             ORDER BY taken_at DESC
         ");
-        $stmt->execute([$med['id'], $startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $stmt->execute([$med['id'], $userId, $startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         $logs = $stmt->fetchAll();
         
         $pdf->SetFont('helvetica', 'B', 14);
@@ -538,19 +542,17 @@ function generatePRNUsage($pdf, $pdo, $userId, $user, $startDate, $endDate) {
         } else {
             // Table header
             $pdf->SetFont('helvetica', 'B', 9);
-            $pdf->Cell(40, 6, 'Date/Time', 1, 0, 'C');
-            $pdf->Cell(25, 6, 'Dosage', 1, 0, 'C');
-            $pdf->Cell(60, 6, 'Reason', 1, 0, 'C');
-            $pdf->Cell(55, 6, 'Notes', 1, 0, 'C');
+            $pdf->Cell(60, 6, 'Date/Time', 1, 0, 'C');
+            $pdf->Cell(40, 6, 'Quantity Taken', 1, 0, 'C');
+            $pdf->Cell(80, 6, 'Status', 1, 0, 'C');
             $pdf->Ln();
             
             // Table data
             $pdf->SetFont('helvetica', '', 8);
             foreach ($logs as $log) {
-                $pdf->Cell(40, 6, date('M j, Y g:i A', strtotime($log['taken_at'])), 1, 0, 'L');
-                $pdf->Cell(25, 6, htmlspecialchars($log['dosage'] ?? 'N/A'), 1, 0, 'C');
-                $pdf->Cell(60, 6, htmlspecialchars($log['reason'] ?? ''), 1, 0, 'L');
-                $pdf->Cell(55, 6, htmlspecialchars($log['notes'] ?? ''), 1, 0, 'L');
+                $pdf->Cell(60, 6, date('M j, Y g:i A', strtotime($log['taken_at'])), 1, 0, 'L');
+                $pdf->Cell(40, 6, $log['quantity_taken'] ?? '1', 1, 0, 'C');
+                $pdf->Cell(80, 6, ucfirst($log['status']), 1, 0, 'L');
                 $pdf->Ln();
             }
         }

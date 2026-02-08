@@ -3,9 +3,22 @@
  * Handles iOS native push notifications via Capacitor Push Notifications plugin
  */
 
+// Configuration constants
+const MAX_CAPACITOR_WAIT_RETRIES = 50; // Max 5 seconds (50 * 100ms)
+const CAPACITOR_RETRY_DELAY_MS = 100;
+
 // Check if running in native Capacitor environment
 function isCapacitor() {
     return window.Capacitor && window.Capacitor.isNativePlatform();
+}
+
+// Show the iOS push notification section in the UI
+function showIOSPushSection() {
+    const iosPushSection = document.getElementById('ios-push-status');
+    if (iosPushSection) {
+        iosPushSection.style.display = 'block';
+        console.log('iOS push section made visible');
+    }
 }
 
 // Initialize push notifications for native iOS
@@ -18,11 +31,7 @@ async function initializeNativePush() {
     console.log('Running in Capacitor environment - setting up push notifications');
     
     // Show iOS push section in UI
-    const iosPushSection = document.getElementById('ios-push-status');
-    if (iosPushSection) {
-        iosPushSection.style.display = 'block';
-        console.log('iOS push section made visible');
-    }
+    showIOSPushSection();
 
     try {
         const { PushNotifications } = window.Capacitor.Plugins;
@@ -205,9 +214,8 @@ function updatePushRegistrationStatus(isRegistered) {
     }
     
     // Also ensure the iOS push section is visible when running in Capacitor
-    const iosPushSection = document.getElementById('ios-push-status');
-    if (iosPushSection && isCapacitor()) {
-        iosPushSection.style.display = 'block';
+    if (isCapacitor()) {
+        showIOSPushSection();
     }
 }
 
@@ -248,16 +256,14 @@ document.head.appendChild(style);
 
 // Initialize on page load - wait for both DOM and Capacitor to be ready
 function initializeWhenReady(retryCount = 0) {
-    const maxRetries = 50; // Max 5 seconds (50 * 100ms)
-    
     // Check if Capacitor is available
     if (typeof window.Capacitor !== 'undefined') {
         console.log('Capacitor detected - initializing push notifications');
         initializeNativePush();
-    } else if (retryCount < maxRetries) {
+    } else if (retryCount < MAX_CAPACITOR_WAIT_RETRIES) {
         // If Capacitor is not yet available, wait a bit and try again
         // This handles the case where Capacitor runtime is still loading
-        setTimeout(() => initializeWhenReady(retryCount + 1), 100);
+        setTimeout(() => initializeWhenReady(retryCount + 1), CAPACITOR_RETRY_DELAY_MS);
     } else {
         console.log('Capacitor not detected after timeout - running in web browser');
     }

@@ -1,7 +1,11 @@
 <?php
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/TimeFormatter.php";
 Auth::requireAdmin();
+
+// Initialize TimeFormatter - admins see their own time preferences
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 $search = $_GET['q'] ?? "";
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -306,7 +310,7 @@ $users = $stmt->fetchAll();
                             <div class="user-info">
                                 <div class="user-username"><?= htmlspecialchars($u['username']) ?></div>
                                 <div class="user-last-login">
-                                    <abbr title="Last login">Last:</abbr> <?= $u['last_login'] ? date('d M Y, H:i', strtotime($u['last_login'])) : 'Never' ?>
+                                    <abbr title="Last login">Last:</abbr> <?= $u['last_login'] ? $timeFormatter->formatDateTime($u['last_login']) : 'Never' ?>
                                 </div>
                             </div>
                             <div class="action-buttons">

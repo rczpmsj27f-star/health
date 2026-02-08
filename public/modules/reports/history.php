@@ -3,6 +3,7 @@ session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/core/LinkedUserHelper.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -12,6 +13,9 @@ if (empty($_SESSION['user_id'])) {
 $medicationId = $_GET['medication_id'] ?? 0;
 $linkedHelper = new LinkedUserHelper($pdo);
 $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+// Initialize TimeFormatter with current user's preferences
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 // Get medication details
 $stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ?");
@@ -96,14 +100,14 @@ $history = $stmt->fetchAll();
                             <?php foreach ($history as $log): ?>
                             <tr style="border-bottom: 1px solid var(--color-bg-light);">
                                 <td style="padding: 12px;">
-                                    <?= date('M d, Y g:i A', strtotime($log['scheduled_date_time'])) ?>
+                                    <?= $timeFormatter->formatDateTime($log['scheduled_date_time']) ?>
                                 </td>
                                 <td style="padding: 12px;">
                                     <?php if ($log['status'] === 'taken'): ?>
                                         <span style="color: #10b981; font-weight: 600;">✓ Taken</span>
                                         <?php if ($log['taken_at']): ?>
                                             <br><small style="color: var(--color-text-secondary);">
-                                                at <?= date('g:i A', strtotime($log['taken_at'])) ?>
+                                                at <?= $timeFormatter->formatTime($log['taken_at']) ?>
                                             </small>
                                         <?php endif; ?>
                                     <?php else: ?>

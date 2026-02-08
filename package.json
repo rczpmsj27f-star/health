@@ -11,13 +11,14 @@
     "capacitor:update": "npx cap update"
   },
   "dependencies": {
+    "@capacitor/app": "^5.0.7",
     "@capacitor/core": "^5.7.0",
     "@capacitor/ios": "^5.7.0",
-    "@capacitor/status-bar": "^5.0.7",
-    "@capacitor/splash-screen": "^5.0.7",
     "@capacitor/keyboard": "^5.0.8",
     "@capacitor/network": "^5.0.7",
-    "@capacitor/app": "^5.0.7"
+    "@capacitor/push-notifications": "^5.1.2",
+    "@capacitor/splash-screen": "^5.0.7",
+    "@capacitor/status-bar": "^5.0.7"
   },
   "devDependencies": {
     "@capacitor/cli": "^5.7.0"

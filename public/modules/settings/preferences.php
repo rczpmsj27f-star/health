@@ -153,20 +153,7 @@ unset($_SESSION['error'], $_SESSION['success']);
         document.getElementById('use_24_hour_input').value = use24Hour ? '1' : '0';
         
         // Update button styles
-        const btn12 = document.getElementById('time-12h');
-        const btn24 = document.getElementById('time-24h');
-        
-        if (use24Hour) {
-            btn24.style.background = 'var(--color-primary)';
-            btn24.style.color = 'white';
-            btn12.style.background = 'transparent';
-            btn12.style.color = 'var(--color-text)';
-        } else {
-            btn12.style.background = 'var(--color-primary)';
-            btn12.style.color = 'white';
-            btn24.style.background = 'transparent';
-            btn24.style.color = 'var(--color-text)';
-        }
+        updateButtonStyles(use24Hour);
         
         // Auto-save the preference
         const formData = new FormData();
@@ -184,6 +171,23 @@ unset($_SESSION['error'], $_SESSION['success']);
         }).catch(error => {
             console.error('Error saving time format:', error);
         });
+    }
+    
+    function updateButtonStyles(use24Hour) {
+        const btn12 = document.getElementById('time-12h');
+        const btn24 = document.getElementById('time-24h');
+        
+        if (use24Hour) {
+            btn24.style.background = 'var(--color-primary)';
+            btn24.style.color = 'white';
+            btn12.style.background = 'transparent';
+            btn12.style.color = 'var(--color-text)';
+        } else {
+            btn12.style.background = 'var(--color-primary)';
+            btn12.style.color = 'white';
+            btn24.style.background = 'transparent';
+            btn24.style.color = 'var(--color-text)';
+        }
     }
     </script>
 </body>

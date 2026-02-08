@@ -23,11 +23,11 @@ try {
         VALUES 
             (?, ?)
         ON DUPLICATE KEY UPDATE
-            use_24_hour = VALUES(use_24_hour),
+            use_24_hour = ?,
             updated_at = CURRENT_TIMESTAMP
     ");
     
-    $stmt->execute([$userId, $use24Hour]);
+    $stmt->execute([$userId, $use24Hour, $use24Hour]);
     
     http_response_code(200);
     echo json_encode(['success' => true]);

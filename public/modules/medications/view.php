@@ -164,7 +164,7 @@ $notes = $stmt->fetchAll();
                             <?= nl2br(htmlspecialchars($note['note_text'])) ?>
                         </div>
                         <div style="font-size: 12px; color: var(--color-text-secondary);">
-                            <?= date('M d, Y g:i A', strtotime($note['created_at'])) ?>
+                            <?= $timeFormatter->formatDateTime($note['created_at']) ?>
                         </div>
                     </div>
                     <?php endforeach; ?>

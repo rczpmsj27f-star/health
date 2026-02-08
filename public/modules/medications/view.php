@@ -102,7 +102,7 @@ $doseTimes = $stmt->fetchAll();
                         Refill Date
                     </label>
                     <div style="font-size: 16px; color: var(--color-text);">
-                        <?= $medication['refill_date'] ? date('M d, Y', strtotime($medication['refill_date'])) : 'Not set' ?>
+                        <?= !empty($medication['refill_date']) ? date('M d, Y', strtotime($medication['refill_date'])) : 'Not set' ?>
                     </div>
                 </div>
                 
@@ -111,8 +111,9 @@ $doseTimes = $stmt->fetchAll();
                         Status
                     </label>
                     <div style="font-size: 16px; color: var(--color-text);">
-                        <span style="background: <?= $medication['status'] === 'active' ? '#dcfce7' : '#fee2e2' ?>; color: <?= $medication['status'] === 'active' ? '#16a34a' : '#dc2626' ?>; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600;">
-                            <?= ucfirst($medication['status']) ?>
+                        <?php $status = $medication['status'] ?? 'active'; ?>
+                        <span style="background: <?= $status === 'active' ? '#dcfce7' : '#fee2e2' ?>; color: <?= $status === 'active' ? '#16a34a' : '#dc2626' ?>; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600;">
+                            <?= ucfirst($status) ?>
                         </span>
                     </div>
                 </div>

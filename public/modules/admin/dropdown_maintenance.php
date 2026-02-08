@@ -143,35 +143,64 @@ if ($selected_category_id) {
         }
         
         .section-header p {
-            color: rgba(255, 255, 255, 0.9);
+            color: white;
+            margin: 4px 0 0 0;
+            font-size: 13px;
         }
         
-        .options-table {
-            width: 100%;
-            border-collapse: collapse;
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
         }
         
-        .options-table th {
-            background: var(--color-bg-gray);
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--color-text-primary);
-            border-bottom: 2px solid var(--color-border);
+        .option-card {
+            background: var(--color-bg-white);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
         }
         
-        .options-table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--color-border);
-            color: var(--color-text);
+        .option-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
         }
         
-        .options-table tr:hover {
-            background: var(--color-bg-gray);
-        }
-        
-        .option-inactive {
+        .option-card.inactive {
             opacity: 0.5;
+        }
+        
+        .option-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .option-icon {
+            font-size: 20px;
+        }
+        
+        .option-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+        
+        .option-status-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--color-text-secondary);
         }
         
         .option-actions {
@@ -348,53 +377,44 @@ if ($selected_category_id) {
                 <div class="section-header">
                     <div>
                         <h3 class="section-title"><?= htmlspecialchars($selected_category['category_name']) ?></h3>
-                        <p style="margin: 4px 0 0 0; font-size: 13px;">
+                        <p>
                             <?= htmlspecialchars($selected_category['description'] ?? '') ?>
                         </p>
                     </div>
                     <button class="btn-add" onclick="showAddModal()">+ Add Option</button>
                 </div>
                 
-                <table class="options-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">Order</th>
-                            <th style="width: 60px;">Icon</th>
-                            <th>Option</th>
-                            <th style="width: 80px;">Status</th>
-                            <th style="width: 150px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <?php if (empty($options)): ?>
+                    <div class="empty-state">
+                        No options yet. Click "Add Option" to create one.
+                    </div>
+                <?php else: ?>
+                    <div class="options-grid">
                         <?php foreach ($options as $option): ?>
-                            <tr class="<?= $option['is_active'] ? '' : 'option-inactive' ?>">
-                                <td><?= $option['display_order'] ?></td>
-                                <td><?= htmlspecialchars($option['icon_emoji'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($option['option_value']) ?></td>
-                                <td>
+                            <div class="option-card <?= $option['is_active'] ? '' : 'inactive' ?>">
+                                <div class="option-info">
+                                    <?php if (!empty($option['icon_emoji'])): ?>
+                                        <span class="option-icon"><?= htmlspecialchars($option['icon_emoji']) ?></span>
+                                    <?php endif; ?>
+                                    <span class="option-text"><?= htmlspecialchars($option['option_value']) ?></span>
+                                </div>
+                                <div class="option-status-actions">
                                     <?php if ($option['is_active']): ?>
                                         <span class="badge badge-success">Active</span>
                                     <?php else: ?>
                                         <span class="badge badge-warning">Inactive</span>
                                     <?php endif; ?>
-                                </td>
-                                <td class="option-actions">
-                                    <button class="btn-icon" onclick="editOption(<?= htmlspecialchars(json_encode($option)) ?>)" title="Edit">✏️</button>
-                                    <button class="btn-icon" onclick="toggleActive(<?= $option['id'] ?>, <?= $option['is_active'] ? 'false' : 'true' ?>)" title="<?= $option['is_active'] ? 'Deactivate' : 'Activate' ?>">
-                                        <?= $option['is_active'] ? '⚡' : '🔌' ?>
-                                    </button>
-                                </td>
-                            </tr>
+                                    <div class="option-actions">
+                                        <button class="btn-icon" onclick="editOption(<?= htmlspecialchars(json_encode($option)) ?>)" title="Edit">✏️</button>
+                                        <button class="btn-icon" onclick="toggleActive(<?= $option['id'] ?>, <?= $option['is_active'] ? 'false' : 'true' ?>)" title="<?= $option['is_active'] ? 'Deactivate' : 'Activate' ?>">
+                                            <?= $option['is_active'] ? '⚡' : '🔌' ?>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
-                        <?php if (empty($options)): ?>
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--color-text-secondary);">
-                                    No options yet. Click "Add Option" to create one.
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>

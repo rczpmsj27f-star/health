@@ -72,7 +72,7 @@ $history = $stmt->fetchAll();
             📜 <?= htmlspecialchars($medication['name']) ?> History
         </h2>
         <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
-            <?= htmlspecialchars($medication['dosage']) ?> - Last 90 days
+            Last 90 days of medication logs
         </p>
         
         <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">

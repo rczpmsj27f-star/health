@@ -43,7 +43,6 @@ $stmt = $pdo->prepare("
     LEFT JOIN medication_logs ml ON m.id = ml.medication_id 
         AND ml.scheduled_date_time BETWEEN ? AND ?
     WHERE m.user_id = ?
-    AND m.is_prn = 0
     GROUP BY m.id, m.name
     ORDER BY compliance_rate DESC
 ");

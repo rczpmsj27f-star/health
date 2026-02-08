@@ -831,8 +831,8 @@ foreach ($prnMedications as $med) {
                 <!-- TIMED MEDICATIONS (08:00, 12:00, etc.) -->
                 <?php foreach ($timedMedications as $time => $timeData): ?>
                 <?php
-                    $meds = is_array($timeData) && isset($timeData['meds']) ? $timeData['meds'] : $timeData;
-                    $timeDisplay = is_array($timeData) && isset($timeData['display']) ? $timeData['display'] : $time;
+                    $meds = $timeData['meds'];
+                    $timeDisplay = $timeData['display'];
                     $scheduleTime = strtotime($time);
                     $isOverdue = $currentTime > $scheduleTime;
                     $medCount = count($meds);

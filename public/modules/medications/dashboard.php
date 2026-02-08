@@ -692,16 +692,22 @@ foreach ($prnMedications as $med) {
         ?>
 
         <?php if ($linkedUser && $linkedUser['status'] === 'active' && $linkedUserHasMeds): 
-            // Get profile pictures for both users
-            $myPicStmt = $pdo->prepare("SELECT profile_picture_path FROM users WHERE id = ?");
-            $myPicStmt->execute([$_SESSION['user_id']]);
-            $myPicResult = $myPicStmt->fetch();
-            $myPic = !empty($myPicResult['profile_picture_path']) ? $myPicResult['profile_picture_path'] : '/assets/images/default-avatar.svg';
+            // Get profile pictures for both users in a single query
+            $stmt = $pdo->prepare("SELECT id, profile_picture_path FROM users WHERE id IN (?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $linkedUser['linked_user_id']]);
+            $userProfiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            $theirPicStmt = $pdo->prepare("SELECT profile_picture_path FROM users WHERE id = ?");
-            $theirPicStmt->execute([$linkedUser['linked_user_id']]);
-            $theirPicResult = $theirPicStmt->fetch();
-            $theirPic = !empty($theirPicResult['profile_picture_path']) ? $theirPicResult['profile_picture_path'] : '/assets/images/default-avatar.svg';
+            // Map profiles by user ID
+            $myPic = '/assets/images/default-avatar.svg';
+            $theirPic = '/assets/images/default-avatar.svg';
+            
+            foreach ($userProfiles as $profile) {
+                if ($profile['id'] == $_SESSION['user_id'] && !empty($profile['profile_picture_path'])) {
+                    $myPic = $profile['profile_picture_path'];
+                } elseif ($profile['id'] == $linkedUser['linked_user_id'] && !empty($profile['profile_picture_path'])) {
+                    $theirPic = $profile['profile_picture_path'];
+                }
+            }
         ?>
         <!-- Tab Switcher with Profile Pictures -->
         <div style="background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 12px;">

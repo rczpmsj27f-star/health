@@ -12,7 +12,7 @@ try {
     if (empty($_SESSION['user_id'])) {
         error_log("Notifications API: No user_id in session");
         http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized', 'debug' => 'No session']);
+        echo json_encode(['error' => 'Unauthorized']);
         exit;
     }
     

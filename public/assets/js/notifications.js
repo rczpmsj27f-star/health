@@ -82,11 +82,15 @@ function markAsRead(notificationId) {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_read', notification_id: notificationId})
-    }).then(() => {
+    })
+    .then(() => {
         loadNotifications();
         if (typeof updateBadge === 'function') {
             updateBadge();
         }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
     });
 }
 
@@ -96,11 +100,15 @@ function markAllRead() {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_all_read'})
-    }).then(() => {
+    })
+    .then(() => {
         loadNotifications();
         if (typeof updateBadge === 'function') {
             updateBadge();
         }
+    })
+    .catch(error => {
+        console.error('Error marking all notifications as read:', error);
     });
 }
 

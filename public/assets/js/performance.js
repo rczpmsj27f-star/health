@@ -33,7 +33,7 @@ const cache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 async function cachedFetch(url, options = {}) {
-    const cacheKey = url + JSON.stringify(options);
+    const cacheKey = JSON.stringify([url, options]);
     const cached = cache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {

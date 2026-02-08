@@ -36,6 +36,7 @@ $doseTimes = $stmt->fetchAll();
     <title><?= htmlspecialchars($medication['name']) ?> - Details</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>"></script>
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
@@ -160,15 +161,14 @@ $doseTimes = $stmt->fetchAll();
                 $isArchived = !empty($medication['archived']) && $medication['archived'] == 1;
                 ?>
                 <a href="/modules/medications/archive_handler.php?id=<?= $medication['id'] ?>&action=<?= $isArchived ? 'unarchive' : 'archive' ?>" 
-                   class="btn btn-secondary" 
+                   class="btn btn-secondary archive-link" 
                    style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box;"
-                   onclick="return confirm('Are you sure you want to <?= $isArchived ? 'unarchive' : 'archive' ?> this medication?')">
+                   data-action="<?= $isArchived ? 'unarchive' : 'archive' ?>">
                     <?= $isArchived ? '📤 Unarchive' : '📦 Archive' ?>
                 </a>
                 <a href="/modules/medications/delete_handler.php?id=<?= $medication['id'] ?>" 
-                   class="btn btn-danger" 
-                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box; background: #dc2626;"
-                   onclick="return confirm('Are you sure you want to DELETE this medication? This action cannot be undone.')">
+                   class="btn btn-danger delete-link" 
+                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box; background: #dc2626;">
                     🗑️ Delete
                 </a>
                 <a href="/modules/medications/dashboard.php" 
@@ -179,5 +179,35 @@ $doseTimes = $stmt->fetchAll();
             </div>
         </div>
     </div>
+    
+    <script>
+    // Handle archive/unarchive confirmation
+    document.querySelector('.archive-link')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const action = this.dataset.action;
+        const confirmed = await confirmAction(
+            `Are you sure you want to ${action} this medication?`,
+            `${action.charAt(0).toUpperCase() + action.slice(1)} Medication`
+        );
+        if (confirmed) {
+            window.location.href = this.href;
+        }
+    });
+    
+    // Handle delete confirmation
+    document.querySelector('.delete-link')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const confirmed = await ConfirmModal.show({
+            title: 'Delete Medication',
+            message: 'Are you sure you want to DELETE this medication? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            danger: true
+        });
+        if (confirmed) {
+            window.location.href = this.href;
+        }
+    });
+    </script>
 </body>
 </html>

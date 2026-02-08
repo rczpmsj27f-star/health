@@ -278,6 +278,7 @@ foreach ($prnMedications as $med) {
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>"></script>
     <script src="/assets/js/medication-icons.js?v=<?= time() ?>"></script>
     <style>
         .page-content {
@@ -1119,14 +1120,14 @@ foreach ($prnMedications as $med) {
         if (reason === 'Other') {
             const otherText = document.getElementById('otherReasonText').value.trim();
             if (!otherText) {
-                alert('Please specify the reason');
+                showAlert('Please specify the reason', 'Missing Information');
                 return;
             }
             reason = 'Other: ' + otherText;
         }
         
         if (!reason) {
-            alert('Please select a reason');
+            showAlert('Please select a reason', 'Missing Information');
             return;
         }
         
@@ -1366,8 +1367,13 @@ foreach ($prnMedications as $med) {
     }
     
     // Nudge functionality for linked users
-    function sendNudge(medicationId, toUserId) {
-        if (!confirm('Send a gentle reminder to take this medication?')) {
+    async function sendNudge(medicationId, toUserId) {
+        const confirmed = await confirmAction(
+            'Send a gentle reminder to take this medication?',
+            'Send Reminder'
+        );
+        
+        if (!confirmed) {
             return;
         }
         

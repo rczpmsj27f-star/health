@@ -57,6 +57,7 @@ $users = $stmt->fetchAll();
     <title>Admin – Users</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>"></script>
     <style>
         .page-content {
             max-width: 1200px;
@@ -352,21 +353,34 @@ $users = $stmt->fetchAll();
         document.addEventListener('DOMContentLoaded', function() {
             // Reset password confirmation
             document.querySelectorAll('.btn-reset-password').forEach(btn => {
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', async function(e) {
+                    e.preventDefault();
                     const username = this.dataset.username;
-                    if (!confirm('Force password reset for ' + username + '?')) {
-                        e.preventDefault();
+                    const confirmed = await confirmAction(
+                        'Force password reset for ' + username + '?',
+                        'Reset Password'
+                    );
+                    if (confirmed) {
+                        window.location.href = this.href;
                     }
                 });
             });
 
             // Delete user confirmation and POST request
             document.querySelectorAll('.btn-delete-user').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', async function() {
                     const userId = this.dataset.userId;
                     const username = this.dataset.username;
                     
-                    if (!confirm('Are you sure you want to delete ' + username + '? This action cannot be undone.')) {
+                    const confirmed = await ConfirmModal.show({
+                        title: 'Delete User',
+                        message: 'Are you sure you want to delete ' + username + '? This action cannot be undone.',
+                        confirmText: 'Delete',
+                        cancelText: 'Cancel',
+                        danger: true
+                    });
+                    
+                    if (!confirmed) {
                         return;
                     }
 

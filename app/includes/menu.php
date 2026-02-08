@@ -286,3 +286,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     <a href="/logout">🚪 Logout</a>
 </div>
+
+<!-- Phase 5: UI Polish & Mobile Optimization -->
+<link rel="stylesheet" href="/assets/css/mobile.css?v=<?= time() ?>">
+<link rel="stylesheet" href="/assets/css/accessibility.css?v=<?= time() ?>">
+<script src="/assets/js/notifications.js?v=<?= time() ?>" defer></script>
+<script src="/assets/js/error-handler.js?v=<?= time() ?>" defer></script>
+<script src="/assets/js/performance.js?v=<?= time() ?>" defer></script>

@@ -60,7 +60,8 @@ $overdueCount = 0;
 $currentTimeStamp = strtotime(date('H:i'));
 
 foreach ($medications as $med) {
-    // Skip if no dose time (already filtered in query but double-check)
+    // Note: dose_time is already validated as NOT NULL in query at line 45
+    // This check is kept as defensive programming practice
     if (empty($med['dose_time'])) {
         continue;
     }
@@ -80,7 +81,8 @@ foreach ($medications as $med) {
         $isOverdue = $currentTimeStamp > $doseTime;
     }
     
-    // Only count if overdue and status is null or pending (query already filters this)
+    // Count if overdue - status is already filtered in query (line 46: status IS NULL OR pending)
+    // and taken medications are excluded via NOT EXISTS subquery (lines 47-53)
     if ($isOverdue) {
         $overdueCount++;
     }

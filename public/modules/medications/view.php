@@ -27,11 +27,6 @@ if (!$medication) {
 $stmt = $pdo->prepare("SELECT * FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_time ASC");
 $stmt->execute([$medicationId]);
 $doseTimes = $stmt->fetchAll();
-
-// Get notes
-$stmt = $pdo->prepare("SELECT * FROM medication_notes WHERE medication_id = ? ORDER BY created_at DESC");
-$stmt->execute([$medicationId]);
-$notes = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html>
@@ -154,20 +149,13 @@ $notes = $stmt->fetchAll();
                 📝 Notes
             </h3>
             
-            <?php if (empty($notes)): ?>
+            <?php if (empty($medication['notes'])): ?>
                 <p style="color: var(--color-text-secondary); margin: 0;">No notes yet</p>
             <?php else: ?>
-                <div style="display: grid; gap: 12px;">
-                    <?php foreach ($notes as $note): ?>
-                    <div style="padding: 16px; background: var(--color-bg-light); border-radius: 6px; border-left: 4px solid var(--color-primary);">
-                        <div style="font-size: 14px; color: var(--color-text); margin-bottom: 8px;">
-                            <?= nl2br(htmlspecialchars($note['note_text'])) ?>
-                        </div>
-                        <div style="font-size: 12px; color: var(--color-text-secondary);">
-                            <?= $timeFormatter->formatDateTime($note['created_at']) ?>
-                        </div>
+                <div style="padding: 16px; background: var(--color-bg-light); border-radius: 6px; border-left: 4px solid var(--color-primary);">
+                    <div style="font-size: 14px; color: var(--color-text);">
+                        <?= nl2br(htmlspecialchars($medication['notes'])) ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </div>

@@ -2,17 +2,18 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
 }
 
-// Date format constant for next dose time display
-define('NEXT_DOSE_DATE_FORMAT', 'H:i \o\n d M');  // e.g., "14:30 on 06 Feb"
-
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
+
+// Initialize TimeFormatter for user-friendly time display
+$timeFormatter = new TimeFormatter($pdo, $userId);
 
 // Get all active PRN medications for the user
 $stmt = $pdo->prepare("
@@ -66,9 +67,9 @@ foreach ($prnMedications as $med) {
             // Format time with date if it's on a different day than today
             $todayEnd = strtotime('tomorrow') - 1;
             if ($nextAvailableTimestamp > $todayEnd) {
-                $nextAvailableTimeForMaxDose = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
+                $nextAvailableTimeForMaxDose = date('M d', $nextAvailableTimestamp) . ' at ' . $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
             } else {
-                $nextAvailableTimeForMaxDose = date('H:i', $nextAvailableTimestamp);
+                $nextAvailableTimeForMaxDose = $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
             }
         }
     }
@@ -85,9 +86,9 @@ foreach ($prnMedications as $med) {
             // Show date if next dose is on a different day
             $todayEnd = strtotime('tomorrow') - 1;
             if ($nextAvailableTimestamp > $todayEnd) {
-                $nextAvailableTime = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
+                $nextAvailableTime = date('M d', $nextAvailableTimestamp) . ' at ' . $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
             } else {
-                $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+                $nextAvailableTime = $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
             }
         }
     }

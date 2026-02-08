@@ -1,16 +1,17 @@
 <?php
 session_start();
 require_once "../../../app/config/database.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
 }
 
-// Date format constant for next dose time display
-define('NEXT_DOSE_DATE_FORMAT', 'H:i \o\n d M');  // e.g., "14:30 on 06 Feb"
-
 $userId = $_SESSION['user_id'];
+
+// Initialize TimeFormatter for user-friendly time display
+$timeFormatter = new TimeFormatter($pdo, $userId);
 
 // Get quantity taken from POST (default to 1 for backwards compatibility)
 $quantityTaken = !empty($_POST['quantity_taken']) ? (int)$_POST['quantity_taken'] : 1;
@@ -69,9 +70,9 @@ try {
         // Format time with date if it's on a different day than today
         $todayEnd = strtotime('tomorrow') - 1;
         if ($nextAvailableTimestamp > $todayEnd) {
-            $nextAvailableTime = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
+            $nextAvailableTime = date('M d', $nextAvailableTimestamp) . ' at ' . $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
         } else {
-            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+            $nextAvailableTime = $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
         }
         
         throw new Exception("Maximum daily dose limit reached. Next dose available at {$nextAvailableTime}.");
@@ -88,9 +89,9 @@ try {
             // Show date if next dose is on a different day
             $todayEnd = strtotime('tomorrow') - 1;
             if ($nextAvailableTimestamp > $todayEnd) {
-                $nextAvailableTime = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
+                $nextAvailableTime = date('M d', $nextAvailableTimestamp) . ' at ' . $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
             } else {
-                $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+                $nextAvailableTime = $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
             }
             throw new Exception("You must wait at least {$minHours} hours between doses. Next dose available at {$nextAvailableTime}.");
         }
@@ -136,14 +137,14 @@ try {
         // Show date if next dose is on a different day
         $todayEnd = strtotime('tomorrow') - 1;
         if ($nextAvailableTimestamp > $todayEnd) {
-            $nextAvailableTime = date(NEXT_DOSE_DATE_FORMAT, $nextAvailableTimestamp);
+            $nextAvailableTime = date('M d', $nextAvailableTimestamp) . ' at ' . $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
         } else {
-            $nextAvailableTime = date('H:i', $nextAvailableTimestamp);
+            $nextAvailableTime = $timeFormatter->formatTime(date('H:i', $nextAvailableTimestamp));
         }
         $nextDoseMessage = " You can take the next dose at {$nextAvailableTime}.";
     }
     
-    $currentTime = date('H:i');
+    $currentTime = $timeFormatter->formatTime(date('H:i'));
     $tabletText = $quantityTaken > 1 ? "{$quantityTaken} tablets" : "1 tablet";
     $_SESSION['success'] = "Took {$tabletText} at {$currentTime}.{$nextDoseMessage}";
     header("Location: /modules/medications/log_prn.php");

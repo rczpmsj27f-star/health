@@ -4,10 +4,243 @@ if (!isset($isAdmin)) {
     require_once __DIR__ . '/../core/auth.php';
     $isAdmin = Auth::isAdmin();
 }
+
+// Get unread notification count
+require_once __DIR__ . '/../core/NotificationHelper.php';
+$notificationHelper = new NotificationHelper($pdo);
+$unreadCount = 0;
+if (!empty($_SESSION['user_id'])) {
+    $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
+}
 ?>
 <div class="hamburger" onclick="toggleMenu()">
     <div></div><div></div><div></div>
 </div>
+
+<!-- Notification Bell -->
+<div class="header-notifications">
+    <button class="notification-bell" id="notificationBell" onclick="toggleNotifications()">
+        🔔
+        <?php if ($unreadCount > 0): ?>
+            <span class="notification-badge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span>
+        <?php endif; ?>
+    </button>
+    
+    <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+        <div class="notification-header">
+            <strong>Notifications</strong>
+            <button onclick="markAllRead()" style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 12px;">
+                Mark all read
+            </button>
+        </div>
+        
+        <div class="notification-list" id="notificationList">
+            <div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">
+                Loading...
+            </div>
+        </div>
+        
+        <div class="notification-footer">
+            <a href="/modules/settings/notifications.php">View all notifications →</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.header-notifications {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-bell {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 350px;
+    max-height: 500px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    margin-top: 8px;
+}
+
+.notification-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--color-bg-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-bg-light);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.notification-item:hover {
+    background: var(--color-bg-light);
+}
+
+.notification-item.unread {
+    background: #eff6ff;
+}
+
+.notification-footer {
+    padding: 12px 16px;
+    text-align: center;
+    border-top: 1px solid var(--color-bg-light);
+}
+
+.notification-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 14px;
+}
+</style>
+
+<script>
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    const isVisible = dropdown.style.display === 'block';
+    
+    if (isVisible) {
+        dropdown.style.display = 'none';
+    } else {
+        dropdown.style.display = 'block';
+        loadNotifications();
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function loadNotifications() {
+    fetch('/api/notifications.php?action=get_recent')
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
+        .then(data => {
+            const list = document.getElementById('notificationList');
+            
+            if (!data.notifications || data.notifications.length === 0) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">No notifications</div>';
+                return;
+            }
+            
+            list.innerHTML = data.notifications.map(n => `
+                <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="markAsRead(${n.id})">
+                    <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
+                    <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
+                    <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                        ${formatTime(n.created_at)}
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            const list = document.getElementById('notificationList');
+            list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">Error loading notifications</div>';
+        });
+}
+
+function markAsRead(notificationId) {
+    fetch('/api/notifications.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'mark_read', notification_id: notificationId})
+    }).then(() => {
+        loadNotifications();
+        updateBadge();
+    });
+}
+
+function markAllRead() {
+    fetch('/api/notifications.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'mark_all_read'})
+    }).then(() => {
+        loadNotifications();
+        updateBadge();
+    });
+}
+
+function updateBadge() {
+    fetch('/api/notifications.php?action=get_count')
+        .then(r => r.json())
+        .then(data => {
+            const bell = document.getElementById('notificationBell');
+            const existingBadge = bell.querySelector('.notification-badge');
+            
+            if (data.count > 0) {
+                if (existingBadge) {
+                    existingBadge.textContent = data.count > 9 ? '9+' : data.count;
+                } else {
+                    bell.innerHTML += `<span class="notification-badge">${data.count > 9 ? '9+' : data.count}</span>`;
+                }
+            } else if (existingBadge) {
+                existingBadge.remove();
+            }
+        });
+}
+
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+    return Math.floor(diff / 86400) + ' days ago';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        const bell = document.getElementById('notificationBell');
+        const dropdown = document.getElementById('notificationDropdown');
+        
+        if (bell && dropdown && !bell.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+});
+</script>
 
 <div class="menu" id="menu">
     <h3>Menu</h3>

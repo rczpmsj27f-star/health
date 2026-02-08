@@ -32,9 +32,9 @@
                     ✓ Taken <?= $takenTimeDisplay ?>
                 </span>
                 <button type="button" 
-                        onclick="untakeMedication(<?= $med['id'] ?>, '<?= htmlspecialchars($med['scheduled_date_time']) ?>')"
-                        style="background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline; font-size: 12px; padding: 4px 8px;">
-                    Untake
+                        class="btn-untake"
+                        onclick="untakeMedication(<?= $med['id'] ?>, '<?= htmlspecialchars($med['scheduled_date_time']) ?>')">
+                    ↩️ Untake
                 </button>
             </div>
         <?php elseif ($med['log_status'] === 'skipped'): ?>

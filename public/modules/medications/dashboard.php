@@ -1273,7 +1273,7 @@ foreach ($prnMedications as $med) {
             };
             document.getElementById('earlyLoggingModal').classList.add('active');
         } else {
-            // Direct submission for same-day logging
+            // Direct submission for today's logging
             submitLogToServer({
                 medId: medId,
                 scheduledDateTime: scheduledDateTime

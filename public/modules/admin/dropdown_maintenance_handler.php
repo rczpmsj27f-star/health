@@ -15,21 +15,20 @@ try {
         case 'add':
             $category_id = $_POST['category_id'] ?? null;
             $option_value = $_POST['option_value'] ?? '';
-            $option_label = $_POST['option_label'] ?? '';
             $icon_emoji = $_POST['icon_emoji'] ?? null;
             $display_order = $_POST['display_order'] ?? 0;
             
-            if (empty($category_id) || empty($option_value) || empty($option_label)) {
+            if (empty($category_id) || empty($option_value)) {
                 echo json_encode(['success' => false, 'message' => 'Missing required fields']);
                 exit;
             }
             
             $stmt = $pdo->prepare("
                 INSERT INTO dropdown_options 
-                (category_id, option_value, option_label, icon_emoji, display_order, is_active)
-                VALUES (?, ?, ?, ?, ?, 1)
+                (category_id, option_value, icon_emoji, display_order, is_active)
+                VALUES (?, ?, ?, ?, 1)
             ");
-            $stmt->execute([$category_id, $option_value, $option_label, $icon_emoji, $display_order]);
+            $stmt->execute([$category_id, $option_value, $icon_emoji, $display_order]);
             
             echo json_encode(['success' => true, 'message' => 'Option added successfully']);
             break;
@@ -37,21 +36,20 @@ try {
         case 'edit':
             $option_id = $_POST['option_id'] ?? null;
             $option_value = $_POST['option_value'] ?? '';
-            $option_label = $_POST['option_label'] ?? '';
             $icon_emoji = $_POST['icon_emoji'] ?? null;
             $display_order = $_POST['display_order'] ?? 0;
             
-            if (empty($option_id) || empty($option_value) || empty($option_label)) {
+            if (empty($option_id) || empty($option_value)) {
                 echo json_encode(['success' => false, 'message' => 'Missing required fields']);
                 exit;
             }
             
             $stmt = $pdo->prepare("
                 UPDATE dropdown_options 
-                SET option_value = ?, option_label = ?, icon_emoji = ?, display_order = ?
+                SET option_value = ?, icon_emoji = ?, display_order = ?
                 WHERE id = ?
             ");
-            $stmt->execute([$option_value, $option_label, $icon_emoji, $display_order, $option_id]);
+            $stmt->execute([$option_value, $icon_emoji, $display_order, $option_id]);
             
             echo json_encode(['success' => true, 'message' => 'Option updated successfully']);
             break;

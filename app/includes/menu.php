@@ -36,6 +36,7 @@ if (!isset($isAdmin)) {
         <div class="menu-section-children" id="settings-menu">
             <a href="/modules/settings/preferences.php">⚡ Preferences</a>
             <a href="/settings/notifications">🔔 Notifications</a>
+            <a href="/modules/settings/linked_users.php">👥 Linked Users</a>
             <?php if ($isAdmin): ?>
             <div class="menu-section nested">
                 <div class="menu-section-header nested-header" onclick="toggleSubmenu('admin-menu'); event.stopPropagation();">

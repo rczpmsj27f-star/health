@@ -129,15 +129,21 @@ if ($selected_category_id) {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--color-border);
+            padding: 16px 20px;
+            background: var(--color-primary);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            margin: -24px -24px 20px -24px;
         }
         
         .section-title {
             font-size: 20px;
             font-weight: 600;
-            color: var(--color-text-primary);
+            color: white;
             margin: 0;
+        }
+        
+        .section-header p {
+            color: rgba(255, 255, 255, 0.9);
         }
         
         .options-table {
@@ -188,8 +194,8 @@ if ($selected_category_id) {
         }
         
         .btn-add {
-            background: var(--color-primary);
-            color: white;
+            background: white;
+            color: var(--color-primary);
             border: none;
             padding: 10px 20px;
             border-radius: var(--radius-sm);
@@ -200,7 +206,9 @@ if ($selected_category_id) {
         }
         
         .btn-add:hover {
-            background: var(--color-primary-hover);
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         
         .modal {

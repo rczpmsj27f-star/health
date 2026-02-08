@@ -5,8 +5,6 @@ require_once "../../../app/core/auth.php";
 require_once "../../../app/core/LinkedUserHelper.php";
 require_once "../../../vendor/autoload.php";
 
-use TCPDF;
-
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;

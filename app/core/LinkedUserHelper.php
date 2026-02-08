@@ -49,11 +49,12 @@ class LinkedUserHelper {
         $code = $this->generateInviteCode();
         $expiresAt = date('Y-m-d H:i:s', strtotime('+7 days'));
         
+        // Create with user_b_id = NULL (will be set when invite is accepted)
         $stmt = $this->pdo->prepare("
             INSERT INTO user_links (user_a_id, user_b_id, invite_code, invited_by, expires_at, status)
-            VALUES (?, ?, ?, ?, ?, 'pending_a')
+            VALUES (?, NULL, ?, ?, ?, 'pending_a')
         ");
-        $stmt->execute([$inviterId, null, $code, $inviterId, $expiresAt]);
+        $stmt->execute([$inviterId, $code, $inviterId, $expiresAt]);
         
         return [
             'link_id' => $this->pdo->lastInsertId(),

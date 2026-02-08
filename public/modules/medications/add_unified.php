@@ -1,6 +1,8 @@
 <?php 
 session_start();
 require_once "../../../app/core/auth.php";
+require_once "../../../app/config/database.php";
+require_once "../../../app/helpers/dropdown_helper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -180,15 +182,7 @@ $isAdmin = Auth::isAdmin();
 
                     <div class="form-group">
                         <label>Unit *</label>
-                        <select name="dose_unit" required>
-                            <option value="">Select unit...</option>
-                            <option value="mg">mg (milligrams)</option>
-                            <option value="ml">ml (milliliters)</option>
-                            <option value="tablet">tablet(s)</option>
-                            <option value="capsule">capsule(s)</option>
-                            <option value="g">g (grams)</option>
-                            <option value="mcg">mcg (micrograms)</option>
-                        </select>
+                        <?= renderDropdown($pdo, 'dose_units', 'dose_unit', '', ['required' => 'required']) ?>
                     </div>
                 </div>
             </div>
@@ -266,12 +260,7 @@ $isAdmin = Auth::isAdmin();
                     <div id="special-timing-section" style="display: none; margin-top: 16px;">
                         <div class="form-group">
                             <label>When to Take</label>
-                            <select name="special_timing" id="special_timing" class="form-control">
-                                <option value="">At specific times</option>
-                                <option value="on_waking">🌅 On Waking</option>
-                                <option value="before_bed">🌙 Before Bed</option>
-                                <option value="with_meal">🍽️ With Main Meal</option>
-                            </select>
+                            <?= renderDropdown($pdo, 'special_timing', 'special_timing', '', ['id' => 'special_timing', 'class' => 'form-control']) ?>
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Choose a general time or set specific times below
                             </small>
@@ -355,6 +344,14 @@ $isAdmin = Auth::isAdmin();
                     </div>
 
                     <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" name="start_date" value="<?= date('Y-m-d') ?>">
+                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                            When did you start taking this medication?
+                        </small>
+                    </div>
+
+                    <div class="form-group">
                         <label>End Date (optional)</label>
                         <input type="date" name="end_date">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
@@ -368,24 +365,7 @@ $isAdmin = Auth::isAdmin();
             <div class="form-section">
                 <div class="form-section-title">5. Special Instructions</div>
                 
-                <div class="checkbox-group">
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Take with water">
-                        💧 Take with water
-                    </label>
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Take on empty stomach">
-                        🍽️ Take on empty stomach
-                    </label>
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Take with food">
-                        🍴 Take with food
-                    </label>
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Do not crush or chew">
-                        💊 Do not crush or chew
-                    </label>
-                </div>
+                <?= renderCheckboxGroup($pdo, 'special_instructions', 'instructions', []) ?>
 
                 <div class="form-group">
                     <label>Other Instructions (optional)</label>

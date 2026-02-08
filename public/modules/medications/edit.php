@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/dropdown_helper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -60,30 +61,18 @@ try {
     // Table doesn't exist yet - continue with empty arrays
 }
 
-// Prepare instruction checkboxes
-$hasWater = false;
-$hasEmptyStomach = false;
-$hasFood = false;
-$hasNoCrush = false;
+// Prepare instruction checkboxes - build selected values array
+$selectedInstructions = [];
 $otherInstructions = [];
 
 foreach ($instructions as $i) {
-    switch ($i['instruction_text']) {
-        case 'Take with water':
-            $hasWater = true;
-            break;
-        case 'Take on empty stomach':
-            $hasEmptyStomach = true;
-            break;
-        case 'Take with food':
-            $hasFood = true;
-            break;
-        case 'Do not crush or chew':
-            $hasNoCrush = true;
-            break;
-        default:
-            $otherInstructions[] = $i['instruction_text'];
-            break;
+    $instructionText = $i['instruction_text'];
+    // Check if it's a standard instruction or other
+    $standardInstructions = ['Take with water', 'Take on empty stomach', 'Take with food', 'Do not crush or chew'];
+    if (in_array($instructionText, $standardInstructions)) {
+        $selectedInstructions[] = $instructionText;
+    } else {
+        $otherInstructions[] = $instructionText;
     }
 }
 ?>
@@ -258,15 +247,7 @@ foreach ($instructions as $i) {
 
                     <div class="form-group">
                         <label>Unit *</label>
-                        <select name="dose_unit" required>
-                            <option value="">Select unit...</option>
-                            <option value="mg" <?= $dose['dose_unit'] === 'mg' ? 'selected' : '' ?>>mg (milligrams)</option>
-                            <option value="ml" <?= $dose['dose_unit'] === 'ml' ? 'selected' : '' ?>>ml (milliliters)</option>
-                            <option value="tablet" <?= $dose['dose_unit'] === 'tablet' ? 'selected' : '' ?>>tablet(s)</option>
-                            <option value="capsule" <?= $dose['dose_unit'] === 'capsule' ? 'selected' : '' ?>>capsule(s)</option>
-                            <option value="g" <?= $dose['dose_unit'] === 'g' ? 'selected' : '' ?>>g (grams)</option>
-                            <option value="mcg" <?= $dose['dose_unit'] === 'mcg' ? 'selected' : '' ?>>mcg (micrograms)</option>
-                        </select>
+                        <?= renderDropdown($pdo, 'dose_units', 'dose_unit', $dose['dose_unit'] ?? '', ['required' => 'required']) ?>
                     </div>
                 </div>
             </div>
@@ -344,12 +325,7 @@ foreach ($instructions as $i) {
                         <div id="special-timing-section" style="display: none; margin-top: 16px;">
                             <div class="form-group">
                                 <label>When to Take</label>
-                                <select name="special_timing" id="special_timing" class="form-control">
-                                    <option value="">At specific times</option>
-                                    <option value="on_waking" <?= ($schedule['special_timing'] ?? '') === 'on_waking' ? 'selected' : '' ?>>🌅 On Waking</option>
-                                    <option value="before_bed" <?= ($schedule['special_timing'] ?? '') === 'before_bed' ? 'selected' : '' ?>>🌙 Before Bed</option>
-                                    <option value="with_meal" <?= ($schedule['special_timing'] ?? '') === 'with_meal' ? 'selected' : '' ?>>🍽️ With Main Meal</option>
-                                </select>
+                                <?= renderDropdown($pdo, 'special_timing', 'special_timing', $schedule['special_timing'] ?? '', ['id' => 'special_timing', 'class' => 'form-control']) ?>
                                 <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                     Choose a general time or set specific times below
                                 </small>
@@ -419,6 +395,14 @@ foreach ($instructions as $i) {
                     </div>
 
                     <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" name="start_date" value="<?= htmlspecialchars($med['start_date'] ?? date('Y-m-d')) ?>">
+                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                            When did you start taking this medication?
+                        </small>
+                    </div>
+
+                    <div class="form-group">
                         <label>End Date (optional)</label>
                         <input type="date" name="end_date" value="<?= htmlspecialchars($med['end_date'] ?? '') ?>">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
@@ -432,24 +416,7 @@ foreach ($instructions as $i) {
             <div class="form-section">
                 <div class="form-section-title">5. Special Instructions</div>
                 
-                <div class="checkbox-group">
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Take with water" <?= $hasWater ? 'checked' : '' ?>>
-                        💧 Take with water
-                    </label>
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Take on empty stomach" <?= $hasEmptyStomach ? 'checked' : '' ?>>
-                        🍽️ Take on empty stomach
-                    </label>
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Take with food" <?= $hasFood ? 'checked' : '' ?>>
-                        🍴 Take with food
-                    </label>
-                    <label>
-                        <input type="checkbox" name="instructions[]" value="Do not crush or chew" <?= $hasNoCrush ? 'checked' : '' ?>>
-                        💊 Do not crush or chew
-                    </label>
-                </div>
+                <?= renderCheckboxGroup($pdo, 'special_instructions', 'instructions', $selectedInstructions) ?>
 
                 <div class="form-group">
                     <label>Other Instructions (optional)</label>

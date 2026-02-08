@@ -246,5 +246,19 @@ if (isset($_POST['current_stock'])) {
     }
 }
 
+// Update start_date if provided
+if (isset($_POST['start_date'])) {
+    $startDate = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
+    $stmt = $pdo->prepare("UPDATE medications SET start_date = ? WHERE id = ?");
+    $stmt->execute([$startDate, $medId]);
+}
+
+// Update end_date if provided
+if (isset($_POST['end_date'])) {
+    $endDate = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+    $stmt = $pdo->prepare("UPDATE medications SET end_date = ? WHERE id = ?");
+    $stmt->execute([$endDate, $medId]);
+}
+
 header("Location: /modules/medications/view.php?id=$medId");
 exit;

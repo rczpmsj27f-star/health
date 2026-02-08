@@ -14,7 +14,7 @@ class NotificationHelper {
     /**
      * Create a notification and send via enabled channels
      */
-    public function create($userId, $type, $title, $message, $relatedUserId = null, $relatedMedicationId = null) {
+    public function create($userId, $type, $title, $message, $relatedUserId = null, $relatedMedicationId = null, $data = []) {
         // Create in-app notification
         $stmt = $this->pdo->prepare("
             INSERT INTO notifications (user_id, type, title, message, related_user_id, related_medication_id)
@@ -24,8 +24,16 @@ class NotificationHelper {
         $stmt->execute([$userId, $type, $title, $message, $relatedUserId, $relatedMedicationId]);
         $notificationId = $this->pdo->lastInsertId();
         
+        // Add notification ID and medication ID to data if provided
+        if (!isset($data['notification_id'])) {
+            $data['notification_id'] = $notificationId;
+        }
+        if ($relatedMedicationId && !isset($data['medication_id'])) {
+            $data['medication_id'] = $relatedMedicationId;
+        }
+        
         // Send via other channels based on preferences
-        $this->sendViaChannels($userId, $type, $title, $message);
+        $this->sendViaChannels($userId, $type, $title, $message, $data);
         
         return $notificationId;
     }
@@ -33,7 +41,7 @@ class NotificationHelper {
     /**
      * Send notification via enabled channels
      */
-    private function sendViaChannels($userId, $type, $title, $message) {
+    private function sendViaChannels($userId, $type, $title, $message, $data = []) {
         $stmt = $this->pdo->prepare("
             SELECT in_app, push, email FROM notification_preferences 
             WHERE user_id = ? AND notification_type = ?
@@ -45,14 +53,99 @@ class NotificationHelper {
             $prefs = ['in_app' => 1, 'push' => 1, 'email' => 0];
         }
         
-        // Push notification (placeholder for Phase 7)
+        // Push notification via OneSignal
         if ($prefs['push']) {
-            error_log("PUSH notification for user $userId: $title");
+            $this->sendPushNotification($userId, $type, $title, $message, $data);
         }
         
         // Email notification (basic implementation)
         if ($prefs['email']) {
             $this->sendEmailNotification($userId, $title, $message);
+        }
+    }
+    
+    /**
+     * Send push notification via OneSignal
+     */
+    private function sendPushNotification($userId, $type, $title, $message, $data = []) {
+        try {
+            // Get user's OneSignal player ID or device token
+            $stmt = $this->pdo->prepare("
+                SELECT onesignal_player_id, device_token, platform, notifications_enabled
+                FROM user_notification_settings
+                WHERE user_id = ? AND notifications_enabled = 1
+            ");
+            $stmt->execute([$userId]);
+            $settings = $stmt->fetch();
+            
+            if (!$settings || empty($settings['onesignal_player_id'])) {
+                // User hasn't registered for push notifications
+                return;
+            }
+            
+            // Prepare notification data
+            $notificationData = array_merge($data, [
+                'type' => $type
+            ]);
+            
+            // Send via OneSignal API
+            $this->sendToOneSignal(
+                $settings['onesignal_player_id'],
+                $title,
+                $message,
+                $notificationData
+            );
+            
+        } catch (Exception $e) {
+            error_log("Error sending push notification: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Send notification to OneSignal
+     */
+    private function sendToOneSignal($playerId, $title, $message, $data = []) {
+        if (!defined('ONESIGNAL_APP_ID') || !defined('ONESIGNAL_REST_API_KEY')) {
+            error_log("OneSignal credentials not configured");
+            return;
+        }
+        
+        $payload = [
+            'app_id' => ONESIGNAL_APP_ID,
+            'include_player_ids' => [$playerId],
+            'headings' => ['en' => $title],
+            'contents' => ['en' => $message],
+            'ios_badgeType' => 'Increase',
+            'ios_badgeCount' => 1
+        ];
+        
+        if (!empty($data)) {
+            $payload['data'] = $data;
+        }
+        
+        // Add action buttons for medication reminders
+        if (isset($data['type']) && $data['type'] === 'medication_reminder') {
+            $payload['buttons'] = [
+                ['id' => 'mark_taken', 'text' => 'Mark as Taken'],
+                ['id' => 'snooze', 'text' => 'Snooze']
+            ];
+        }
+        
+        $ch = curl_init('https://onesignal.com/api/v1/notifications');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Basic ' . ONESIGNAL_REST_API_KEY
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200 && $httpCode !== 201) {
+            error_log("OneSignal API error: HTTP $httpCode, Response: $response");
         }
     }
     

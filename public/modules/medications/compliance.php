@@ -12,6 +12,24 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
+// Check for linked user
+require_once __DIR__ . '/../../../app/core/LinkedUserHelper.php';
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+$viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
+$targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Check permissions if viewing linked user
+if ($viewingLinkedUser) {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_view_schedule']) {
+        $_SESSION['error_msg'] = "You don't have permission to view their compliance data";
+        header("Location: /modules/medications/compliance.php");
+        exit;
+    }
+}
+
 // Get current medication type (scheduled or prn)
 $medType = $_GET['type'] ?? 'scheduled';
 $validTypes = ['scheduled', 'prn'];
@@ -56,7 +74,7 @@ $stmt = $pdo->prepare("
     WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL) AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
     ORDER BY m.name
 ");
-$stmt->execute([$userId]);
+$stmt->execute([$targetUserId]);
 $medications = $stmt->fetchAll();
 
 // Calculate date ranges based on view
@@ -199,7 +217,7 @@ if ($medType === 'prn') {
                 GROUP BY DATE(taken_at)
                 ORDER BY taken_at
             ");
-            $stmt->execute([$medId, $userId, $currentYear, $currentMonth]);
+            $stmt->execute([$medId, $targetUserId, $currentYear, $currentMonth]);
         } else {
             $stmt = $pdo->prepare("
                 SELECT DATE(taken_at) as log_date, TIME(taken_at) as log_time, 
@@ -209,7 +227,7 @@ if ($medType === 'prn') {
                 GROUP BY DATE(taken_at)
                 ORDER BY taken_at
             ");
-            $stmt->execute([$medId, $userId]);
+            $stmt->execute([$medId, $targetUserId]);
         }
         $doseLogs = $stmt->fetchAll();
         
@@ -222,7 +240,7 @@ if ($medType === 'prn') {
                 WHERE medication_id = ? AND user_id = ? AND status = 'taken' AND DATE(taken_at) = CURDATE()
                 ORDER BY taken_at
             ");
-            $stmt->execute([$medId, $userId]);
+            $stmt->execute([$medId, $targetUserId]);
             $detailedTimes = $stmt->fetchAll();
         }
         
@@ -899,6 +917,7 @@ if ($medType === 'prn') {
             <p>Track your medication adherence</p>
         </div>
         
+        <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <!-- Medication Type Toggle and View Selector -->
         <div class="compliance-controls">
             <div class="med-type-toggle">
@@ -1209,7 +1228,7 @@ if ($medType === 'prn') {
                                 AND DATE(scheduled_date_time) >= ?
                                 AND DATE(scheduled_date_time) <= ?
                             ");
-                            $stmt->execute([$medId, $userId, $week['start'], $week['end']]);
+                            $stmt->execute([$medId, $targetUserId, $week['start'], $week['end']]);
                             $weekTaken = $stmt->fetchColumn();
                             
                             // Calculate expected doses for the week
@@ -1293,7 +1312,7 @@ if ($medType === 'prn') {
                                                 AND status = 'taken'
                                                 AND DATE(scheduled_date_time) = ?
                                             ");
-                                            $stmt->execute([$medId, $userId, $dayDate]);
+                                            $stmt->execute([$medId, $targetUserId, $dayDate]);
                                             $dayTaken = $stmt->fetchColumn();
                                             
                                             $dayCompliant = $dayTaken >= $expectedDosesPerDay;
@@ -1377,7 +1396,7 @@ if ($medType === 'prn') {
                         AND DATE(scheduled_date_time) <= ?
                         GROUP BY DATE(scheduled_date_time)
                     ");
-                    $stmt->execute([$medId, $userId, $monthStart, $monthEnd]);
+                    $stmt->execute([$medId, $targetUserId, $monthStart, $monthEnd]);
                     $monthLogs = [];
                     while ($row = $stmt->fetch()) {
                         $monthLogs[$row['log_date']] = $row['taken_count'];
@@ -1519,7 +1538,7 @@ if ($medType === 'prn') {
                             AND DATE(scheduled_date_time) >= ?
                             AND DATE(scheduled_date_time) <= ?
                         ");
-                        $stmt->execute([$medId, $userId, $yearStart, $yearEnd]);
+                        $stmt->execute([$medId, $targetUserId, $yearStart, $yearEnd]);
                         $yearTaken = $stmt->fetchColumn();
                         
                         // Calculate expected doses for the year
@@ -1588,7 +1607,7 @@ if ($medType === 'prn') {
                                 AND DATE(scheduled_date_time) >= ?
                                 AND DATE(scheduled_date_time) <= ?
                             ");
-                            $stmt->execute([$medId, $userId, $weekStart, $weekEnd]);
+                            $stmt->execute([$medId, $targetUserId, $weekStart, $weekEnd]);
                             $weekTaken = $stmt->fetchColumn();
                             
                             // Count only active days in this week
@@ -1929,7 +1948,7 @@ if ($medType === 'prn') {
                         GROUP BY MONTH(taken_at)
                         ORDER BY month
                     ");
-                    $stmt->execute([$medId, $userId]);
+                    $stmt->execute([$medId, $targetUserId]);
                     $monthlyData = $stmt->fetchAll();
                     
                     $totalDosesYear = 0;

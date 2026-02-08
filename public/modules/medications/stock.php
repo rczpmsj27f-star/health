@@ -12,6 +12,24 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
+// Check for linked user
+require_once __DIR__ . '/../../../app/core/LinkedUserHelper.php';
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+$viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
+$targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Check permissions if viewing linked user
+if ($viewingLinkedUser) {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_view_medications']) {
+        $_SESSION['error_msg'] = "You don't have permission to view their medication stock";
+        header("Location: /modules/medications/stock.php");
+        exit;
+    }
+}
+
 // Initialize TimeFormatter with current user's preferences
 $timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
@@ -23,7 +41,7 @@ $stmt = $pdo->prepare("
     WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL)
     ORDER BY m.name
 ");
-$stmt->execute([$userId]);
+$stmt->execute([$targetUserId]);
 $medications = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -345,6 +363,7 @@ $medications = $stmt->fetchAll();
             <p>Track and update your medication stock levels</p>
         </div>
         
+        <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <?php if (empty($medications)): ?>
             <div class="no-meds">
                 <p>You don't have any active medications yet.</p>

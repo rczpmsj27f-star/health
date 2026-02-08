@@ -12,6 +12,24 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
+// Check for linked user
+require_once __DIR__ . '/../../../app/core/LinkedUserHelper.php';
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+$viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
+$targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Check permissions if viewing linked user
+if ($viewingLinkedUser) {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_view_medications']) {
+        $_SESSION['error_msg'] = "You don't have permission to view their medications";
+        header("Location: /modules/medications/list.php");
+        exit;
+    }
+}
+
 // Get active medications (not archived)
 $stmt = $pdo->prepare("
     SELECT m.*, ms.frequency_type, ms.times_per_day, ms.times_per_week, ms.days_of_week, ms.is_prn 
@@ -20,7 +38,7 @@ $stmt = $pdo->prepare("
     WHERE m.user_id = ? AND (m.archived = 0 OR m.archived IS NULL) 
     ORDER BY m.created_at DESC
 ");
-$stmt->execute([$userId]);
+$stmt->execute([$targetUserId]);
 $allActiveMeds = $stmt->fetchAll();
 
 // Separate into scheduled and PRN medications
@@ -42,7 +60,7 @@ $stmt = $pdo->prepare("
     WHERE m.user_id = ? AND m.archived = 1 
     ORDER BY m.archived_at DESC
 ");
-$stmt->execute([$userId]);
+$stmt->execute([$targetUserId]);
 $archivedMeds = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -115,6 +133,8 @@ $archivedMeds = $stmt->fetchAll();
             <h2>💊 Medication Management</h2>
             <p>Track and manage your medications</p>
         </div>
+
+        <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
 
         <?php if (empty($scheduledMeds) && empty($prnMeds) && empty($archivedMeds)): ?>
             <div class="content-card" style="text-align: center;">

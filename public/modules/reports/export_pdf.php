@@ -461,19 +461,20 @@ function generateManualChart($pdf, $pdo, $userId, $user, $startDate, $endDate, $
             }
             $pdf->Ln();
         } else {
-            // Multiple dose times
-            $medName = ($idx === 0) ? htmlspecialchars($med['name']) : '';
-            $timeLabel = date('g:iA', strtotime($time['dose_time']));
-            
-            $pdf->Cell(50, 7, $medName, 1, 0, 'L');
-            for ($i = 0; $i < min($days, 14); $i++) {
-                $pdf->Cell($dateColWidth, 7, '[ ]', 1, 0, 'C'); // Checkbox
-            }
-            $pdf->Ln();
-            
-            if ($medName) {
-                // Time on next row, indented
-                $pdf->Cell(50, 5, '  ' . $timeLabel, 0, 0, 'L');
+            // Multiple dose times - iterate through each time
+            foreach ($times as $idx => $time) {
+                $timeLabel = date('g:iA', strtotime($time['dose_time']));
+                
+                // Show medication name only on first row, time label on subsequent rows
+                if ($idx === 0) {
+                    $pdf->Cell(50, 7, htmlspecialchars($med['name']), 1, 0, 'L');
+                } else {
+                    $pdf->Cell(50, 7, '  ' . $timeLabel, 1, 0, 'L');
+                }
+                
+                for ($i = 0; $i < min($days, 14); $i++) {
+                    $pdf->Cell($dateColWidth, 7, '[ ]', 1, 0, 'C'); // Checkbox
+                }
                 $pdf->Ln();
             }
         }

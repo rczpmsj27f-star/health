@@ -10,14 +10,13 @@
  * @param PDO $pdo Database connection
  * @param string $category_key The category key (e.g., 'special_instructions')
  * @param bool $include_inactive Include inactive options (default: false)
- * @return array Array of options with id, value, label, icon_emoji
+ * @return array Array of options with id, value, icon_emoji
  */
 function getDropdownOptions($pdo, $category_key, $include_inactive = false) {
     $sql = "
         SELECT 
             o.id,
             o.option_value,
-            o.option_label,
             o.icon_emoji,
             o.display_order,
             o.is_active
@@ -30,7 +29,7 @@ function getDropdownOptions($pdo, $category_key, $include_inactive = false) {
         $sql .= " AND o.is_active = 1";
     }
     
-    $sql .= " ORDER BY o.display_order ASC, o.option_label ASC";
+    $sql .= " ORDER BY o.display_order ASC, o.option_value ASC";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$category_key]);
@@ -66,7 +65,7 @@ function renderDropdown($pdo, $category_key, $name, $selected_value = '', $attri
         $selected = ($option['option_value'] == $selected_value) ? ' selected' : '';
         $icon = $option['icon_emoji'] ? $option['icon_emoji'] . ' ' : '';
         $html .= '<option value="' . htmlspecialchars($option['option_value']) . '"' . $selected . '>';
-        $html .= $icon . htmlspecialchars($option['option_label']);
+        $html .= $icon . htmlspecialchars($option['option_value']);
         $html .= '</option>';
     }
     
@@ -95,7 +94,7 @@ function renderCheckboxGroup($pdo, $category_key, $name, $selected_values = []) 
         $html .= '<label>';
         $html .= '<input type="checkbox" name="' . htmlspecialchars($name) . '[]" ';
         $html .= 'value="' . htmlspecialchars($option['option_value']) . '"' . $checked . '>';
-        $html .= $icon . htmlspecialchars($option['option_label']);
+        $html .= $icon . htmlspecialchars($option['option_value']);
         $html .= '</label>';
     }
     

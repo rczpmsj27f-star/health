@@ -12,6 +12,27 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
+// Check for linked user
+require_once __DIR__ . '/../../../app/core/LinkedUserHelper.php';
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+$viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
+$targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Get permissions if viewing linked user
+$myPermissions = null;
+if ($viewingLinkedUser) {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    
+    // Check if user has permission to view
+    if (!$myPermissions || !$myPermissions['can_view_schedule']) {
+        $_SESSION['error_msg'] = "You don't have permission to view their medications";
+        header("Location: /modules/medications/dashboard.php");
+        exit;
+    }
+}
+
 // Get date from query parameter or default to today
 $viewDate = $_GET['date'] ?? date('Y-m-d');
 $viewDate = date('Y-m-d', strtotime($viewDate)); // Validate format
@@ -38,7 +59,7 @@ $stmt = $pdo->prepare("
     )
     ORDER BY m.name
 ");
-$stmt->execute([$userId, "%$today%"]);
+$stmt->execute([$targetUserId, "%$today%"]);
 $todaysMeds = $stmt->fetchAll();
 
 // Get dose times for each medication and build schedule by time
@@ -61,7 +82,7 @@ $stmt = $pdo->prepare("
         OR status IN ('taken', 'skipped')
     )
 ");
-$stmt->execute([$userId, $todayDate, $currentDateTime]);
+$stmt->execute([$targetUserId, $todayDate, $currentDateTime]);
 $medLogs = [];
 while ($log = $stmt->fetch()) {
     $key = $log['medication_id'] . '_' . $log['scheduled_date_time'];
@@ -650,6 +671,42 @@ foreach ($prnMedications as $med) {
             <p>Today's schedule and medication management</p>
         </div>
         
+        <?php if ($linkedUser && $linkedUser['status'] === 'active'): ?>
+        <!-- Tab Switcher -->
+        <div style="background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 12px;">
+            <a href="/modules/medications/dashboard.php<?= isset($_GET['date']) ? '?date=' . urlencode($_GET['date']) : '' ?>" 
+               class="tab-button <?= !$viewingLinkedUser ? 'active' : '' ?>"
+               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; <?= !$viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
+                💊 My Medications
+            </a>
+            <a href="/modules/medications/dashboard.php?view=linked<?= isset($_GET['date']) ? '&date=' . urlencode($_GET['date']) : '' ?>" 
+               class="tab-button <?= $viewingLinkedUser ? 'active' : '' ?>"
+               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; <?= $viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
+                👥 Manage <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Meds
+            </a>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($viewingLinkedUser): ?>
+        <!-- Linked User Banner -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 10px; margin-bottom: 20px;">
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
+                👥 Viewing <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Medications
+            </div>
+            <div style="font-size: 13px; opacity: 0.9;">
+                <?php
+                $permissions = [];
+                if ($myPermissions['can_view_medications']) $permissions[] = 'View';
+                if ($myPermissions['can_mark_taken']) $permissions[] = 'Mark as taken';
+                if ($myPermissions['can_add_medications']) $permissions[] = 'Add';
+                if ($myPermissions['can_edit_medications']) $permissions[] = 'Edit';
+                if ($myPermissions['can_delete_medications']) $permissions[] = 'Delete';
+                echo 'Your permissions: ' . implode(', ', $permissions);
+                ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        
         <!-- Today's Schedule Section -->
         <div class="schedule-section">
             <h3>Today's Schedule</h3>
@@ -657,7 +714,7 @@ foreach ($prnMedications as $med) {
             <!-- Compact Date Navigation -->
             <div style="text-align: center; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 8px;">
-                    <a href="?date=<?= $prevDate ?>" 
+                    <a href="?date=<?= $prevDate ?><?= $viewingLinkedUser ? '&view=linked' : '' ?>" 
                        style="font-size: 28px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; line-height: 1;" 
                        class="nav-arrow"
                        title="Previous Day"
@@ -669,7 +726,7 @@ foreach ($prnMedications as $med) {
                         <?= date('l j F Y', strtotime($viewDate)) ?>
                     </div>
                     
-                    <a href="?date=<?= $nextDate ?>" 
+                    <a href="?date=<?= $nextDate ?><?= $viewingLinkedUser ? '&view=linked' : '' ?>" 
                        style="font-size: 28px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; line-height: 1;" 
                        class="nav-arrow"
                        title="Next Day"
@@ -679,7 +736,7 @@ foreach ($prnMedications as $med) {
                 </div>
                 
                 <?php if (!$isToday): ?>
-                    <a href="?" 
+                    <a href="?<?= $viewingLinkedUser ? 'view=linked' : '' ?>" 
                        style="display: inline-block; font-size: 13px; color: var(--color-primary); text-decoration: none; padding: 4px 12px; border: 1px solid var(--color-primary); border-radius: 4px; margin-top: 4px;">
                         Return to Today
                     </a>
@@ -1047,6 +1104,11 @@ foreach ($prnMedications as $med) {
             formData.append('late_logging_reason', logData.lateReason);
         }
         
+        // Add for_user_id if viewing linked user
+        <?php if ($viewingLinkedUser): ?>
+        formData.append('for_user_id', '<?= $targetUserId ?>');
+        <?php endif; ?>
+        
         // Submit to take_handler
         fetch('/modules/medications/take_medication_handler.php', {
             method: 'POST',
@@ -1254,6 +1316,34 @@ foreach ($prnMedications as $med) {
     if (document.querySelectorAll('[id^="countdown-"]').length > 0) {
         setInterval(updateCountdowns, 1000);
         updateCountdowns(); // Initial call
+    }
+    
+    // Nudge functionality for linked users
+    function sendNudge(medicationId, toUserId) {
+        if (!confirm('Send a gentle reminder to take this medication?')) {
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('medication_id', medicationId);
+        formData.append('to_user_id', toUserId);
+        
+        fetch('/modules/medications/nudge_handler.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal('Nudge sent! ✓', 2000);
+            } else {
+                showErrorModal('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            showErrorModal('An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
     }
     </script>
 </body>

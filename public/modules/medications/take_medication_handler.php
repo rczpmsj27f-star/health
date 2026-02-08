@@ -2,6 +2,8 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/LinkedUserHelper.php";
+require_once "../../../app/core/NotificationHelper.php";
 
 // Check if this is an AJAX request
 $isAjax = isset($_POST['ajax']) && $_POST['ajax'] == '1';
@@ -26,7 +28,44 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+$linkedHelper = new LinkedUserHelper($pdo);
+$notificationHelper = new NotificationHelper($pdo);
+
+// Check if taking for linked user
+$forUserId = $_POST['for_user_id'] ?? $_SESSION['user_id'];
+$isForLinkedUser = $forUserId != $_SESSION['user_id'];
+$linkedUser = null;
+
+if ($isForLinkedUser) {
+    // Verify permission
+    $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+    if (!$linkedUser || $linkedUser['linked_user_id'] != $forUserId) {
+        $errorMsg = "Invalid user";
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $errorMsg]);
+            exit;
+        }
+        $_SESSION['error'] = $errorMsg;
+        header("Location: /modules/medications/dashboard.php");
+        exit;
+    }
+    
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_mark_taken']) {
+        $errorMsg = "You don't have permission to mark medications as taken";
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $errorMsg]);
+            exit;
+        }
+        $_SESSION['error'] = $errorMsg;
+        header("Location: /modules/medications/dashboard.php");
+        exit;
+    }
+}
+
+$userId = $forUserId; // Use the target user ID for all medication operations
 $medicationId = $_POST['medication_id'] ?? null;
 $scheduledDateTime = $_POST['scheduled_date_time'] ?? null;
 
@@ -116,6 +155,28 @@ try {
     }
     
     $pdo->commit();
+    
+    // Send notification if taking for linked user
+    if ($isForLinkedUser) {
+        // Check if they want to be notified
+        $theirPermissions = $linkedHelper->getPermissions($linkedUser['id'], $forUserId);
+        if ($theirPermissions && $theirPermissions['notify_on_medication_taken']) {
+            // Get sender name
+            $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $myName = $stmt->fetch()['first_name'];
+            
+            // Send notification
+            $notificationHelper->create(
+                $forUserId,
+                'partner_took_med',
+                'Medication Taken',
+                $myName . ' marked "' . $medication['name'] . '" as taken for you',
+                $_SESSION['user_id'],
+                $medicationId
+            );
+        }
+    }
     
     $successMsg = htmlspecialchars($medication['name']) . " marked as taken";
     

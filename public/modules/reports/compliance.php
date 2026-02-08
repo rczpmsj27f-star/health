@@ -58,7 +58,8 @@ $overallCompliance = $overallTotal > 0 ? round(($overallTaken / $overallTotal) *
 // Get user name
 $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
 $stmt->execute([$targetUserId]);
-$targetUserName = $stmt->fetch()['first_name'];
+$targetUser = $stmt->fetch();
+$targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
 ?>
 <!DOCTYPE html>
 <html>

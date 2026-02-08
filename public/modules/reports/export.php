@@ -32,7 +32,8 @@ $data = $stmt->fetchAll();
 
 if ($format === 'csv') {
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="medication-history-' . date('Y-m-d') . '.csv"');
+    $filename = 'medication-history-' . date('Y-m-d') . '.csv';
+    header('Content-Disposition: attachment; filename="' . addslashes($filename) . '"');
     
     $output = fopen('php://output', 'w');
     fputcsv($output, ['Medication', 'Dosage', 'Scheduled Time', 'Status', 'Taken At', 'Reason']);
@@ -54,7 +55,8 @@ if ($format === 'csv') {
 
 if ($format === 'json') {
     header('Content-Type: application/json');
-    header('Content-Disposition: attachment; filename="medication-history-' . date('Y-m-d') . '.json"');
+    $filename = 'medication-history-' . date('Y-m-d') . '.json';
+    header('Content-Disposition: attachment; filename="' . addslashes($filename) . '"');
     echo json_encode($data, JSON_PRETTY_PRINT);
     exit;
 }

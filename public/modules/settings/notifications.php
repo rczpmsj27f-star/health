@@ -169,11 +169,23 @@ unset($_SESSION['success_msg']);
         }
     }
     
-    // Check status on page load
+    // Check status on page load - wait for CapacitorPush to be available
+    function checkStatusWhenReady(retryCount = 0) {
+        if (typeof window.CapacitorPush !== 'undefined') {
+            checkIOSPushStatus();
+        } else if (retryCount < 20) {
+            // Wait up to 2 seconds for CapacitorPush to be available
+            setTimeout(() => checkStatusWhenReady(retryCount + 1), 100);
+        } else {
+            // CapacitorPush not available - probably in web browser
+            console.log('CapacitorPush not available - skipping status check');
+        }
+    }
+    
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkIOSPushStatus);
+        document.addEventListener('DOMContentLoaded', () => checkStatusWhenReady(0));
     } else {
-        checkIOSPushStatus();
+        checkStatusWhenReady(0);
     }
     </script>
 </body>

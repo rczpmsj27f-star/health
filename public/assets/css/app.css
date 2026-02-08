@@ -4,6 +4,7 @@
 }
 
 :root {
+    /* Primary Colors */
     --color-primary: #5b21b6; /* Dark Purple */
     --color-primary-hover: #4c1d95;
     --color-success: #28a745;
@@ -16,13 +17,19 @@
     --color-info-hover: #0056b3;
     --color-secondary: #6c757d;
     --color-secondary-hover: #545b62;
-    --color-text: #333;
-    --color-text-primary: #333;
-    --color-text-secondary: #666;
+    
+    /* Text Colors - WCAG AA Compliant for Light Backgrounds */
+    --color-text: #333; /* Primary text - Contrast ratio 12.6:1 on white */
+    --color-text-primary: #333; /* Primary text - Contrast ratio 12.6:1 on white */
+    --color-text-secondary: #666; /* Secondary text - Contrast ratio 5.7:1 on white (WCAG AA) */
+    
+    /* Background & Border Colors */
     --color-border: #ddd;
     --color-bg-light: #f5f5f5;
     --color-bg-gray: #f8f9fa;
     --color-bg-white: #fff;
+    
+    /* Shadows & Borders */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);

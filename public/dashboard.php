@@ -42,9 +42,17 @@ $stmt = $pdo->prepare("
         ms.frequency_type = 'per_day' 
         OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE ?)
     )
+    AND mdt.dose_time IS NOT NULL
     AND (ml.status IS NULL OR ml.status = 'pending')
+    AND NOT EXISTS (
+        SELECT 1 FROM medication_logs ml2 
+        WHERE ml2.medication_id = m.id 
+        AND DATE(ml2.scheduled_date_time) = ?
+        AND TIME(ml2.scheduled_date_time) = mdt.dose_time
+        AND ml2.status = 'taken'
+    )
 ");
-$stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%"]);
+$stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Count overdue medications
@@ -52,7 +60,7 @@ $overdueCount = 0;
 $currentTimeStamp = strtotime(date('H:i'));
 
 foreach ($medications as $med) {
-    // Skip if no dose time
+    // Skip if no dose time (already filtered in query but double-check)
     if (empty($med['dose_time'])) {
         continue;
     }
@@ -72,7 +80,8 @@ foreach ($medications as $med) {
         $isOverdue = $currentTimeStamp > $doseTime;
     }
     
-    if ($isOverdue && ($med['status'] === null || $med['status'] === 'pending')) {
+    // Only count if overdue and status is null or pending (query already filters this)
+    if ($isOverdue) {
         $overdueCount++;
     }
 }

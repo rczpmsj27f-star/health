@@ -145,7 +145,7 @@ The most realistic test:
 
 ### "OneSignal credentials not configured"
 
-**Solution:** Check `/home/runner/work/health/health/config.php`:
+**Solution:** Check `config.php` in your project root:
 ```php
 define('ONESIGNAL_APP_ID', 'your-actual-app-id');
 define('ONESIGNAL_REST_API_KEY', 'your-actual-api-key');

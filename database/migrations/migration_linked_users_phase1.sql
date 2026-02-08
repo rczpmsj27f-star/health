@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS user_links (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_a_id INT NOT NULL,
-    user_b_id INT NOT NULL,
+    user_b_id INT NULL,
     invite_code VARCHAR(10) UNIQUE NOT NULL,
     status ENUM('pending_a', 'pending_b', 'active', 'rejected', 'revoked') DEFAULT 'pending_a',
     invited_by INT NOT NULL,

@@ -122,7 +122,7 @@ try {
             }
             
             // Verify category ownership
-            if ($current['category_id'] != $category_id) {
+            if ($current['category_id'] !== $category_id) {
                 echo json_encode(['success' => false, 'message' => 'Invalid category']);
                 exit;
             }

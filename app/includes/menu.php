@@ -165,7 +165,9 @@ function loadNotifications() {
     const list = document.getElementById('notificationList');
     list.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="spinner"></div></div>';
     
-    fetch('/api/notifications.php?action=get_recent')
+    fetch('/api/notifications.php?action=get_recent', {
+            credentials: 'include'
+        })
         .then(r => {
             console.log('Notification response status:', r.status);
             if (!r.ok) {
@@ -224,6 +226,7 @@ function loadNotifications() {
 function markAsRead(notificationId) {
     fetch('/api/notifications.php', {
         method: 'POST',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_read', notification_id: notificationId})
     }).then(() => {
@@ -235,6 +238,7 @@ function markAsRead(notificationId) {
 function markAllRead() {
     fetch('/api/notifications.php', {
         method: 'POST',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_all_read'})
     }).then(() => {
@@ -244,7 +248,9 @@ function markAllRead() {
 }
 
 function updateBadge() {
-    fetch('/api/notifications.php?action=get_count')
+    fetch('/api/notifications.php?action=get_count', {
+            credentials: 'include'
+        })
         .then(r => r.json())
         .then(data => {
             const bell = document.getElementById('notificationBell');
@@ -296,17 +302,24 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="menu-toggle-icon" id="medications-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="medications-menu">
-            <a href="/modules/medications/compliance.php">Compliance Calendar</a>
+            <!-- Activity & Compliance nested submenu -->
+            <div class="menu-section nested">
+                <div class="menu-section-header nested-header" onclick="toggleSubmenu('activity-menu'); event.stopPropagation();">
+                    <span>📊 Activity & Compliance</span>
+                    <span class="menu-toggle-icon" id="activity-menu-icon">▶</span>
+                </div>
+                <div class="menu-section-children" id="activity-menu">
+                    <a href="/modules/reports/activity.php">Activity Feed</a>
+                    <a href="/modules/medications/compliance.php">Compliance Calendar</a>
+                    <a href="/modules/reports/compliance.php">Compliance Explorer</a>
+                    <a href="/modules/reports/export.php">Export</a>
+                </div>
+            </div>
             <a href="/modules/medications/log_prn.php">Log PRN</a>
             <a href="/medications/stock">Medication Stock</a>
             <a href="/medications">My Medications</a>
         </div>
     </div>
-    
-    <a href="/modules/reports/compliance.php" 
-       class="<?= strpos($_SERVER['PHP_SELF'], '/modules/reports/compliance.php') !== false ? 'active' : '' ?>">
-        📊 Activity & Compliance
-    </a>
     
     <a href="/profile">👤 My Profile</a>
     
@@ -316,9 +329,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="menu-toggle-icon" id="settings-menu-icon">▶</span>
         </div>
         <div class="menu-section-children" id="settings-menu">
-            <a href="/modules/settings/preferences.php">⚡ Preferences</a>
-            <a href="/settings/notifications">🔔 Notifications</a>
-            <a href="/modules/settings/linked_users.php">👥 Linked Users</a>
             <?php if ($isAdmin): ?>
             <div class="menu-section nested">
                 <div class="menu-section-header nested-header" onclick="toggleSubmenu('admin-menu'); event.stopPropagation();">
@@ -330,6 +340,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <?php endif; ?>
+            <a href="/modules/settings/linked_users.php">👥 Linked Users</a>
+            <a href="/settings/notifications">🔔 Notifications</a>
+            <a href="/modules/settings/preferences.php">⚡ Preferences</a>
         </div>
     </div>
     

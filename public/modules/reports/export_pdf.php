@@ -551,8 +551,8 @@ function generatePRNUsage($pdf, $pdo, $userId, $user, $startDate, $endDate) {
             $pdf->SetFont('helvetica', '', 8);
             foreach ($logs as $log) {
                 $pdf->Cell(60, 6, date('M j, Y g:i A', strtotime($log['taken_at'])), 1, 0, 'L');
-                $pdf->Cell(40, 6, $log['quantity_taken'] ?? '1', 1, 0, 'C');
-                $pdf->Cell(80, 6, ucfirst($log['status']), 1, 0, 'L');
+                $pdf->Cell(40, 6, htmlspecialchars((string)($log['quantity_taken'] ?? 1)), 1, 0, 'C');
+                $pdf->Cell(80, 6, htmlspecialchars(ucfirst($log['status'])), 1, 0, 'L');
                 $pdf->Ln();
             }
         }

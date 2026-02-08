@@ -59,9 +59,17 @@ if (!$valid) {
 
 if ($action === 'enable') {
     // Generate backup codes - using 10000000-99999999 range for consistent 8-digit codes
+    // Check for duplicates to ensure uniqueness
     $backupCodes = [];
-    for ($i = 0; $i < 10; $i++) {
-        $backupCodes[] = (string)random_int(10000000, 99999999);
+    $attempts = 0;
+    $maxAttempts = 100; // Safety limit
+    
+    while (count($backupCodes) < 10 && $attempts < $maxAttempts) {
+        $code = (string)random_int(10000000, 99999999);
+        if (!in_array($code, $backupCodes, true)) {
+            $backupCodes[] = $code;
+        }
+        $attempts++;
     }
     
     // Enable 2FA and save backup codes

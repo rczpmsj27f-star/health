@@ -17,6 +17,7 @@ $userId = $_SESSION['user_id'];
 
 // Get form values
 $timeFormat = $_POST['time_format'] ?? '12h';
+$use24Hour = isset($_POST['use_24_hour']) ? 1 : 0;
 $stockNotificationEnabled = isset($_POST['stock_notification_enabled']) ? 1 : 0;
 $stockNotificationThreshold = intval($_POST['stock_notification_threshold'] ?? 10);
 $notifyLinkedUsers = isset($_POST['notify_linked_users']) ? 1 : 0;
@@ -39,11 +40,12 @@ try {
     // Update or insert preferences (theme_mode removed - dark mode disabled)
     $stmt = $pdo->prepare("
         INSERT INTO user_preferences 
-            (user_id, time_format, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
+            (user_id, time_format, use_24_hour, stock_notification_threshold, stock_notification_enabled, notify_linked_users) 
         VALUES 
-            (?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
             time_format = VALUES(time_format),
+            use_24_hour = VALUES(use_24_hour),
             stock_notification_threshold = VALUES(stock_notification_threshold),
             stock_notification_enabled = VALUES(stock_notification_enabled),
             notify_linked_users = VALUES(notify_linked_users),
@@ -53,6 +55,7 @@ try {
     $stmt->execute([
         $userId,
         $timeFormat,
+        $use24Hour,
         $stockNotificationThreshold,
         $stockNotificationEnabled,
         $notifyLinkedUsers

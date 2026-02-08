@@ -74,16 +74,25 @@ if (!empty($_SESSION['user_id'])) {
 }
 
 .notification-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    width: 350px;
-    max-height: 500px;
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    width: min(350px, calc(100vw - 32px));
+    max-height: calc(100vh - 80px);
     background: white;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    z-index: 1000;
-    margin-top: 8px;
+    z-index: 10000;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .notification-dropdown {
+        top: 60px;
+        right: 8px;
+        left: 8px;
+        width: auto;
+    }
 }
 
 .notification-header {

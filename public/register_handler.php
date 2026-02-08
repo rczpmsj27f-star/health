@@ -4,6 +4,20 @@ require_once __DIR__ . '/../app/config/mailer.php';
 
 session_start();
 
+// Rate limiting - prevent spam registrations
+if (!isset($_SESSION['last_register_attempt'])) {
+    $_SESSION['last_register_attempt'] = 0;
+}
+
+$timeSinceLastAttempt = time() - $_SESSION['last_register_attempt'];
+if ($timeSinceLastAttempt < 5) {
+    $_SESSION['error'] = "Please wait a moment before submitting again.";
+    header("Location: /register.php");
+    exit;
+}
+
+$_SESSION['last_register_attempt'] = time();
+
 // Input validation for empty fields
 if (empty($_POST['username']) || empty($_POST['email']) || empty($_POST['first_name']) || 
     empty($_POST['surname']) || empty($_POST['password']) || empty($_POST['confirm_password'])) {

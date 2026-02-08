@@ -3,6 +3,7 @@ session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/helpers/medication_icon.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -19,6 +20,9 @@ $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
 
 $viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
 $targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Initialize TimeFormatter - use current user's preferences, NOT the target user's
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 // Get permissions if viewing linked user
 $myPermissions = null;
@@ -673,7 +677,17 @@ foreach ($prnMedications as $med) {
             <p>Today's schedule and medication management</p>
         </div>
         
-        <?php if ($linkedUser && $linkedUser['status'] === 'active'): ?>
+        <?php 
+        // Check if linked user has any medications
+        $linkedUserHasMeds = false;
+        if ($linkedUser && $linkedUser['status'] === 'active') {
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM medications WHERE user_id = ? AND (archived = 0 OR archived IS NULL)");
+            $stmt->execute([$linkedUser['linked_user_id']]);
+            $linkedUserHasMeds = $stmt->fetch()['count'] > 0;
+        }
+        ?>
+
+        <?php if ($linkedUser && $linkedUser['status'] === 'active' && $linkedUserHasMeds): ?>
         <!-- Tab Switcher -->
         <div style="background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 12px;">
             <a href="/modules/medications/dashboard.php<?= isset($_GET['date']) ? '?date=' . urlencode($_GET['date']) : '' ?>" 
@@ -709,9 +723,9 @@ foreach ($prnMedications as $med) {
         </div>
         <?php endif; ?>
         
-        <!-- Today's Schedule Section -->
+        <!-- Scheduled Medications Section -->
         <div class="schedule-section">
-            <h3>Today's Schedule</h3>
+            <h3>Scheduled Medications</h3>
             
             <!-- Compact Date Navigation -->
             <div style="text-align: center; margin-bottom: 20px;">

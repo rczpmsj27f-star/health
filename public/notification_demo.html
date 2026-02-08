@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification System Demo</title>
+    <style>
+        :root {
+            --color-primary: #6366f1;
+            --color-bg-light: #f3f4f6;
+            --color-text-secondary: #6b7280;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-demo {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Notification Bell Styles */
+        .header-notifications {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-bell {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            margin-top: 8px;
+        }
+
+        .notification-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--color-bg-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-bg-light);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: var(--color-bg-light);
+        }
+
+        .notification-item.unread {
+            background: #eff6ff;
+        }
+
+        .notification-footer {
+            padding: 12px 16px;
+            text-align: center;
+            border-top: 1px solid var(--color-bg-light);
+        }
+
+        .notification-footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        /* Preferences table styles */
+        .preferences-demo {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
+        .preferences-demo table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .preferences-demo th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid var(--color-bg-light);
+        }
+        
+        .preferences-demo td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-bg-light);
+        }
+        
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🔔 Phase 3: In-App Notification System Demo</h1>
+        
+        <div class="header-demo">
+            <h2>Header with Notification Bell</h2>
+            
+            <div class="header-notifications">
+                <button class="notification-bell" id="notificationBell" onclick="toggleNotifications()">
+                    🔔
+                    <span class="notification-badge">5</span>
+                </button>
+                
+                <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+                    <div class="notification-header">
+                        <strong>Notifications</strong>
+                        <button onclick="alert('All marked as read')" style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 12px;">
+                            Mark all read
+                        </button>
+                    </div>
+                    
+                    <div class="notification-list" id="notificationList">
+                        <div class="notification-item unread">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Medication Reminder</div>
+                            <div style="font-size: 13px; color: var(--color-text-secondary);">Time to take Aspirin 100mg</div>
+                            <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                                2 min ago
+                            </div>
+                        </div>
+                        <div class="notification-item unread">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Partner Took Medication</div>
+                            <div style="font-size: 13px; color: var(--color-text-secondary);">John took their medication</div>
+                            <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                                15 min ago
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Link Request</div>
+                            <div style="font-size: 13px; color: var(--color-text-secondary);">New link request from Sarah</div>
+                            <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                                1 hour ago
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-footer">
+                        <a href="#">View all notifications →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preferences-demo">
+            <h2>🔔 Notification Preferences</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 20px;">
+                Control how you receive notifications for different events
+            </p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Notification Type</th>
+                        <th style="text-align: center; width: 100px;">In-App</th>
+                        <th style="text-align: center; width: 100px;">Push</th>
+                        <th style="text-align: center; width: 100px;">Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Medication Reminders</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td>Overdue Alerts</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td>Partner Took Medication</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td>Partner Has Overdue Meds</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td>Nudge Received</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td>Link Requests</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                    </tr>
+                    <tr>
+                        <td>Link Accepted</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td>Stock Low Warning</td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                        <td style="text-align: center;"><input type="checkbox" checked></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <button class="btn-primary">💾 Save Preferences</button>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #d1fae5; border-radius: 8px;">
+            <h3 style="margin-top: 0;">✅ Implementation Complete</h3>
+            <ul>
+                <li>NotificationHelper.php class created with full CRUD operations</li>
+                <li>API endpoint at /api/notifications.php for getting and marking notifications</li>
+                <li>Notification bell with badge in menu</li>
+                <li>Dropdown showing recent notifications</li>
+                <li>Notification preferences page with per-type channel controls</li>
+                <li>Handler for saving notification preferences</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const bell = document.getElementById('notificationBell');
+            const dropdown = document.getElementById('notificationDropdown');
+            
+            if (!bell.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

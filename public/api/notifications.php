@@ -37,6 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid JSON']);
+        exit;
+    }
+    
     $action = $input['action'] ?? '';
     
     switch ($action) {

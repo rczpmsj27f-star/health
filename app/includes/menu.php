@@ -140,26 +140,40 @@ function toggleNotifications() {
     }
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function loadNotifications() {
     fetch('/api/notifications.php?action=get_recent')
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
         .then(data => {
             const list = document.getElementById('notificationList');
             
-            if (data.notifications.length === 0) {
+            if (!data.notifications || data.notifications.length === 0) {
                 list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">No notifications</div>';
                 return;
             }
             
             list.innerHTML = data.notifications.map(n => `
                 <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="markAsRead(${n.id})">
-                    <div style="font-weight: 600; margin-bottom: 4px;">${n.title}</div>
-                    <div style="font-size: 13px; color: var(--color-text-secondary);">${n.message}</div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
+                    <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
                     <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
                         ${formatTime(n.created_at)}
                     </div>
                 </div>
             `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            const list = document.getElementById('notificationList');
+            list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">Error loading notifications</div>';
         });
 }
 
@@ -216,13 +230,15 @@ function formatTime(timestamp) {
 }
 
 // Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-    const bell = document.getElementById('notificationBell');
-    const dropdown = document.getElementById('notificationDropdown');
-    
-    if (!bell.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.style.display = 'none';
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        const bell = document.getElementById('notificationBell');
+        const dropdown = document.getElementById('notificationDropdown');
+        
+        if (bell && dropdown && !bell.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
 });
 </script>
 

@@ -88,7 +88,7 @@ class LinkedUserHelper {
             return ['success' => false, 'error' => 'Invalid or expired invite code'];
         }
         
-        if ($invite['invited_by'] === $userId) {
+        if ((int)$invite['invited_by'] === (int)$userId) {
             return ['success' => false, 'error' => 'You cannot accept your own invitation'];
         }
         

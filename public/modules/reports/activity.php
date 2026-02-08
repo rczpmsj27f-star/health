@@ -136,7 +136,16 @@ usort($allActivities, function($a, $b) {
     if (empty($timeA)) return 1;  // A goes after B
     if (empty($timeB)) return -1; // B goes after A
     
-    return strtotime($timeB) - strtotime($timeA);
+    // Convert to timestamps and validate
+    $tsA = strtotime($timeA);
+    $tsB = strtotime($timeB);
+    
+    // Handle invalid timestamps
+    if ($tsA === false && $tsB === false) return 0;
+    if ($tsA === false) return 1;  // A goes after B
+    if ($tsB === false) return -1; // B goes after A
+    
+    return $tsB - $tsA;
 });
 
 $allActivities = array_slice($allActivities, 0, 50);
@@ -237,7 +246,8 @@ $allActivities = array_slice($allActivities, 0, 50);
                         $borderColor = $activity['status'] === 'taken' ? '#10b981' : '#ef4444';
                         $activityText = $activity['status'] === 'taken' ? 'took' : 'skipped';
                         // Use taken_at if available, otherwise use created_at, finally fallback to scheduled_date_time
-                        $displayTime = $activity['taken_at'] ?? $activity['created_at'] ?? $activity['scheduled_date_time'];
+                        // All medication logs should have scheduled_date_time, so this should always have a value
+                        $displayTime = $activity['taken_at'] ?? $activity['created_at'] ?? $activity['scheduled_date_time'] ?? date('Y-m-d H:i:s');
                     }
                 ?>
                 <div style="padding: 16px; margin-bottom: 12px; border-left: 4px solid <?= $borderColor ?>; background: var(--color-bg-light); border-radius: 0 6px 6px 0;">
@@ -248,7 +258,7 @@ $allActivities = array_slice($allActivities, 0, 50);
                             <?= htmlspecialchars($activity['medication_name']) ?>
                         </strong>
                         <small style="color: var(--color-text-secondary);">
-                            <?= $timeFormatter->formatDateTime($displayTime) ?>
+                            <?= $displayTime ? $timeFormatter->formatDateTime($displayTime) : 'Unknown time' ?>
                         </small>
                     </div>
                     

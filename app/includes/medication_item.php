@@ -18,6 +18,14 @@
                 ⊘ Skipped<?= $med['skipped_reason'] ? ': ' . htmlspecialchars($med['skipped_reason']) : '' ?>
             </span>
         <?php else: ?>
+            <?php
+            // Check if this is for a linked user and if med is overdue
+            $isForLinkedUser = isset($viewingLinkedUser) && $viewingLinkedUser;
+            $isOverdue = strtotime($med['scheduled_date_time']) < time();
+            // Check if the linked user wants to receive nudges
+            $canNudge = $isForLinkedUser && $isOverdue && isset($theirPermissions) && $theirPermissions && $theirPermissions['receive_nudges'];
+            ?>
+            
             <button type="button" 
                     class="btn-taken" 
                     onclick="markAsTaken(<?= $med['id'] ?>, '<?= htmlspecialchars($med['scheduled_date_time']) ?>')"
@@ -30,6 +38,15 @@
                     style="background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">
                 ⊘ Skipped
             </button>
+            
+            <?php if ($canNudge): ?>
+            <button type="button" 
+                    class="btn-nudge" 
+                    onclick="sendNudge(<?= $med['id'] ?>, <?= $targetUserId ?>)"
+                    style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">
+                👋 Nudge
+            </button>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>

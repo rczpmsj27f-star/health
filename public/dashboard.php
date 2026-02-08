@@ -280,7 +280,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
                                     • <?= $overdueCount ?> overdue - View now
                                 </a>
                             <?php else: ?>
-                                <a href="/modules/medications/dashboard.php?filter=overdue" 
+                                <a href="/modules/medications/dashboard.php" 
                                    style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px; text-decoration: underline;">
                                     • <?= $overdueCount ?> overdue
                                 </a>

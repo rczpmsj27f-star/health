@@ -64,6 +64,26 @@ $doseTimes = $stmt->fetchAll();
                    style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
                     📜 History
                 </a>
+                
+                <!-- Archive/Unarchive Button -->
+                <?php 
+                $isArchived = !empty($medication['archived']) && $medication['archived'] == 1;
+                ?>
+                <a href="/modules/medications/archive_handler.php?id=<?= $medication['id'] ?>&action=<?= $isArchived ? 'unarchive' : 'archive' ?>" 
+                   class="btn btn-secondary" 
+                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;"
+                   onclick="return confirm('Are you sure you want to <?= $isArchived ? 'unarchive' : 'archive' ?> this medication?')">
+                    <?= $isArchived ? '📤 Unarchive' : '📦 Archive' ?>
+                </a>
+                
+                <!-- Delete Button -->
+                <a href="/modules/medications/delete_handler.php?id=<?= $medication['id'] ?>" 
+                   class="btn btn-danger" 
+                   style="padding: 8px 16px; font-size: 14px; text-decoration: none; background: #dc2626;"
+                   onclick="return confirm('Are you sure you want to DELETE this medication? This action cannot be undone.')">
+                    🗑️ Delete
+                </a>
+                
                 <a href="/modules/medications/dashboard.php" 
                    class="btn btn-secondary" 
                    style="padding: 8px 16px; font-size: 14px; text-decoration: none;">

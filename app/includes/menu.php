@@ -94,10 +94,11 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
 
 @media (max-width: 768px) {
     .notification-dropdown {
-        right: 16px;
-        left: 16px;
-        transform: none;
-        width: auto;
+        left: 16px !important;
+        right: 16px !important;
+        transform: none !important;
+        width: auto !important;
+        margin: 0 auto;
     }
 }
 

@@ -34,7 +34,8 @@ INSERT INTO dropdown_categories (category_key, category_name, description) VALUE
 ('special_timing', 'Special Timing', 'When to take medication (on waking, before bed, etc.)'),
 ('dose_units', 'Dose Units', 'Units of measurement for medication doses'),
 ('skipped_reasons', 'Skipped Reasons', 'Reasons for skipping a scheduled medication'),
-('late_logging_reasons', 'Late Logging Reasons', 'Reasons for logging medication late');
+('late_logging_reasons', 'Late Logging Reasons', 'Reasons for logging medication late'),
+('early_logging_reasons', 'Early Logging Reasons', 'Reasons for logging medication early');
 
 -- Insert special instructions options
 INSERT INTO dropdown_options (category_id, option_value, display_order, icon_emoji) 
@@ -91,3 +92,15 @@ UNION ALL
 SELECT id, 'Skipped and logged late', 3 FROM dropdown_categories WHERE category_key = 'late_logging_reasons'
 UNION ALL
 SELECT id, 'Other (please specify)', 4 FROM dropdown_categories WHERE category_key = 'late_logging_reasons';
+
+-- Insert early logging reasons options
+INSERT INTO dropdown_options (category_id, option_value, display_order)
+SELECT id, 'Instructed by doctor', 1 FROM dropdown_categories WHERE category_key = 'early_logging_reasons'
+UNION ALL
+SELECT id, 'Going on vacation', 2 FROM dropdown_categories WHERE category_key = 'early_logging_reasons'
+UNION ALL
+SELECT id, 'Adjusting schedule', 3 FROM dropdown_categories WHERE category_key = 'early_logging_reasons'
+UNION ALL
+SELECT id, 'Accidentally took early', 4 FROM dropdown_categories WHERE category_key = 'early_logging_reasons'
+UNION ALL
+SELECT id, 'Other', 5 FROM dropdown_categories WHERE category_key = 'early_logging_reasons';

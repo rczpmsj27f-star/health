@@ -22,8 +22,10 @@ $targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['
 
 // Get permissions if viewing linked user
 $myPermissions = null;
+$theirPermissions = null;
 if ($viewingLinkedUser) {
     $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    $theirPermissions = $linkedHelper->getPermissions($linkedUser['id'], $targetUserId);
     
     // Check if user has permission to view
     if (!$myPermissions || !$myPermissions['can_view_schedule']) {
@@ -696,12 +698,12 @@ foreach ($prnMedications as $med) {
             <div style="font-size: 13px; opacity: 0.9;">
                 <?php
                 $permissions = [];
-                if ($myPermissions['can_view_medications']) $permissions[] = 'View';
-                if ($myPermissions['can_mark_taken']) $permissions[] = 'Mark as taken';
-                if ($myPermissions['can_add_medications']) $permissions[] = 'Add';
-                if ($myPermissions['can_edit_medications']) $permissions[] = 'Edit';
-                if ($myPermissions['can_delete_medications']) $permissions[] = 'Delete';
-                echo 'Your permissions: ' . implode(', ', $permissions);
+                if (!empty($myPermissions['can_view_medications'])) $permissions[] = 'View';
+                if (!empty($myPermissions['can_mark_taken'])) $permissions[] = 'Mark as taken';
+                if (!empty($myPermissions['can_add_medications'])) $permissions[] = 'Add';
+                if (!empty($myPermissions['can_edit_medications'])) $permissions[] = 'Edit';
+                if (!empty($myPermissions['can_delete_medications'])) $permissions[] = 'Delete';
+                echo 'Your permissions: ' . (count($permissions) > 0 ? implode(', ', $permissions) : 'None');
                 ?>
             </div>
         </div>

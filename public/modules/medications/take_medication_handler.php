@@ -164,17 +164,21 @@ try {
             // Get sender name
             $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
             $stmt->execute([$_SESSION['user_id']]);
-            $myName = $stmt->fetch()['first_name'];
+            $myNameRow = $stmt->fetch();
             
-            // Send notification
-            $notificationHelper->create(
-                $forUserId,
-                'partner_took_med',
-                'Medication Taken',
-                $myName . ' marked "' . $medication['name'] . '" as taken for you',
-                $_SESSION['user_id'],
-                $medicationId
-            );
+            if ($myNameRow) {
+                $myName = $myNameRow['first_name'];
+                
+                // Send notification
+                $notificationHelper->create(
+                    $forUserId,
+                    'partner_took_med',
+                    'Medication Taken',
+                    $myName . ' marked "' . $medication['name'] . '" as taken for you',
+                    $_SESSION['user_id'],
+                    $medicationId
+                );
+            }
         }
     }
     

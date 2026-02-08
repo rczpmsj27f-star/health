@@ -29,7 +29,7 @@ foreach ($links as $link) {
 function checkAndNotifyOverdue($medicationOwnerId, $notifyUserId, $pdo, $notificationHelper) {
     // Get overdue medications
     $stmt = $pdo->prepare("
-        SELECT m.id, m.name, mdt.dose_time, CONCAT(CURDATE(), ' ', mdt.dose_time) as scheduled_time
+        SELECT m.id, m.name, mdt.dose_time
         FROM medications m
         JOIN medication_dose_times mdt ON m.id = mdt.medication_id
         WHERE m.user_id = ?
@@ -49,7 +49,13 @@ function checkAndNotifyOverdue($medicationOwnerId, $notifyUserId, $pdo, $notific
         // Get owner name
         $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
         $stmt->execute([$medicationOwnerId]);
-        $ownerName = $stmt->fetch()['first_name'];
+        $ownerNameRow = $stmt->fetch();
+        
+        if (!$ownerNameRow) {
+            return; // Skip if user not found
+        }
+        
+        $ownerName = $ownerNameRow['first_name'];
         
         // Check if we already notified in the last hour
         $stmt = $pdo->prepare("

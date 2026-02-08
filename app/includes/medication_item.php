@@ -22,7 +22,8 @@
             // Check if this is for a linked user and if med is overdue
             $isForLinkedUser = isset($viewingLinkedUser) && $viewingLinkedUser;
             $isOverdue = strtotime($med['scheduled_date_time']) < time();
-            $canNudge = $isForLinkedUser && $isOverdue && isset($myPermissions) && $myPermissions && $myPermissions['receive_nudges'];
+            // Check if the linked user wants to receive nudges
+            $canNudge = $isForLinkedUser && $isOverdue && isset($theirPermissions) && $theirPermissions && $theirPermissions['receive_nudges'];
             ?>
             
             <button type="button" 

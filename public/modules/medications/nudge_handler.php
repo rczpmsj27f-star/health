@@ -4,6 +4,8 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/LinkedUserHelper.php";
 require_once "../../../app/core/NotificationHelper.php";
 
+header('Content-Type: application/json');
+
 if (empty($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
@@ -48,7 +50,14 @@ if (!$med) {
 // Get sender name
 $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
-$myName = $stmt->fetch()['first_name'];
+$myNameRow = $stmt->fetch();
+
+if (!$myNameRow) {
+    echo json_encode(['success' => false, 'error' => 'User not found']);
+    exit;
+}
+
+$myName = $myNameRow['first_name'];
 
 // Send nudge notification
 $notificationHelper->create(

@@ -236,7 +236,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
             <form method="POST" action="two_factor_handler.php">
                 <input type="hidden" name="action" value="enable">
                 <div class="form-group">
-                    <label>Enter the 6-digit code from your authenticator app to verify:</label>
+                    <label>Enter code from your authenticator app (6 digits) or backup code (8 digits):</label>
                     <input type="text" name="code" pattern="[0-9]{6,8}" maxlength="8" 
                            inputmode="numeric" autocomplete="one-time-code" required>
                 </div>

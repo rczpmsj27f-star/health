@@ -115,7 +115,7 @@ unset($_SESSION['2fa_error']);
     <div class="login-card">
         <div class="login-header">
             <h2>Two-Factor Authentication</h2>
-            <p>Enter the 6-digit code from your authenticator app</p>
+            <p>Enter the code from your authenticator app or a backup code</p>
         </div>
         
         <?php if ($error): ?>

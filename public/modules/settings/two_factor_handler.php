@@ -40,10 +40,16 @@ $google2fa = new Google2FA();
 $valid = $google2fa->verifyKey($user['two_factor_secret'], $code);
 
 // Also check backup codes if TOTP fails
+$usedBackupCode = false;
 if (!$valid && !empty($user['two_factor_backup_codes'])) {
     $backupCodes = json_decode($user['two_factor_backup_codes'], true);
     if (is_array($backupCodes) && in_array($code, $backupCodes, true)) {
         $valid = true;
+        $usedBackupCode = true;
+        // Remove used backup code
+        $backupCodes = array_diff($backupCodes, [$code]);
+        $pdo->prepare("UPDATE users SET two_factor_backup_codes = ? WHERE id = ?")
+            ->execute([json_encode(array_values($backupCodes)), $_SESSION['user_id']]);
     }
 }
 

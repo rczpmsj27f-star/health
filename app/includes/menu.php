@@ -5,12 +5,17 @@ if (!isset($isAdmin)) {
     $isAdmin = Auth::isAdmin();
 }
 
-// Get unread notification count
-require_once __DIR__ . '/../core/NotificationHelper.php';
-$notificationHelper = new NotificationHelper($pdo);
+// Get unread notification count - only if $pdo is available
 $unreadCount = 0;
-if (!empty($_SESSION['user_id'])) {
-    $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
+if (isset($pdo) && !empty($_SESSION['user_id'])) {
+    require_once __DIR__ . '/../core/NotificationHelper.php';
+    try {
+        $notificationHelper = new NotificationHelper($pdo);
+        $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
+    } catch (Exception $e) {
+        error_log("Menu notification error: " . $e->getMessage());
+        $unreadCount = 0;
+    }
 }
 ?>
 <div class="hamburger" onclick="toggleMenu()">
@@ -76,8 +81,9 @@ if (!empty($_SESSION['user_id'])) {
 .notification-dropdown {
     position: fixed;
     top: 60px;
-    right: 16px;
-    width: min(350px, calc(100vw - 32px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(400px, calc(100vw - 32px));
     max-height: calc(100vh - 80px);
     background: white;
     border-radius: 10px;
@@ -88,9 +94,9 @@ if (!empty($_SESSION['user_id'])) {
 
 @media (max-width: 768px) {
     .notification-dropdown {
-        top: 60px;
-        right: 8px;
-        left: 8px;
+        right: 16px;
+        left: 16px;
+        transform: none;
         width: auto;
     }
 }
@@ -156,21 +162,40 @@ function escapeHtml(text) {
 }
 
 function loadNotifications() {
+    const list = document.getElementById('notificationList');
+    list.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="spinner"></div></div>';
+    
     fetch('/api/notifications.php?action=get_recent')
         .then(r => {
-            if (!r.ok) throw new Error('Network response was not ok');
+            console.log('Notification response status:', r.status);
+            if (!r.ok) {
+                return r.json().then(err => {
+                    throw new Error(err.error || 'Network error');
+                });
+            }
             return r.json();
         })
         .then(data => {
-            const list = document.getElementById('notificationList');
+            console.log('Notification data:', data);
             
-            if (!data.notifications || data.notifications.length === 0) {
-                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">No notifications</div>';
+            if (!data.success || !data.notifications) {
+                throw new Error('Invalid response format');
+            }
+            
+            if (data.notifications.length === 0) {
+                list.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--color-text-secondary);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">🔔</div>
+                        <div>No notifications yet</div>
+                    </div>
+                `;
                 return;
             }
             
             list.innerHTML = data.notifications.map(n => `
-                <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="markAsRead(${n.id})">
+                <div class="notification-item ${n.is_read ? '' : 'unread'}" 
+                     onclick="markAsRead(${n.id})"
+                     style="cursor: pointer; transition: all 0.2s;">
                     <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
                     <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
                     <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
@@ -180,9 +205,19 @@ function loadNotifications() {
             `).join('');
         })
         .catch(error => {
-            console.error('Error loading notifications:', error);
-            const list = document.getElementById('notificationList');
-            list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">Error loading notifications</div>';
+            console.error('Notification error:', error);
+            list.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #ef4444;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+                    <div>Failed to load notifications</div>
+                    <div style="font-size: 12px; margin-top: 8px; color: var(--color-text-secondary);">
+                        Please try again later
+                    </div>
+                    <button onclick="loadNotifications()" style="margin-top: 12px; padding: 8px 16px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Retry
+                    </button>
+                </div>
+            `;
         });
 }
 

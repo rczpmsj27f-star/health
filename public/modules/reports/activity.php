@@ -68,7 +68,8 @@ $stmt = $pdo->prepare("
         ml.medication_id,
         m.name as medication_name,
         m.user_id as med_owner_id,
-        u1.first_name as owner_name
+        u1.first_name as owner_name,
+        ml.created_at
     FROM medication_logs ml
     JOIN medications m ON ml.medication_id = m.id
     JOIN users u1 ON m.user_id = u1.id
@@ -81,6 +82,73 @@ $stmt = $pdo->prepare("
 $params[] = $daysFilter;
 $stmt->execute($params);
 $activities = $stmt->fetchAll();
+
+// Get medication CRUD activity (add, edit, delete)
+$stmtCrud = $pdo->prepare("
+    SELECT 
+        'medication_added' as activity_type,
+        m.id as medication_id,
+        m.name as medication_name,
+        m.user_id as med_owner_id,
+        u.first_name as owner_name,
+        m.created_at as activity_time
+    FROM medications m
+    JOIN users u ON m.user_id = u.id
+    WHERE m.user_id IN (?, ?)
+    AND m.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+    
+    UNION ALL
+    
+    SELECT 
+        'medication_edited' as activity_type,
+        m.id as medication_id,
+        m.name as medication_name,
+        m.user_id as med_owner_id,
+        u.first_name as owner_name,
+        m.updated_at as activity_time
+    FROM medications m
+    JOIN users u ON m.user_id = u.id
+    WHERE m.user_id IN (?, ?)
+    AND m.updated_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+    AND m.updated_at != m.created_at
+    
+    ORDER BY activity_time DESC
+    LIMIT 20
+");
+$stmtCrud->execute([
+    $_SESSION['user_id'], $linkedUser['linked_user_id'], $daysFilter,
+    $_SESSION['user_id'], $linkedUser['linked_user_id'], $daysFilter
+]);
+$crudActivities = $stmtCrud->fetchAll();
+
+// Merge medication logs and CRUD activities
+$allActivities = array_merge($activities, $crudActivities);
+
+// Sort by time
+usort($allActivities, function($a, $b) {
+    // For CRUD activities, use activity_time
+    // For log activities, use created_at (which should be available)
+    $timeA = $a['activity_time'] ?? $a['created_at'] ?? '';
+    $timeB = $b['activity_time'] ?? $b['created_at'] ?? '';
+    
+    // Push empty timestamps to the end
+    if (empty($timeA) && empty($timeB)) return 0;
+    if (empty($timeA)) return 1;  // A goes after B
+    if (empty($timeB)) return -1; // B goes after A
+    
+    // Convert to timestamps and validate
+    $tsA = strtotime($timeA);
+    $tsB = strtotime($timeB);
+    
+    // Handle invalid timestamps
+    if ($tsA === false && $tsB === false) return 0;
+    if ($tsA === false) return 1;  // A goes after B
+    if ($tsB === false) return -1; // B goes after A
+    
+    return $tsB - $tsA;
+});
+
+$allActivities = array_slice($allActivities, 0, 50);
 ?>
 <!DOCTYPE html>
 <html>
@@ -142,33 +210,63 @@ $activities = $stmt->fetchAll();
         </div>
         
         <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <?php if (empty($activities)): ?>
+            <?php if (empty($allActivities)): ?>
                 <div class="empty-state">
                     <div class="empty-state-icon">📰</div>
                     <div class="empty-state-text">No activity yet</div>
                 </div>
             <?php else: ?>
-                <?php foreach ($activities as $activity): 
+                <?php foreach ($allActivities as $activity): 
                     $isOwn = $activity['med_owner_id'] == $_SESSION['user_id'];
+                    
+                    // Determine activity type and color
+                    if (isset($activity['activity_type'])) {
+                        // CRUD activity
+                        $borderColor = '#6366f1';
+                        $activityText = '';
+                        
+                        switch ($activity['activity_type']) {
+                            case 'medication_added':
+                                $activityText = 'added medication';
+                                $borderColor = '#10b981';
+                                break;
+                            case 'medication_edited':
+                                $activityText = 'updated medication';
+                                $borderColor = '#f59e0b';
+                                break;
+                            case 'medication_deleted':
+                                $activityText = 'deleted medication';
+                                $borderColor = '#ef4444';
+                                break;
+                        }
+                        
+                        $displayTime = $activity['activity_time'];
+                    } else {
+                        // Log activity (taken/skipped)
+                        $borderColor = $activity['status'] === 'taken' ? '#10b981' : '#ef4444';
+                        $activityText = $activity['status'] === 'taken' ? 'took' : 'skipped';
+                        // Use taken_at if available, otherwise use created_at, finally fallback to scheduled_date_time, or null
+                        // All medication logs should have scheduled_date_time, so null should be rare
+                        $displayTime = $activity['taken_at'] ?? $activity['created_at'] ?? $activity['scheduled_date_time'] ?? null;
+                    }
                 ?>
-                <div style="padding: 16px; margin-bottom: 12px; border-left: 4px solid <?= $activity['status'] === 'taken' ? '#10b981' : '#ef4444' ?>; background: var(--color-bg-light); border-radius: 0 6px 6px 0;">
+                <div style="padding: 16px; margin-bottom: 12px; border-left: 4px solid <?= $borderColor ?>; background: var(--color-bg-light); border-radius: 0 6px 6px 0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <strong style="color: var(--color-text);">
                             <?= $isOwn ? 'You' : htmlspecialchars($activity['owner_name']) ?>
-                            <?php if ($activity['status'] === 'taken'): ?>
-                                <span style="color: #10b981;">took</span>
-                            <?php else: ?>
-                                <span style="color: #ef4444;">skipped</span>
-                            <?php endif; ?>
+                            <span style="color: <?= $borderColor ?>;"><?= $activityText ?></span>
                             <?= htmlspecialchars($activity['medication_name']) ?>
                         </strong>
                         <small style="color: var(--color-text-secondary);">
-                            <?= $timeFormatter->formatDateTime($activity['taken_at'] ?? $activity['scheduled_date_time']) ?>
+                            <?= $displayTime ? $timeFormatter->formatDateTime($displayTime) : 'Unknown time' ?>
                         </small>
                     </div>
+                    
+                    <?php if (isset($activity['scheduled_date_time'])): ?>
                     <small style="color: var(--color-text-secondary);">
                         Scheduled for <?= $timeFormatter->formatDateTime($activity['scheduled_date_time']) ?>
                     </small>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             <?php endif; ?>

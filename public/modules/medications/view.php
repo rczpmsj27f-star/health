@@ -79,10 +79,10 @@ $doseTimes = $stmt->fetchAll();
                 
                 <div>
                     <label style="display: block; font-weight: 600; color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 6px;">
-                        Start Date
+                        Started
                     </label>
                     <div style="font-size: 16px; color: var(--color-text);">
-                        <?= !empty($medication['start_date']) ? date('M d, Y', strtotime($medication['start_date'])) : 'Not specified' ?>
+                        <?= !empty($medication['start_date']) ? date('d M Y', strtotime($medication['start_date'])) : 'Not specified' ?>
                     </div>
                 </div>
                 

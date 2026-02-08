@@ -3,6 +3,7 @@ session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/core/LinkedUserHelper.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -12,6 +13,9 @@ if (empty($_SESSION['user_id'])) {
 $linkedHelper = new LinkedUserHelper($pdo);
 $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
 $pendingInvites = $linkedHelper->getPendingInvites($_SESSION['user_id']);
+
+// Initialize TimeFormatter with current user's preferences
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 $successMsg = $_SESSION['success_msg'] ?? null;
 $errorMsg = $_SESSION['error_msg'] ?? null;
@@ -144,9 +148,9 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
                     </strong>
                     <br>
                     <small style="color: var(--color-text-secondary);">
-                        Created: <?= date('M d, Y g:i A', strtotime($invite['created_at'])) ?>
+                        Created: <?= $timeFormatter->formatDateTime($invite['created_at']) ?>
                         <br>
-                        Expires: <?= date('M d, Y g:i A', strtotime($invite['expires_at'])) ?>
+                        Expires: <?= $timeFormatter->formatDateTime($invite['expires_at']) ?>
                     </small>
                 </div>
                 <form method="POST" action="/modules/settings/linked_users_handler.php" style="margin: 0;">

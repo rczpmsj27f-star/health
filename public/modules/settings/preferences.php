@@ -87,6 +87,14 @@ unset($_SESSION['error'], $_SESSION['success']);
                     <p class="help-text">Choose how times are displayed throughout the app</p>
                 </div>
 
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="use_24_hour" value="1" <?= (!empty($preferences['use_24_hour'])) ? 'checked' : '' ?>>
+                        <span>Use 24-hour time format</span>
+                    </label>
+                    <p class="help-text">Display times as 14:00 instead of 2:00 PM</p>
+                </div>
+
                 <div class="section-header">Stock Notifications</div>
 
                 <div class="form-group">

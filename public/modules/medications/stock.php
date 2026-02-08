@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -10,6 +11,9 @@ if (empty($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
+
+// Initialize TimeFormatter with current user's preferences
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 // Get active medications with stock information
 $stmt = $pdo->prepare("
@@ -369,7 +373,7 @@ $medications = $stmt->fetchAll();
                                     ?>
                                 </p>
                                 <?php if ($med['stock_updated_at']): ?>
-                                    <p class="stock-updated">Stock updated: <?= date('M j, Y H:i', strtotime($med['stock_updated_at'])) ?></p>
+                                    <p class="stock-updated">Stock updated: <?= $timeFormatter->formatDateTime($med['stock_updated_at']) ?></p>
                                 <?php endif; ?>
                             </div>
                             

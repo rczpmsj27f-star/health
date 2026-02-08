@@ -15,8 +15,20 @@
     
     <div class="med-actions" style="display: flex; gap: 8px;">
         <?php if ($med['log_status'] === 'taken'): ?>
+            <?php 
+            // Format the taken time using TimeFormatter if available, otherwise use 12-hour format as fallback
+            $takenTimeDisplay = '';
+            if ($med['taken_at'] && strtotime($med['taken_at'])) {
+                if (isset($timeFormatter)) {
+                    $takenTimeDisplay = $timeFormatter->formatTime($med['taken_at']);
+                } else {
+                    // Fallback to 12-hour format if TimeFormatter not initialized
+                    $takenTimeDisplay = date('g:i A', strtotime($med['taken_at']));
+                }
+            }
+            ?>
             <span class="status-taken" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">
-                ✓ Taken <?= $med['taken_at'] && strtotime($med['taken_at']) ? date('H:i', strtotime($med['taken_at'])) : '' ?>
+                ✓ Taken <?= $takenTimeDisplay ?>
             </span>
         <?php elseif ($med['log_status'] === 'skipped'): ?>
             <span class="status-skipped" style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">

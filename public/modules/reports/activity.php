@@ -3,6 +3,7 @@ session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/core/LinkedUserHelper.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -11,6 +12,9 @@ if (empty($_SESSION['user_id'])) {
 
 $linkedHelper = new LinkedUserHelper($pdo);
 $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+// Initialize TimeFormatter with current user's preferences
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 if (!$linkedUser || $linkedUser['status'] !== 'active') {
     $_SESSION['error_msg'] = "No active linked user";
@@ -28,13 +32,10 @@ $stmt = $pdo->prepare("
         ml.medication_id,
         m.name as medication_name,
         m.user_id as med_owner_id,
-        u1.first_name as owner_name,
-        ml.logged_by_user_id,
-        u2.first_name as logged_by_name
+        u1.first_name as owner_name
     FROM medication_logs ml
     JOIN medications m ON ml.medication_id = m.id
     JOIN users u1 ON m.user_id = u1.id
-    LEFT JOIN users u2 ON ml.logged_by_user_id = u2.id
     WHERE m.user_id IN (?, ?)
     AND ml.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
     ORDER BY ml.created_at DESC
@@ -72,34 +73,24 @@ $activities = $stmt->fetchAll();
             <?php else: ?>
                 <?php foreach ($activities as $activity): 
                     $isOwn = $activity['med_owner_id'] == $_SESSION['user_id'];
-                    $loggedBySelf = $activity['logged_by_user_id'] == $activity['med_owner_id'] || !$activity['logged_by_user_id'];
                 ?>
                 <div style="padding: 16px; margin-bottom: 12px; border-left: 4px solid <?= $activity['status'] === 'taken' ? '#10b981' : '#ef4444' ?>; background: var(--color-bg-light); border-radius: 0 6px 6px 0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <strong style="color: var(--color-text);">
-                            <?php if ($loggedBySelf): ?>
-                                <?= $isOwn ? 'You' : htmlspecialchars($activity['owner_name']) ?>
-                            <?php else: ?>
-                                <?= htmlspecialchars($activity['logged_by_name']) ?>
-                            <?php endif; ?>
+                            <?= $isOwn ? 'You' : htmlspecialchars($activity['owner_name']) ?>
                             <?php if ($activity['status'] === 'taken'): ?>
                                 <span style="color: #10b981;">took</span>
                             <?php else: ?>
                                 <span style="color: #ef4444;">skipped</span>
                             <?php endif; ?>
                             <?= htmlspecialchars($activity['medication_name']) ?>
-                            <?php if (!$loggedBySelf): ?>
-                                <span style="color: var(--color-text-secondary); font-weight: normal;">
-                                    for <?= $isOwn ? 'you' : htmlspecialchars($activity['owner_name']) ?>
-                                </span>
-                            <?php endif; ?>
                         </strong>
                         <small style="color: var(--color-text-secondary);">
-                            <?= date('M d, g:i A', strtotime($activity['taken_at'] ?? $activity['scheduled_date_time'])) ?>
+                            <?= $timeFormatter->formatDateTime($activity['taken_at'] ?? $activity['scheduled_date_time']) ?>
                         </small>
                     </div>
                     <small style="color: var(--color-text-secondary);">
-                        Scheduled for <?= date('M d, Y g:i A', strtotime($activity['scheduled_date_time'])) ?>
+                        Scheduled for <?= $timeFormatter->formatDateTime($activity['scheduled_date_time']) ?>
                     </small>
                 </div>
                 <?php endforeach; ?>

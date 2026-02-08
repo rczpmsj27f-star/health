@@ -3,11 +3,12 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 
-// Get all categories with option counts
+// Get all categories with active/inactive counts
 $categories_stmt = $pdo->query("
     SELECT 
         c.*,
-        COUNT(o.id) as option_count
+        SUM(CASE WHEN o.is_active = 1 THEN 1 ELSE 0 END) as active_count,
+        SUM(CASE WHEN o.is_active = 0 THEN 1 ELSE 0 END) as inactive_count
     FROM dropdown_categories c
     LEFT JOIN dropdown_options o ON c.id = o.category_id
     GROUP BY c.id
@@ -15,25 +16,28 @@ $categories_stmt = $pdo->query("
 ");
 $categories = $categories_stmt->fetchAll();
 
-// Get selected category details if viewing one
-$selected_category_id = $_GET['category'] ?? null;
-$selected_category = null;
-$options = [];
-
-if ($selected_category_id) {
-    $cat_stmt = $pdo->prepare("SELECT * FROM dropdown_categories WHERE id = ?");
-    $cat_stmt->execute([$selected_category_id]);
-    $selected_category = $cat_stmt->fetch();
+// Get all options for all categories, separated by active/inactive
+$all_options = [];
+foreach ($categories as $category) {
+    $category_id = $category['id'];
     
-    if ($selected_category) {
-        $opt_stmt = $pdo->prepare("
-            SELECT * FROM dropdown_options 
-            WHERE category_id = ? 
-            ORDER BY display_order ASC, option_value ASC
-        ");
-        $opt_stmt->execute([$selected_category_id]);
-        $options = $opt_stmt->fetchAll();
-    }
+    // Get active options
+    $active_stmt = $pdo->prepare("
+        SELECT * FROM dropdown_options 
+        WHERE category_id = ? AND is_active = 1
+        ORDER BY display_order ASC
+    ");
+    $active_stmt->execute([$category_id]);
+    $all_options[$category_id]['active'] = $active_stmt->fetchAll();
+    
+    // Get inactive options
+    $inactive_stmt = $pdo->prepare("
+        SELECT * FROM dropdown_options 
+        WHERE category_id = ? AND is_active = 0
+        ORDER BY display_order ASC
+    ");
+    $inactive_stmt->execute([$category_id]);
+    $all_options[$category_id]['inactive'] = $inactive_stmt->fetchAll();
 }
 ?>
 <!DOCTYPE html>
@@ -54,7 +58,7 @@ if ($selected_category_id) {
         
         .page-title {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
         }
         
         .page-title h2 {
@@ -69,99 +73,120 @@ if ($selected_category_id) {
             color: var(--color-text-secondary);
         }
         
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-        
-        .category-card {
+        /* Category sections */
+        .category-section {
             background: var(--color-bg-white);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
-            padding: 20px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        
+        .category-header {
+            background: var(--color-primary);
+            color: white;
+            padding: 20px 24px;
             cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            color: var(--color-text);
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .category-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+        .category-header:hover {
+            background: #6d28d9;
         }
         
-        .category-card.active {
-            border: 2px solid var(--color-primary);
+        .category-header-left {
+            flex: 1;
         }
         
-        .category-name {
-            font-size: 18px;
+        .category-title {
+            font-size: 20px;
             font-weight: 600;
-            margin: 0 0 8px 0;
-            color: var(--color-text-primary);
+            margin: 0 0 4px 0;
+            color: white;
         }
         
         .category-description {
             font-size: 13px;
-            color: var(--color-text-secondary);
-            margin: 0 0 12px 0;
+            margin: 0;
+            color: white;
+            opacity: 0.9;
         }
         
-        .category-stats {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            display: flex;
-            gap: 8px;
+        .category-counts {
+            font-size: 13px;
+            color: white;
+            margin-right: 12px;
         }
         
-        .options-section {
-            background: var(--color-bg-white);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
-            padding: 24px;
-            margin-bottom: 24px;
+        .toggle-icon {
+            font-size: 18px;
+            transition: transform 0.2s;
+            display: inline-block;
         }
         
-        .section-header {
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .category-content {
+            padding: 20px 24px;
+        }
+        
+        .category-content.collapsed {
+            display: none;
+        }
+        
+        /* Subsection headers (Active/Inactive) */
+        .subsection-header {
+            background: var(--color-bg-gray);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 16px 20px;
-            background: var(--color-primary);
-            border-radius: var(--radius-md) var(--radius-md) 0 0;
-            margin: -24px -24px 20px -24px;
+            user-select: none;
         }
         
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: white;
+        .subsection-header:hover {
+            background: #e0e0e0;
+        }
+        
+        .subsection-title {
             margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .section-header p {
-            color: white;
-            margin: 4px 0 0 0;
-            font-size: 13px;
+        .subsection-content {
+            margin-bottom: 20px;
         }
         
+        .subsection-content.collapsed {
+            display: none;
+        }
+        
+        /* Options grid */
         .options-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }
         
         .option-card {
             background: var(--color-bg-white);
             border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-radius: var(--radius-sm);
+            padding: 14px;
             transition: all 0.2s;
         }
         
@@ -170,12 +195,14 @@ if ($selected_category_id) {
             border-color: var(--color-primary);
         }
         
-        .option-card.inactive {
-            opacity: 0.5;
+        .option-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
         
         .option-info {
-            flex: 1;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -191,55 +218,99 @@ if ($selected_category_id) {
             color: var(--color-text-primary);
         }
         
-        .option-status-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--color-text-secondary);
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
         }
         
         .option-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
         
-        .btn-icon {
-            background: none;
-            border: 1px solid var(--color-border);
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
+        .btn-sm {
+            padding: 5px 10px;
             font-size: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
             transition: all 0.2s;
+            background: var(--color-bg-white);
         }
         
-        .btn-icon:hover {
+        .btn-sm:hover {
             background: var(--color-bg-gray);
         }
         
-        .btn-add {
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+        
+        .btn-activate {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        
+        .btn-activate:hover {
+            background: #059669;
+        }
+        
+        .btn-deactivate {
+            background: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+        
+        .btn-deactivate:hover {
+            background: #d97706;
+        }
+        
+        .btn-add-option {
             background: white;
             color: var(--color-primary);
-            border: none;
-            padding: 10px 20px;
+            border: 2px solid white;
+            padding: 8px 16px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.2s;
         }
         
-        .btn-add:hover {
+        .btn-add-option:hover {
             background: rgba(255, 255, 255, 0.9);
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--color-text-secondary);
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -291,14 +362,20 @@ if ($selected_category_id) {
             color: var(--color-text-primary);
         }
         
-        .form-group input,
-        .form-group textarea {
+        .form-group input {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-sm);
             font-size: 14px;
             color: var(--color-text);
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
         }
         
         .modal-footer {
@@ -325,22 +402,19 @@ if ($selected_category_id) {
             background: var(--color-border);
         }
         
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            border: 1px solid var(--color-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
         }
         
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-warning {
-            background: #fff3cd;
-            color: #856404;
+        .btn-primary:hover {
+            background: #6d28d9;
         }
     </style>
 </head>
@@ -353,70 +427,116 @@ if ($selected_category_id) {
             <p>Manage dropdown options used throughout the application</p>
         </div>
         
-        <?php if (!$selected_category): ?>
-            <!-- Category Selection View -->
-            <div class="categories-grid">
-                <?php foreach ($categories as $category): ?>
-                    <a href="?category=<?= $category['id'] ?>" class="category-card">
-                        <h3 class="category-name"><?= htmlspecialchars($category['category_name']) ?></h3>
+        <?php foreach ($categories as $category): ?>
+            <div class="category-section">
+                <div class="category-header" onclick="toggleCategory(<?= $category['id'] ?>)">
+                    <div class="category-header-left">
+                        <h3 class="category-title"><?= htmlspecialchars($category['category_name']) ?></h3>
                         <p class="category-description"><?= htmlspecialchars($category['description'] ?? '') ?></p>
-                        <div class="category-stats">
-                            <span>📋 <?= $category['option_count'] ?> options</span>
-                            <span>🔑 <?= htmlspecialchars($category['category_key']) ?></span>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <!-- Options Management View -->
-            <div style="margin-bottom: 16px;">
-                <a href="?" style="color: var(--color-primary); text-decoration: none;">← Back to Categories</a>
-            </div>
-            
-            <div class="options-section">
-                <div class="section-header">
-                    <div>
-                        <h3 class="section-title"><?= htmlspecialchars($selected_category['category_name']) ?></h3>
-                        <p>
-                            <?= htmlspecialchars($selected_category['description'] ?? '') ?>
-                        </p>
                     </div>
-                    <button class="btn-add" onclick="showAddModal()">+ Add Option</button>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="category-counts">(<?= $category['active_count'] ?> active, <?= $category['inactive_count'] ?> inactive)</span>
+                        <button class="btn-add-option" 
+                                data-category-id="<?= $category['id'] ?>"
+                                data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
+                                onclick="showAddModal(this.dataset.categoryId, this.dataset.categoryName); event.stopPropagation();">+ Add</button>
+                        <span class="toggle-icon" id="cat-toggle-<?= $category['id'] ?>">▼</span>
+                    </div>
                 </div>
                 
-                <?php if (empty($options)): ?>
-                    <div class="empty-state">
-                        No options yet. Click "Add Option" to create one.
+                <div class="category-content" id="cat-content-<?= $category['id'] ?>">
+                    <!-- Active Options Subsection -->
+                    <div class="subsection-header" onclick="toggleSubsection('active-<?= $category['id'] ?>')">
+                        <h4 class="subsection-title">
+                            <span class="toggle-icon" id="subsec-toggle-active-<?= $category['id'] ?>">▼</span>
+                            Active Options (<?= count($all_options[$category['id']]['active']) ?>)
+                        </h4>
                     </div>
-                <?php else: ?>
-                    <div class="options-grid">
-                        <?php foreach ($options as $option): ?>
-                            <div class="option-card <?= $option['is_active'] ? '' : 'inactive' ?>">
-                                <div class="option-info">
-                                    <?php if (!empty($option['icon_emoji'])): ?>
-                                        <span class="option-icon"><?= htmlspecialchars($option['icon_emoji']) ?></span>
-                                    <?php endif; ?>
-                                    <span class="option-text"><?= htmlspecialchars($option['option_value']) ?></span>
-                                </div>
-                                <div class="option-status-actions">
-                                    <?php if ($option['is_active']): ?>
-                                        <span class="badge badge-success">Active</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-warning">Inactive</span>
-                                    <?php endif; ?>
-                                    <div class="option-actions">
-                                        <button class="btn-icon" onclick="editOption(<?= htmlspecialchars(json_encode($option)) ?>)" title="Edit">✏️</button>
-                                        <button class="btn-icon" onclick="toggleActive(<?= $option['id'] ?>, <?= $option['is_active'] ? 'false' : 'true' ?>)" title="<?= $option['is_active'] ? 'Deactivate' : 'Activate' ?>">
-                                            <?= $option['is_active'] ? '⚡' : '🔌' ?>
-                                        </button>
+                    <div class="subsection-content" id="subsec-content-active-<?= $category['id'] ?>">
+                        <?php if (empty($all_options[$category['id']]['active'])): ?>
+                            <div class="empty-state">No active options</div>
+                        <?php else: ?>
+                            <div class="options-grid">
+                                <?php foreach ($all_options[$category['id']]['active'] as $index => $option): ?>
+                                    <div class="option-card">
+                                        <div class="option-card-header">
+                                            <div class="option-info">
+                                                <?php if (!empty($option['icon_emoji'])): ?>
+                                                    <span class="option-icon"><?= htmlspecialchars($option['icon_emoji']) ?></span>
+                                                <?php endif; ?>
+                                                <span class="option-text"><?= htmlspecialchars($option['option_value']) ?></span>
+                                            </div>
+                                            <span class="badge badge-success">Active</span>
+                                        </div>
+                                        <div class="option-actions">
+                                            <button class="btn-sm btn-edit" 
+                                                    data-option='<?= htmlspecialchars(json_encode($option, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES) ?>'
+                                                    data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
+                                                    onclick="editOption(JSON.parse(this.dataset.option), this.dataset.categoryName)">✏️ Edit</button>
+                                            <button class="btn-sm btn-deactivate" 
+                                                    data-option-id="<?= $option['id'] ?>"
+                                                    data-option-text="<?= htmlspecialchars($option['option_value'], ENT_QUOTES) ?>"
+                                                    onclick="toggleOption(this.dataset.optionId, 0, this.dataset.optionText)">Deactivate</button>
+                                            <?php if ($index > 0): ?>
+                                                <button class="btn-sm" onclick="reorderOption(<?= $option['id'] ?>, <?= $category['id'] ?>, 'up', 1)" title="Move Up">↑</button>
+                                            <?php endif; ?>
+                                            <?php if ($index < count($all_options[$category['id']]['active']) - 1): ?>
+                                                <button class="btn-sm" onclick="reorderOption(<?= $option['id'] ?>, <?= $category['id'] ?>, 'down', 1)" title="Move Down">↓</button>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php endforeach; ?>
                             </div>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                    
+                    <!-- Inactive Options Subsection -->
+                    <div class="subsection-header" onclick="toggleSubsection('inactive-<?= $category['id'] ?>')">
+                        <h4 class="subsection-title">
+                            <span class="toggle-icon" id="subsec-toggle-inactive-<?= $category['id'] ?>">▼</span>
+                            Inactive Options (<?= count($all_options[$category['id']]['inactive']) ?>)
+                        </h4>
+                    </div>
+                    <div class="subsection-content" id="subsec-content-inactive-<?= $category['id'] ?>">
+                        <?php if (empty($all_options[$category['id']]['inactive'])): ?>
+                            <div class="empty-state">No inactive options</div>
+                        <?php else: ?>
+                            <div class="options-grid">
+                                <?php foreach ($all_options[$category['id']]['inactive'] as $index => $option): ?>
+                                    <div class="option-card">
+                                        <div class="option-card-header">
+                                            <div class="option-info">
+                                                <?php if (!empty($option['icon_emoji'])): ?>
+                                                    <span class="option-icon"><?= htmlspecialchars($option['icon_emoji']) ?></span>
+                                                <?php endif; ?>
+                                                <span class="option-text"><?= htmlspecialchars($option['option_value']) ?></span>
+                                            </div>
+                                            <span class="badge badge-warning">Inactive</span>
+                                        </div>
+                                        <div class="option-actions">
+                                            <button class="btn-sm btn-edit" 
+                                                    data-option='<?= htmlspecialchars(json_encode($option, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES) ?>'
+                                                    data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
+                                                    onclick="editOption(JSON.parse(this.dataset.option), this.dataset.categoryName)">✏️ Edit</button>
+                                            <button class="btn-sm btn-activate" 
+                                                    data-option-id="<?= $option['id'] ?>"
+                                                    data-option-text="<?= htmlspecialchars($option['option_value'], ENT_QUOTES) ?>"
+                                                    onclick="toggleOption(this.dataset.optionId, 1, this.dataset.optionText)">Activate</button>
+                                            <?php if ($index > 0): ?>
+                                                <button class="btn-sm" onclick="reorderOption(<?= $option['id'] ?>, <?= $category['id'] ?>, 'up', 0)" title="Move Up">↑</button>
+                                            <?php endif; ?>
+                                            <?php if ($index < count($all_options[$category['id']]['inactive']) - 1): ?>
+                                                <button class="btn-sm" onclick="reorderOption(<?= $option['id'] ?>, <?= $category['id'] ?>, 'down', 0)" title="Move Down">↓</button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
-        <?php endif; ?>
+        <?php endforeach; ?>
     </div>
     
     <!-- Add/Edit Option Modal -->
@@ -428,15 +548,13 @@ if ($selected_category_id) {
             
             <form id="optionForm">
                 <input type="hidden" id="option_id" name="option_id">
-                <input type="hidden" id="category_id" name="category_id" value="<?= $selected_category['id'] ?? '' ?>">
+                <input type="hidden" id="category_id" name="category_id">
                 <input type="hidden" id="action" name="action" value="add">
                 
                 <div class="form-group">
                     <label>Option Text *</label>
                     <input type="text" id="option_value" name="option_value" required placeholder="e.g., Take with water">
-                    <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                        This text is used both for display and database storage
-                    </small>
+                    <small>This text is used for both display and database storage</small>
                 </div>
                 
                 <div class="form-group">
@@ -447,31 +565,59 @@ if ($selected_category_id) {
                 <div class="form-group">
                     <label>Display Order</label>
                     <input type="number" id="display_order" name="display_order" value="0" min="0">
-                    <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                        Lower numbers appear first
-                    </small>
+                    <small>Lower numbers appear first</small>
                 </div>
                 
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-add">Save</button>
+                    <button type="submit" class="btn-primary">Save</button>
                 </div>
             </form>
         </div>
     </div>
     
     <script>
-        function showAddModal() {
-            document.getElementById('modalTitle').textContent = 'Add Option';
+        // Toggle category expansion
+        function toggleCategory(catId) {
+            const content = document.getElementById('cat-content-' + catId);
+            const toggle = document.getElementById('cat-toggle-' + catId);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+            }
+        }
+        
+        // Toggle subsection expansion
+        function toggleSubsection(subsecId) {
+            const content = document.getElementById('subsec-content-' + subsecId);
+            const toggle = document.getElementById('subsec-toggle-' + subsecId);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+            }
+        }
+        
+        // Show add modal
+        function showAddModal(categoryId, categoryName) {
+            document.getElementById('modalTitle').textContent = 'Add Option to ' + categoryName;
             document.getElementById('action').value = 'add';
             document.getElementById('optionForm').reset();
             document.getElementById('option_id').value = '';
-            document.getElementById('category_id').value = '<?= $selected_category['id'] ?? '' ?>';
+            document.getElementById('category_id').value = categoryId;
             document.getElementById('optionModal').classList.add('show');
         }
         
-        function editOption(option) {
-            document.getElementById('modalTitle').textContent = 'Edit Option';
+        // Show edit modal
+        function editOption(option, categoryName) {
+            document.getElementById('modalTitle').textContent = 'Edit Option in ' + categoryName;
             document.getElementById('action').value = 'edit';
             document.getElementById('option_id').value = option.id;
             document.getElementById('category_id').value = option.category_id;
@@ -481,6 +627,7 @@ if ($selected_category_id) {
             document.getElementById('optionModal').classList.add('show');
         }
         
+        // Close modal
         function closeModal() {
             document.getElementById('optionModal').classList.remove('show');
         }
@@ -533,11 +680,12 @@ if ($selected_category_id) {
             }
         });
         
-        async function toggleActive(optionId, newState) {
+        // Toggle option active/inactive
+        async function toggleOption(optionId, newState, optionText) {
             const action = newState ? 'activate' : 'deactivate';
             const confirmed = await ConfirmModal.show({
                 title: (newState ? 'Activate' : 'Deactivate') + ' Option',
-                message: 'Are you sure you want to ' + action + ' this option?' + 
+                message: 'Are you sure you want to ' + action + ' "' + optionText + '"?' + 
                          (newState ? ' It will become visible in forms.' : ' It will be hidden from forms but preserved for data integrity.'),
                 confirmText: newState ? 'Activate' : 'Deactivate',
                 cancelText: 'Cancel',
@@ -550,6 +698,44 @@ if ($selected_category_id) {
             formData.append('action', 'toggle_active');
             formData.append('option_id', optionId);
             formData.append('is_active', newState ? '1' : '0');
+            
+            try {
+                const response = await fetch('dropdown_maintenance_handler.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    location.reload();
+                } else {
+                    await ConfirmModal.show({
+                        title: 'Error',
+                        message: result.message || 'Operation failed',
+                        confirmText: 'OK',
+                        cancelText: null
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                await ConfirmModal.show({
+                    title: 'Error',
+                    message: 'An error occurred. Please try again.',
+                    confirmText: 'OK',
+                    cancelText: null
+                });
+            }
+        }
+        
+        // Reorder option within its active/inactive subsection
+        async function reorderOption(optionId, categoryId, direction, isActive) {
+            const formData = new FormData();
+            formData.append('action', 'reorder');
+            formData.append('option_id', optionId);
+            formData.append('category_id', categoryId);
+            formData.append('direction', direction);
+            formData.append('is_active', isActive);
             
             try {
                 const response = await fetch('dropdown_maintenance_handler.php', {

@@ -133,7 +133,7 @@ class NotificationHelper {
             return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log("NotificationHelper::getRecent error: " . $e->getMessage());
-            throw new Exception("Failed to fetch notifications: " . $e->getMessage());
+            return [];
         }
     }
     

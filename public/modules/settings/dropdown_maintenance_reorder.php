@@ -63,14 +63,20 @@ $stmt->execute([$categoryId, $isActive, $currentOrder]);
 $target = $stmt->fetch();
 
 if ($target) {
-    $pdo->beginTransaction();
-    
-    // Swap display_order
-    $stmt = $pdo->prepare("UPDATE dropdown_options SET display_order = ? WHERE id = ?");
-    $stmt->execute([$target['display_order'], $id]);
-    $stmt->execute([$currentOrder, $target['id']]);
-    
-    $pdo->commit();
+    try {
+        $pdo->beginTransaction();
+        
+        // Swap display_order
+        $stmt = $pdo->prepare("UPDATE dropdown_options SET display_order = ? WHERE id = ?");
+        $stmt->execute([$target['display_order'], $id]);
+        $stmt->execute([$currentOrder, $target['id']]);
+        
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        http_response_code(500);
+        die("Error: Failed to reorder items");
+    }
 }
 
 header("Location: dropdown_maintenance.php?category=" . urlencode($category));

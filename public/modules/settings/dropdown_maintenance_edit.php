@@ -18,6 +18,20 @@ if (empty($optionText)) {
     die("Error: Option text required");
 }
 
+// Verify the option exists and belongs to the specified category
+$stmt = $pdo->prepare("
+    SELECT o.id 
+    FROM dropdown_options o
+    INNER JOIN dropdown_categories c ON o.category_id = c.id
+    WHERE o.id = ? AND c.category_key = ?
+");
+$stmt->execute([$id, $category]);
+
+if (!$stmt->fetch()) {
+    http_response_code(404);
+    die("Option not found or does not belong to this category");
+}
+
 $stmt = $pdo->prepare("UPDATE dropdown_options 
                        SET option_value = ?, icon_emoji = ? 
                        WHERE id = ?");

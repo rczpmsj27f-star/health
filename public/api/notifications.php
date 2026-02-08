@@ -1,22 +1,33 @@
 <?php
-session_start();
-require_once "../../app/config/database.php";
-require_once "../../app/core/NotificationHelper.php";
-
-// Add error logging
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
+session_start();
+
 header('Content-Type: application/json');
 
-if (empty($_SESSION['user_id'])) {
-    error_log("Notifications API: No user_id in session");
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
-
 try {
+    // Check session first
+    if (empty($_SESSION['user_id'])) {
+        error_log("Notifications API: No user_id in session");
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized', 'debug' => 'No session']);
+        exit;
+    }
+    
+    // Include database
+    require_once "../../app/config/database.php";
+    
+    if (!isset($pdo)) {
+        error_log("Notifications API: PDO not available");
+        http_response_code(500);
+        echo json_encode(['error' => 'Database connection failed']);
+        exit;
+    }
+    
+    require_once "../../app/core/NotificationHelper.php";
+    
     $notificationHelper = new NotificationHelper($pdo);
     $userId = $_SESSION['user_id'];
 
@@ -27,16 +38,23 @@ try {
         switch ($action) {
             case 'get_recent':
                 $notifications = $notificationHelper->getRecent($userId, 10);
-                echo json_encode(['notifications' => $notifications]);
+                echo json_encode([
+                    'success' => true,
+                    'notifications' => $notifications
+                ]);
                 break;
                 
             case 'get_count':
                 $count = $notificationHelper->getUnreadCount($userId);
-                echo json_encode(['count' => $count]);
+                echo json_encode([
+                    'success' => true,
+                    'count' => $count
+                ]);
                 break;
                 
             default:
-                echo json_encode(['error' => 'Invalid action']);
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid action: ' . $action]);
         }
         exit;
     }
@@ -66,15 +84,24 @@ try {
                 break;
                 
             default:
-                echo json_encode(['error' => 'Invalid action']);
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid action: ' . $action]);
         }
         exit;
     }
 
-    echo json_encode(['error' => 'Invalid request method']);
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed']);
     
 } catch (Exception $e) {
-    $errorId = uniqid('notif_err_', true);
-    error_log("Notifications API error [$errorId]: " . $e->getMessage());
-    echo json_encode(['error' => 'Server error occurred', 'error_id' => $errorId]);
+    error_log("Notifications API Exception: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Server error',
+        'message' => $e->getMessage(),
+        'debug' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]
+    ]);
 }

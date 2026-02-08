@@ -111,7 +111,11 @@ $history = $stmt->fetchAll();
                                     <?php endif; ?>
                                 </td>
                                 <td style="padding: 12px;">
-                                    <?= $log['logged_by_name'] ? htmlspecialchars($log['logged_by_name']) : 'Self' ?>
+                                    <?php if (empty($log['logged_by_user_id']) || $log['logged_by_user_id'] == $medication['user_id']): ?>
+                                        Self
+                                    <?php else: ?>
+                                        <?= htmlspecialchars($log['logged_by_name']) ?>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="padding: 12px;">
                                     <?php if ($log['status'] === 'skipped' && $log['skipped_reason']): ?>

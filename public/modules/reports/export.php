@@ -12,6 +12,10 @@ $format = $_GET['format'] ?? 'csv';
 $startDate = $_GET['start_date'] ?? date('Y-m-d', strtotime('-90 days'));
 $endDate = $_GET['end_date'] ?? date('Y-m-d');
 
+// Sanitize filename
+$baseFilename = 'medication-history-' . date('Y-m-d');
+$sanitizedFilename = preg_replace('/[^a-zA-Z0-9._-]/', '', $baseFilename);
+
 // Get data
 $stmt = $pdo->prepare("
     SELECT 
@@ -32,9 +36,7 @@ $data = $stmt->fetchAll();
 
 if ($format === 'csv') {
     header('Content-Type: text/csv');
-    $filename = 'medication-history-' . date('Y-m-d') . '.csv';
-    $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Disposition: attachment; filename="' . $sanitizedFilename . '.csv"');
     
     $output = fopen('php://output', 'w');
     fputcsv($output, ['Medication', 'Dosage', 'Scheduled Time', 'Status', 'Taken At', 'Reason']);
@@ -56,9 +58,7 @@ if ($format === 'csv') {
 
 if ($format === 'json') {
     header('Content-Type: application/json');
-    $filename = 'medication-history-' . date('Y-m-d') . '.json';
-    $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Disposition: attachment; filename="' . $sanitizedFilename . '.json"');
     echo json_encode($data, JSON_PRETTY_PRINT);
     exit;
 }

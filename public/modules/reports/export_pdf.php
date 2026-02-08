@@ -262,7 +262,7 @@ function generateSchedule($pdf, $pdo, $userId, $user, $format) {
         }
         
         $stmt = $pdo->prepare("
-            SELECT dose_time, label 
+            SELECT dose_time 
             FROM medication_dose_times 
             WHERE medication_id = ?
             ORDER BY dose_time ASC
@@ -358,9 +358,8 @@ function renderMonthlySchedule($pdf, $medWithTimes) {
         $pdf->SetFont('helvetica', '', 9);
         foreach ($times as $time) {
             $timeLabel = date('g:i A', strtotime($time['dose_time']));
-            $label = !empty($time['label']) ? ' - ' . $time['label'] : '';
             $pdf->Cell(10, 5, chr(149), 0, 0, 'L'); // Bullet
-            $pdf->Cell(0, 5, $timeLabel . $label, 0, 1, 'L');
+            $pdf->Cell(0, 5, $timeLabel, 0, 1, 'L');
         }
         $pdf->Ln(3);
     }
@@ -439,7 +438,7 @@ function generateManualChart($pdf, $pdo, $userId, $user, $startDate, $endDate, $
     foreach ($medications as $med) {
         // Get dose times
         $stmt = $pdo->prepare("
-            SELECT dose_time, label 
+            SELECT dose_time 
             FROM medication_dose_times 
             WHERE medication_id = ?
             ORDER BY dose_time ASC

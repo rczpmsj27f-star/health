@@ -3,6 +3,12 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 
+// Only accept POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    die("Method not allowed");
+}
+
 $category = $_POST['category'] ?? '';
 $optionText = trim($_POST['option_text'] ?? '');
 $emoji = trim($_POST['emoji'] ?? '');
@@ -30,7 +36,7 @@ $stmt = $pdo->prepare("SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order
 $stmt->execute([$categoryId]);
 $nextOrder = $stmt->fetchColumn();
 
-// Insert
+// Insert new option (always active by default - admins can deactivate later if needed)
 $stmt = $pdo->prepare("INSERT INTO dropdown_options 
                        (category_id, option_value, icon_emoji, is_active, display_order) 
                        VALUES (?, ?, ?, TRUE, ?)");

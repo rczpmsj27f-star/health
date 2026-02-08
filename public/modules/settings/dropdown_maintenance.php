@@ -431,7 +431,7 @@ $inactiveOptions = $stmtInactive->fetchAll();
                             <span class="option-status active">Active</span>
                         </div>
                         <div class="option-card-actions">
-                            <button class="btn-edit" onclick="editOption(<?= htmlspecialchars(json_encode($option)) ?>)">Edit</button>
+                            <button class="btn-edit" onclick='editOption(<?= json_encode($option) ?>)'>Edit</button>
                             <button class="btn-deactivate" onclick="confirmDeactivate(<?= $option['id'] ?>, '<?= htmlspecialchars($option['option_value'], ENT_QUOTES) ?>')">Deactivate</button>
                             <?php if ($index > 0): ?>
                                 <button class="btn-reorder" onclick="moveItem(<?= $option['id'] ?>, 'up')">Move Up</button>
@@ -468,7 +468,7 @@ $inactiveOptions = $stmtInactive->fetchAll();
                             <span class="option-status inactive">Inactive</span>
                         </div>
                         <div class="option-card-actions">
-                            <button class="btn-edit" onclick="editOption(<?= htmlspecialchars(json_encode($option)) ?>)">Edit</button>
+                            <button class="btn-edit" onclick='editOption(<?= json_encode($option) ?>)'>Edit</button>
                             <button class="btn-activate" onclick="confirmActivate(<?= $option['id'] ?>, '<?= htmlspecialchars($option['option_value'], ENT_QUOTES) ?>')">Activate</button>
                             <?php if ($index > 0): ?>
                                 <button class="btn-reorder" onclick="moveItem(<?= $option['id'] ?>, 'up')">Move Up</button>

@@ -3,8 +3,21 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 
+// Only accept POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    die("Method not allowed");
+}
+
 $id = (int)$_POST['id'];
-$direction = $_POST['direction']; // 'up' or 'down'
+$direction = $_POST['direction'] ?? ''; // 'up' or 'down'
+
+// Validate direction parameter
+if (!in_array($direction, ['up', 'down'], true)) {
+    http_response_code(400);
+    die("Invalid direction parameter");
+}
+
 $category = $_POST['category'] ?? '';
 
 // Get the category_id from category_key

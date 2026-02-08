@@ -3,6 +3,12 @@ require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 Auth::requireAdmin();
 
+// Only accept POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    die("Method not allowed");
+}
+
 $id = (int)$_POST['id'];
 $optionText = trim($_POST['option_text'] ?? '');
 $emoji = trim($_POST['emoji'] ?? '');

@@ -382,6 +382,9 @@ $medications = $stmt->fetchAll();
                                     if (!empty($med['dose_amount']) && !empty($med['dose_unit'])) {
                                         $infoParts[] = htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']);
                                     }
+                                    if (!empty($med['start_date'])) {
+                                        $infoParts[] = 'Started: ' . date('M j, Y', strtotime($med['start_date']));
+                                    }
                                     if (!empty($med['created_at'])) {
                                         $infoParts[] = 'Date added: ' . date('M j, Y', strtotime($med['created_at']));
                                     }

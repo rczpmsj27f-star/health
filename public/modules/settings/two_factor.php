@@ -64,11 +64,12 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Two-Factor Authentication – Health Tracker</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <style>
         .container {
             max-width: 600px;
-            margin: 40px auto;
-            padding: 0 20px;
+            margin: 0 auto;
+            padding: 80px 20px 40px 20px;
         }
         .card {
             background: #fff;
@@ -193,7 +194,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
     </style>
 </head>
 <body>
-    <?php require_once "../../../app/includes/menu.php"; ?>
+    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
     
     <div class="container">
         <h1>Two-Factor Authentication</h1>

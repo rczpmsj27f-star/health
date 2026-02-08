@@ -423,7 +423,7 @@ foreach ($categories as $category) {
     
     <div class="page-content">
         <div class="page-title">
-            <h2>🎛️ Dropdown Maintenance</h2>
+            <h2>🛠️ Dropdown Maintenance</h2>
             <p>Manage dropdown options used throughout the application</p>
         </div>
         
@@ -440,19 +440,19 @@ foreach ($categories as $category) {
                                 data-category-id="<?= $category['id'] ?>"
                                 data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
                                 onclick="showAddModal(this.dataset.categoryId, this.dataset.categoryName); event.stopPropagation();">+ Add</button>
-                        <span class="toggle-icon" id="cat-toggle-<?= $category['id'] ?>">▼</span>
+                        <span class="toggle-icon collapsed" id="cat-toggle-<?= $category['id'] ?>">▼</span>
                     </div>
                 </div>
                 
-                <div class="category-content" id="cat-content-<?= $category['id'] ?>">
+                <div class="category-content collapsed" id="cat-content-<?= $category['id'] ?>">
                     <!-- Active Options Subsection -->
                     <div class="subsection-header" onclick="toggleSubsection('active-<?= $category['id'] ?>')">
                         <h4 class="subsection-title">
-                            <span class="toggle-icon" id="subsec-toggle-active-<?= $category['id'] ?>">▼</span>
+                            <span class="toggle-icon collapsed" id="subsec-toggle-active-<?= $category['id'] ?>">▼</span>
                             Active Options (<?= count($all_options[$category['id']]['active']) ?>)
                         </h4>
                     </div>
-                    <div class="subsection-content" id="subsec-content-active-<?= $category['id'] ?>">
+                    <div class="subsection-content collapsed" id="subsec-content-active-<?= $category['id'] ?>">
                         <?php if (empty($all_options[$category['id']]['active'])): ?>
                             <div class="empty-state">No active options</div>
                         <?php else: ?>
@@ -493,11 +493,11 @@ foreach ($categories as $category) {
                     <!-- Inactive Options Subsection -->
                     <div class="subsection-header" onclick="toggleSubsection('inactive-<?= $category['id'] ?>')">
                         <h4 class="subsection-title">
-                            <span class="toggle-icon" id="subsec-toggle-inactive-<?= $category['id'] ?>">▼</span>
+                            <span class="toggle-icon collapsed" id="subsec-toggle-inactive-<?= $category['id'] ?>">▼</span>
                             Inactive Options (<?= count($all_options[$category['id']]['inactive']) ?>)
                         </h4>
                     </div>
-                    <div class="subsection-content" id="subsec-content-inactive-<?= $category['id'] ?>">
+                    <div class="subsection-content collapsed" id="subsec-content-inactive-<?= $category['id'] ?>">
                         <?php if (empty($all_options[$category['id']]['inactive'])): ?>
                             <div class="empty-state">No inactive options</div>
                         <?php else: ?>

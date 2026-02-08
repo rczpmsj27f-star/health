@@ -177,6 +177,9 @@ $doseTimes = $stmt->fetchAll();
                 </a>
                 <?php 
                 $isArchived = !empty($medication['archived']) && $medication['archived'] == 1;
+                $isPastEndDate = !empty($medication['end_date']) && strtotime($medication['end_date']) < time();
+                // Show Archive button if medication is past end date OR if already archived (to allow unarchive)
+                if ($isPastEndDate || $isArchived):
                 ?>
                 <a href="/modules/medications/archive_handler.php?id=<?= $medication['id'] ?>&action=<?= $isArchived ? 'unarchive' : 'archive' ?>" 
                    class="btn btn-secondary archive-link" 
@@ -184,6 +187,7 @@ $doseTimes = $stmt->fetchAll();
                    data-action="<?= $isArchived ? 'unarchive' : 'archive' ?>">
                     <?= $isArchived ? '📤 Unarchive' : '📦 Archive' ?>
                 </a>
+                <?php endif; ?>
                 <a href="/modules/medications/delete_handler.php?id=<?= $medication['id'] ?>" 
                    class="btn btn-danger delete-link" 
                    style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box; background: #dc2626;">

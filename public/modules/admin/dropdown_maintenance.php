@@ -439,7 +439,7 @@ foreach ($categories as $category) {
                         <button class="btn-add-option" 
                                 data-category-id="<?= $category['id'] ?>"
                                 data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
-                                onclick="showAddModal(parseInt(this.getAttribute('data-category-id')), this.getAttribute('data-category-name')); event.stopPropagation();">+ Add</button>
+                                onclick="showAddModal(this.dataset.categoryId, this.dataset.categoryName); event.stopPropagation();">+ Add</button>
                         <span class="toggle-icon" id="cat-toggle-<?= $category['id'] ?>">▼</span>
                     </div>
                 </div>
@@ -472,11 +472,11 @@ foreach ($categories as $category) {
                                             <button class="btn-sm btn-edit" 
                                                     data-option='<?= htmlspecialchars(json_encode($option, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES) ?>'
                                                     data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
-                                                    onclick="editOption(JSON.parse(this.getAttribute('data-option')), this.getAttribute('data-category-name'))">✏️ Edit</button>
+                                                    onclick="editOption(JSON.parse(this.dataset.option), this.dataset.categoryName)">✏️ Edit</button>
                                             <button class="btn-sm btn-deactivate" 
                                                     data-option-id="<?= $option['id'] ?>"
                                                     data-option-text="<?= htmlspecialchars($option['option_value'], ENT_QUOTES) ?>"
-                                                    onclick="toggleOption(parseInt(this.getAttribute('data-option-id')), 0, this.getAttribute('data-option-text'))">Deactivate</button>
+                                                    onclick="toggleOption(this.dataset.optionId, 0, this.dataset.optionText)">Deactivate</button>
                                             <?php if ($index > 0): ?>
                                                 <button class="btn-sm" onclick="reorderOption(<?= $option['id'] ?>, <?= $category['id'] ?>, 'up', 1)" title="Move Up">↑</button>
                                             <?php endif; ?>
@@ -517,11 +517,11 @@ foreach ($categories as $category) {
                                             <button class="btn-sm btn-edit" 
                                                     data-option='<?= htmlspecialchars(json_encode($option, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES) ?>'
                                                     data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
-                                                    onclick="editOption(JSON.parse(this.getAttribute('data-option')), this.getAttribute('data-category-name'))">✏️ Edit</button>
+                                                    onclick="editOption(JSON.parse(this.dataset.option), this.dataset.categoryName)">✏️ Edit</button>
                                             <button class="btn-sm btn-activate" 
                                                     data-option-id="<?= $option['id'] ?>"
                                                     data-option-text="<?= htmlspecialchars($option['option_value'], ENT_QUOTES) ?>"
-                                                    onclick="toggleOption(parseInt(this.getAttribute('data-option-id')), 1, this.getAttribute('data-option-text'))">Activate</button>
+                                                    onclick="toggleOption(this.dataset.optionId, 1, this.dataset.optionText)">Activate</button>
                                             <?php if ($index > 0): ?>
                                                 <button class="btn-sm" onclick="reorderOption(<?= $option['id'] ?>, <?= $category['id'] ?>, 'up', 0)" title="Move Up">↑</button>
                                             <?php endif; ?>

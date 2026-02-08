@@ -395,8 +395,8 @@ foreach ($instructions as $i) {
                     </div>
 
                     <div class="form-group">
-                        <label>Start Date</label>
-                        <input type="date" name="start_date" value="<?= htmlspecialchars($med['start_date'] ?? date('Y-m-d')) ?>">
+                        <label>Start Date (optional)</label>
+                        <input type="date" name="start_date" value="<?= htmlspecialchars($med['start_date'] ?? '') ?>">
                         <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                             When did you start taking this medication?
                         </small>

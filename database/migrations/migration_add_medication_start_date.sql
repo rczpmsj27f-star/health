@@ -4,7 +4,7 @@
 
 ALTER TABLE medications 
 ADD COLUMN IF NOT EXISTS start_date DATE DEFAULT NULL
-AFTER end_date;
+AFTER current_stock;
 
 -- Create index for start date queries
 CREATE INDEX IF NOT EXISTS idx_medications_start_date ON medications(start_date);

@@ -12,8 +12,26 @@ if (empty($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $isAdmin = Auth::isAdmin();
 
+// Check for linked user
+require_once __DIR__ . '/../../../app/core/LinkedUserHelper.php';
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+$viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
+$targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
+
+// Check permissions if viewing linked user
+if ($viewingLinkedUser) {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_mark_taken']) {
+        $_SESSION['error_msg'] = "You don't have permission to log PRN medications for them";
+        header("Location: /modules/medications/log_prn.php");
+        exit;
+    }
+}
+
 // Initialize TimeFormatter for user-friendly time display
-$timeFormatter = new TimeFormatter($pdo, $userId);
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
 // Get all active PRN medications for the user
 $stmt = $pdo->prepare("
@@ -27,7 +45,7 @@ $stmt = $pdo->prepare("
     AND ms.is_prn = 1
     ORDER BY m.name
 ");
-$stmt->execute([$userId]);
+$stmt->execute([$targetUserId]);
 $prnMedications = $stmt->fetchAll();
 
 // For each PRN medication, get dose count in last 24 hours and last dose time
@@ -41,7 +59,7 @@ foreach ($prnMedications as $med) {
         AND taken_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
         AND status = 'taken'
     ");
-    $stmt->execute([$med['id'], $userId]);
+    $stmt->execute([$med['id'], $targetUserId]);
     $logData = $stmt->fetch();
     
     $doseCount = $logData['dose_count'] ?? 0;
@@ -311,6 +329,7 @@ foreach ($prnMedications as $med) {
             <p>Track and log your as-needed (PRN) medications</p>
         </div>
         
+        <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success">
                 <?= htmlspecialchars($_SESSION['success']) ?>

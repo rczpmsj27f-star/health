@@ -3,6 +3,9 @@
  * Database Migration Runner
  * Purpose: Add can_export_data permission column to user_link_permissions table
  * Usage: Run this file once via browser or CLI
+ * 
+ * SECURITY NOTE: This file should be deleted after running the migration.
+ * Alternatively, move it to a protected directory or implement authentication.
  */
 
 require_once __DIR__ . '/app/config/database.php';

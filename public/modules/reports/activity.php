@@ -88,10 +88,11 @@ $activities = $stmt->fetchAll();
 $crudUserIds = [];
 if ($userFilter === 'me') {
     $crudUserIds = [$_SESSION['user_id']];
-} elseif ($userFilter === 'partner') {
+} elseif ($userFilter === 'partner' && $linkedUser) {
     $crudUserIds = [$linkedUser['linked_user_id']];
 } else {
-    $crudUserIds = [$_SESSION['user_id'], $linkedUser['linked_user_id']];
+    // Default to both users if linked user exists, otherwise just current user
+    $crudUserIds = $linkedUser ? [$_SESSION['user_id'], $linkedUser['linked_user_id']] : [$_SESSION['user_id']];
 }
 
 $crudPlaceholders = implode(',', array_fill(0, count($crudUserIds), '?'));

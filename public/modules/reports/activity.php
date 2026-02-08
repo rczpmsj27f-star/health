@@ -22,7 +22,31 @@ if (!$linkedUser || $linkedUser['status'] !== 'active') {
     exit;
 }
 
-// Get combined activity for both users (last 30 days)
+// Get filter values
+$statusFilter = $_GET['status'] ?? '';
+$daysFilter = (int)($_GET['days'] ?? 30);
+$userFilter = $_GET['user_filter'] ?? '';
+
+// Build WHERE conditions
+$whereClauses = ["m.user_id IN (?, ?)"];
+$params = [$_SESSION['user_id'], $linkedUser['linked_user_id']];
+
+if ($statusFilter) {
+    $whereClauses[] = "ml.status = ?";
+    $params[] = $statusFilter;
+}
+
+if ($userFilter === 'me') {
+    $whereClauses[] = "m.user_id = ?";
+    $params[] = $_SESSION['user_id'];
+} elseif ($userFilter === 'partner') {
+    $whereClauses[] = "m.user_id = ?";
+    $params[] = $linkedUser['linked_user_id'];
+}
+
+$whereSQL = implode(' AND ', $whereClauses);
+
+// Get combined activity for both users
 $stmt = $pdo->prepare("
     SELECT 
         ml.id,
@@ -36,12 +60,14 @@ $stmt = $pdo->prepare("
     FROM medication_logs ml
     JOIN medications m ON ml.medication_id = m.id
     JOIN users u1 ON m.user_id = u1.id
-    WHERE m.user_id IN (?, ?)
-    AND ml.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    WHERE $whereSQL
+    AND ml.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
     ORDER BY ml.created_at DESC
     LIMIT 50
 ");
-$stmt->execute([$_SESSION['user_id'], $linkedUser['linked_user_id']]);
+
+$params[] = $daysFilter;
+$stmt->execute($params);
 $activities = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -61,8 +87,47 @@ $activities = $stmt->fetchAll();
             📰 Activity Feed
         </h2>
         <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
-            Combined medication activity for you and <?= htmlspecialchars($linkedUser['linked_user_name']) ?>
+            Feed for your medications
         </p>
+        
+        <!-- Filters -->
+        <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+                <div>
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px;">Status</label>
+                    <select name="status" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <option value="">All Statuses</option>
+                        <option value="taken" <?= ($_GET['status'] ?? '') === 'taken' ? 'selected' : '' ?>>Taken</option>
+                        <option value="skipped" <?= ($_GET['status'] ?? '') === 'skipped' ? 'selected' : '' ?>>Skipped</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px;">Days</label>
+                    <select name="days" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <option value="7" <?= ($_GET['days'] ?? '30') == '7' ? 'selected' : '' ?>>Last 7 days</option>
+                        <option value="30" <?= ($_GET['days'] ?? '30') == '30' ? 'selected' : '' ?>>Last 30 days</option>
+                        <option value="60" <?= ($_GET['days'] ?? '30') == '60' ? 'selected' : '' ?>>Last 60 days</option>
+                        <option value="90" <?= ($_GET['days'] ?? '30') == '90' ? 'selected' : '' ?>>Last 90 days</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-weight: 500; margin-bottom: 8px;">User</label>
+                    <select name="user_filter" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <option value="">Both Users</option>
+                        <option value="me" <?= ($_GET['user_filter'] ?? '') === 'me' ? 'selected' : '' ?>>My Activity</option>
+                        <option value="partner" <?= ($_GET['user_filter'] ?? '') === 'partner' ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Activity
+                        </option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">
+                    🔍 Filter
+                </button>
+            </form>
+        </div>
         
         <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <?php if (empty($activities)): ?>

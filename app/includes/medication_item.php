@@ -27,9 +27,16 @@
                 }
             }
             ?>
-            <span class="status-taken" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">
-                ✓ Taken <?= $takenTimeDisplay ?>
-            </span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="status-taken" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">
+                    ✓ Taken <?= $takenTimeDisplay ?>
+                </span>
+                <button type="button" 
+                        onclick="untakeMedication(<?= $med['id'] ?>, '<?= htmlspecialchars($med['scheduled_date_time']) ?>')"
+                        style="background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline; font-size: 12px; padding: 4px 8px;">
+                    Untake
+                </button>
+            </div>
         <?php elseif ($med['log_status'] === 'skipped'): ?>
             <span class="status-skipped" style="background: #f59e0b; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; white-space: nowrap;">
                 ⊘ Skipped<?= $med['skipped_reason'] ? ': ' . htmlspecialchars($med['skipped_reason']) : '' ?>

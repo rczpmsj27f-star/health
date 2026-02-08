@@ -206,6 +206,33 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
             <?php endif; ?>
         </div>
         
+        <!-- Additional Reports -->
+        <div style="background: white; border-radius: 10px; padding: 24px; margin-top: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 18px; margin-bottom: 16px;">
+                📊 Additional Reports
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <?php if ($linkedUser && $linkedUser['status'] === 'active'): ?>
+                <a href="/modules/reports/activity.php" 
+                   class="btn btn-primary" 
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                    📰 Activity Feed
+                </a>
+                <?php endif; ?>
+                <a href="/modules/reports/export.php?format=csv" 
+                   class="btn btn-secondary" 
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                    💾 Export CSV
+                </a>
+                <a href="/modules/reports/export.php?format=json" 
+                   class="btn btn-secondary" 
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                    📄 Export JSON
+                </a>
+            </div>
+        </div>
+        
         <div style="margin-top: 24px; text-align: center;">
             <a href="/modules/medications/dashboard.php<?= $viewingLinkedUser ? '?view=linked' : '' ?>" 
                style="color: var(--color-text-secondary);">← Back to Dashboard</a>

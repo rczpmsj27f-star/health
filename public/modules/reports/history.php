@@ -46,11 +46,8 @@ if ($medication['user_id'] != $_SESSION['user_id']) {
 
 // Get history (last 90 days)
 $stmt = $pdo->prepare("
-    SELECT 
-        ml.*,
-        u.first_name as logged_by_name
+    SELECT ml.*
     FROM medication_logs ml
-    LEFT JOIN users u ON ml.logged_by_user_id = u.id
     WHERE ml.medication_id = ?
     AND ml.scheduled_date_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
     ORDER BY ml.scheduled_date_time DESC
@@ -92,7 +89,6 @@ $history = $stmt->fetchAll();
                             <tr style="border-bottom: 2px solid var(--color-bg-light);">
                                 <th style="text-align: left; padding: 12px;">Date/Time</th>
                                 <th style="text-align: left; padding: 12px;">Status</th>
-                                <th style="text-align: left; padding: 12px;">Logged By</th>
                                 <th style="text-align: left; padding: 12px;">Notes</th>
                             </tr>
                         </thead>
@@ -112,13 +108,6 @@ $history = $stmt->fetchAll();
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <span style="color: #ef4444; font-weight: 600;">✗ Skipped</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="padding: 12px;">
-                                    <?php if (empty($log['logged_by_user_id']) || $log['logged_by_user_id'] == $medication['user_id']): ?>
-                                        Self
-                                    <?php else: ?>
-                                        <?= htmlspecialchars($log['logged_by_name']) ?>
                                     <?php endif; ?>
                                 </td>
                                 <td style="padding: 12px;">

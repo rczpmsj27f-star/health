@@ -274,7 +274,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
                     <div class="tile-desc">
                         Track your medications
                         <?php if ($overdueCount > 0): ?>
-                            <?php if ($overdueCount == 1 && $firstOverdueMedId): ?>
+                            <?php if ($overdueCount === 1 && $firstOverdueMedId): ?>
                                 <a href="/modules/medications/view.php?id=<?= $firstOverdueMedId ?>" 
                                    style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px; text-decoration: underline;">
                                     • <?= $overdueCount ?> overdue - View now

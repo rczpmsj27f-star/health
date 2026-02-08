@@ -5,6 +5,8 @@ require_once "../../../app/core/auth.php";
 require_once "../../../app/core/LinkedUserHelper.php";
 require_once "../../../vendor/autoload.php";
 
+use TCPDF;
+
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
@@ -451,26 +453,30 @@ function generateManualChart($pdf, $pdo, $userId, $user, $startDate, $endDate, $
             // No times, single row
             $pdf->Cell(50, 7, htmlspecialchars($med['name']), 1, 0, 'L');
             for ($i = 0; $i < min($days, 14); $i++) {
-                $pdf->Cell($dateColWidth, 7, chr(9744), 1, 0, 'C'); // Empty checkbox
+                $pdf->Cell($dateColWidth, 7, '[ ]', 1, 0, 'C'); // Checkbox
             }
             $pdf->Ln();
         } elseif (!empty($med['is_prn'])) {
             // PRN medication
             $pdf->Cell(50, 7, htmlspecialchars($med['name']) . ' (PRN)', 1, 0, 'L');
             for ($i = 0; $i < min($days, 14); $i++) {
-                $pdf->Cell($dateColWidth, 7, chr(9744), 1, 0, 'C');
+                $pdf->Cell($dateColWidth, 7, '[ ]', 1, 0, 'C'); // Checkbox
             }
             $pdf->Ln();
         } else {
             // Multiple dose times
-            foreach ($times as $idx => $time) {
-                $timeLabel = date('g:iA', strtotime($time['dose_time']));
-                $medName = ($idx === 0) ? htmlspecialchars($med['name']) : '';
-                
-                $pdf->Cell(50, 7, $medName . ' ' . $timeLabel, 1, 0, 'L');
-                for ($i = 0; $i < min($days, 14); $i++) {
-                    $pdf->Cell($dateColWidth, 7, chr(9744), 1, 0, 'C'); // Empty checkbox
-                }
+            $medName = ($idx === 0) ? htmlspecialchars($med['name']) : '';
+            $timeLabel = date('g:iA', strtotime($time['dose_time']));
+            
+            $pdf->Cell(50, 7, $medName, 1, 0, 'L');
+            for ($i = 0; $i < min($days, 14); $i++) {
+                $pdf->Cell($dateColWidth, 7, '[ ]', 1, 0, 'C'); // Checkbox
+            }
+            $pdf->Ln();
+            
+            if ($medName) {
+                // Time on next row, indented
+                $pdf->Cell(50, 5, '  ' . $timeLabel, 0, 0, 'L');
                 $pdf->Ln();
             }
         }

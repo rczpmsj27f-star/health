@@ -25,13 +25,18 @@ class TimeFormatter {
      * Format a time string according to user preference
      * 
      * @param string $time Time string to format
-     * @return string Formatted time
+     * @return string Formatted time or empty string if invalid
      */
     public function formatTime($time) {
+        $timestamp = strtotime($time);
+        if ($timestamp === false) {
+            return ''; // Return empty string for invalid time
+        }
+        
         if ($this->use24Hour) {
-            return date('H:i', strtotime($time));
+            return date('H:i', $timestamp);
         } else {
-            return date('g:i A', strtotime($time));
+            return date('g:i A', $timestamp);
         }
     }
     
@@ -39,13 +44,18 @@ class TimeFormatter {
      * Format a datetime string according to user preference
      * 
      * @param string $datetime Datetime string to format
-     * @return string Formatted datetime
+     * @return string Formatted datetime or empty string if invalid
      */
     public function formatDateTime($datetime) {
+        $timestamp = strtotime($datetime);
+        if ($timestamp === false) {
+            return ''; // Return empty string for invalid datetime
+        }
+        
         if ($this->use24Hour) {
-            return date('M d, Y H:i', strtotime($datetime));
+            return date('M d, Y H:i', $timestamp);
         } else {
-            return date('M d, Y g:i A', strtotime($datetime));
+            return date('M d, Y g:i A', $timestamp);
         }
     }
 }

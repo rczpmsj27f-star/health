@@ -338,6 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="menu-section-children" id="admin-menu">
                     <a href="/modules/admin/users.php">User Management</a>
+                    <a href="/modules/admin/dropdown_maintenance.php">Dropdown Maintenance</a>
                 </div>
             </div>
             <?php endif; ?>

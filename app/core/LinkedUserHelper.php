@@ -7,6 +7,9 @@
 class LinkedUserHelper {
     private $pdo;
     
+    // Number of users required to set permissions before link activation
+    const REQUIRED_PERMISSIONS_COUNT = 2;
+    
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
@@ -85,7 +88,7 @@ class LinkedUserHelper {
             return ['success' => false, 'error' => 'Invalid or expired invite code'];
         }
         
-        if ($invite['invited_by'] == $userId) {
+        if ($invite['invited_by'] === $userId) {
             return ['success' => false, 'error' => 'You cannot accept your own invitation'];
         }
         
@@ -215,7 +218,7 @@ class LinkedUserHelper {
         $stmt->execute([$linkId]);
         $result = $stmt->fetch();
         
-        if ($result['count'] >= 2) {
+        if ($result['count'] >= self::REQUIRED_PERMISSIONS_COUNT) {
             $stmt = $this->pdo->prepare("
                 UPDATE user_links SET status = 'active' WHERE id = ?
             ");

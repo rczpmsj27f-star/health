@@ -4,17 +4,17 @@ session_start();
 require_once __DIR__ . '/../app/config/database.php';
 
 // Input validation for empty fields
-if (empty($_POST['email']) || empty($_POST['password'])) {
-    $_SESSION['error'] = "Email and password are required.";
+if (empty($_POST['username']) || empty($_POST['password'])) {
+    $_SESSION['error'] = "Username and password are required.";
     header("Location: /login.php");
     exit;
 }
 
-$email = trim($_POST['email']);
+$username = trim($_POST['username']);
 $password = $_POST['password'];
 
-$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND is_active = 1");
-$stmt->execute([$email]);
+$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND is_active = 1");
+$stmt->execute([$username]);
 $user = $stmt->fetch();
 
 if (!$user || !password_verify($password, $user['password_hash'])) {

@@ -128,8 +128,8 @@ unset($_SESSION['error'], $_SESSION['success']);
 
         <form method="POST" action="login_handler.php">
             <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" required>
+                <label>Username</label>
+                <input type="text" name="username" required autocomplete="username">
             </div>
 
             <div class="form-group">

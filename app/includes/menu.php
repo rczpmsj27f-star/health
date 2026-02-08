@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="/modules/reports/activity.php">Activity Feed</a>
                     <a href="/modules/medications/compliance.php">Compliance Calendar</a>
                     <a href="/modules/reports/compliance.php">Compliance Explorer</a>
-                    <a href="/modules/reports/export.php">Export</a>
+                    <a href="/modules/reports/exports.php">📊 Exports & Reports</a>
                 </div>
             </div>
             <a href="/modules/medications/log_prn.php">Log PRN</a>

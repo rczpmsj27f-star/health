@@ -64,6 +64,46 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Format time for display
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+    return Math.floor(diff / 86400) + ' days ago';
+}
+
+// Mark notification as read
+function markAsRead(notificationId) {
+    fetch('/api/notifications.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'mark_read', notification_id: notificationId})
+    }).then(() => {
+        loadNotifications();
+        if (typeof updateBadge === 'function') {
+            updateBadge();
+        }
+    });
+}
+
+// Mark all notifications as read
+function markAllRead() {
+    fetch('/api/notifications.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'mark_all_read'})
+    }).then(() => {
+        loadNotifications();
+        if (typeof updateBadge === 'function') {
+            updateBadge();
+        }
+    });
+}
+
 // Enhanced nudge with better UX
 function sendNudge(medicationId, toUserId) {
     const button = event.target;

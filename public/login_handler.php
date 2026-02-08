@@ -29,6 +29,15 @@ if (!$user['is_email_verified']) {
     exit;
 }
 
+// Check if 2FA is enabled for this user
+if (!empty($user['two_factor_enabled'])) {
+    // Store user ID temporarily and redirect to 2FA verification
+    $_SESSION['pending_2fa_user_id'] = $user['id'];
+    header("Location: /verify-2fa.php");
+    exit;
+}
+
+// Normal login if 2FA not enabled
 $_SESSION['user_id'] = $user['id'];
 
 // Update last login time

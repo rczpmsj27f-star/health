@@ -1,421 +1,176 @@
-<?php
+<?php 
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/TimeFormatter.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
 }
 
-$medId = $_GET['id'];
-$isAdmin = Auth::isAdmin();
+$medicationId = $_GET['id'] ?? 0;
+$timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
-$stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ?");
-$stmt->execute([$medId]);
-$med = $stmt->fetch();
+// Get medication details
+$stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ? AND user_id = ?");
+$stmt->execute([$medicationId, $_SESSION['user_id']]);
+$medication = $stmt->fetch();
 
-// Check if medication is archived
-$isArchived = !empty($med['archived']) && $med['archived'] == 1;
-
-$stmt = $pdo->prepare("SELECT * FROM medication_doses WHERE medication_id = ?");
-$stmt->execute([$medId]);
-$dose = $stmt->fetch();
-
-$stmt = $pdo->prepare("SELECT * FROM medication_schedules WHERE medication_id = ?");
-$stmt->execute([$medId]);
-$schedule = $stmt->fetch();
-
-$stmt = $pdo->prepare("SELECT * FROM medication_instructions WHERE medication_id = ?");
-$stmt->execute([$medId]);
-$instructions = $stmt->fetchAll();
-
-$stmt = $pdo->prepare("SELECT * FROM medication_alerts WHERE medication_id = ?");
-$stmt->execute([$medId]);
-$alerts = $stmt->fetchAll();
-
-// Days of week for visualizer
-$daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-$activeDays = [];
-if ($schedule && $schedule['days_of_week']) {
-    $activeDays = array_map('trim', explode(',', $schedule['days_of_week']));
+if (!$medication) {
+    $_SESSION['error_msg'] = "Medication not found";
+    header("Location: /modules/medications/dashboard.php");
+    exit;
 }
+
+// Get dose times
+$stmt = $pdo->prepare("SELECT * FROM medication_dose_times WHERE medication_id = ? ORDER BY dose_time ASC");
+$stmt->execute([$medicationId]);
+$doseTimes = $stmt->fetchAll();
+
+// Get notes
+$stmt = $pdo->prepare("SELECT * FROM medication_notes WHERE medication_id = ? ORDER BY created_at DESC");
+$stmt->execute([$medicationId]);
+$notes = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($med['name']) ?></title>
+    <title><?= htmlspecialchars($medication['name']) ?> - Details</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
-    <style>
-/* Critical inline styles - fallback if external CSS doesn't load */
-.tile {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 24px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    text-decoration: none;
-    color: #ffffff;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-.tile .tile-title, .tile .tile-desc, .tile .tile-icon {
-    color: #ffffff;
-}
-.btn {
-    padding: 14px 20px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
-    color: #ffffff;
-    display: block;
-    text-align: center;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 500;
-    min-height: 48px;
-}
-.btn-primary { background: #2563eb; color: #fff; }
-.btn-secondary { background: #6c757d; color: #fff; }
-.btn-danger { background: #dc3545; color: #fff; }
-.btn-info { background: #007bff; color: #fff; }
-    </style>
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
 
-    <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
-        <div class="page-card">
-            <div class="page-header">
-                <h2>💊 <?= htmlspecialchars($med['name']) ?></h2>
-                <p>Medication Details</p>
+    <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2 style="color: var(--color-primary); font-size: 28px; margin: 0 0 8px 0;">
+                    💊 <?= htmlspecialchars($medication['name']) ?>
+                </h2>
+                <p style="color: var(--color-text-secondary); margin: 0;">
+                    Added <?= date('M d, Y', strtotime($medication['created_at'])) ?>
+                </p>
             </div>
-
-            <div class="section-header">Dosage Information</div>
-            <div class="info-item">
-                <div class="info-label">Dose Amount</div>
-                <div class="info-value"><?= number_format($dose['dose_amount'], 2) ?> <?= htmlspecialchars($dose['dose_unit']) ?></div>
-            </div>
-
-            <div class="section-header">Schedule</div>
-            <div class="schedule-grid">
-                <?php if (!empty($schedule['is_prn'])): ?>
-                    <div class="schedule-time">
-                        <div class="schedule-time-label">💊 PRN Schedule</div>
-                        <div class="schedule-time-value">
-                            As and when needed
-                        </div>
-                    </div>
-                <?php elseif ($schedule['frequency_type'] === 'per_day'): ?>
-                    <div class="schedule-time">
-                        <div class="schedule-time-label">⏰ Daily Schedule</div>
-                        <div class="schedule-time-value">
-                            <?= htmlspecialchars($schedule['times_per_day'] ?? '') ?> time(s) per day
-                        </div>
-                    </div>
-                    
-                    <!-- Daily visualizer -->
-                    <div class="day-visualizer">
-                        <?php foreach ($daysOfWeek as $day): ?>
-                            <div class="day-badge active"><?= $day ?></div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php elseif ($schedule['frequency_type'] === 'per_week'): ?>
-                    <div class="schedule-time">
-                        <div class="schedule-time-label">📅 Weekly Schedule</div>
-                        <div class="schedule-time-value">
-                            <?= htmlspecialchars($schedule['times_per_week'] ?? '') ?> time(s) per week
-                        </div>
-                    </div>
-                    
-                    <!-- Weekly visualizer -->
-                    <div class="day-visualizer">
-                        <?php foreach ($daysOfWeek as $day): ?>
-                            <div class="day-badge <?= in_array($day, $activeDays) ? 'active' : '' ?>">
-                                <?= $day ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="schedule-time">
-                        <div class="schedule-time-value">
-                            No schedule set
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <?php if (!empty($instructions)): ?>
-            <div class="section-header">Special Instructions</div>
-            <div class="schedule-grid">
-                <?php foreach ($instructions as $i): ?>
-                    <div class="schedule-time">
-                        <div class="schedule-time-value">
-                            📋 <?= htmlspecialchars($i['instruction_text']) ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-
-            <?php if (!empty($alerts)): ?>
-            <div class="section-header">NHS System Alerts</div>
-            <?php foreach ($alerts as $a): ?>
-                <div class="nhs-alert">
-                    <div class="nhs-alert-title"><?= htmlspecialchars($a['alert_title']) ?></div>
-                    <div class="nhs-alert-body"><?= nl2br(htmlspecialchars($a['alert_body'])) ?></div>
-                </div>
-            <?php endforeach; ?>
-            <?php endif; ?>
-
-            <?php if (!$isArchived): ?>
-                <!-- If NOT archived, show these buttons -->
-                <div class="action-buttons three-col" style="margin-top: 32px;">
-                    <a class="btn btn-primary" href="/modules/medications/edit.php?id=<?= $medId ?>">✏️ Edit</a>
-                    <button class="btn btn-success" id="addStockBtn" data-med-id="<?= $medId ?>" data-med-name="<?= htmlspecialchars($med['name'], ENT_QUOTES) ?>">📦 Add Stock</button>
-                    <button class="btn btn-secondary" onclick="showConfirmModal('Archive Medication', 'Archive this medication?', function() { window.location.href = '/modules/medications/archive_handler.php?id=<?= $medId ?>&action=archive'; })">📦 Archive</button>
-                </div>
-                
-                <div class="action-buttons" style="margin-top: 16px;">
-                    <button class="btn btn-danger" onclick="showConfirmModal('Delete Medication', 'Are you sure you want to delete this medication? This action cannot be undone.', function() { window.location.href = '/modules/medications/delete_handler.php?id=<?= $medId ?>'; })">🗑️ Delete</button>
-                </div>
-            <?php else: ?>
-                <!-- If ARCHIVED, show only Unarchive and Delete -->
-                <div class="action-buttons" style="margin-top: 32px;">
-                    <button class="btn btn-primary" onclick="showUnarchiveModal(<?= $medId ?>)">📤 Unarchive</button>
-                    <button class="btn btn-danger" onclick="showConfirmModal('Delete Medication', 'Are you sure you want to delete this medication? This action cannot be undone.', function() { window.location.href = '/modules/medications/delete_handler.php?id=<?= $medId ?>'; })">🗑️ Delete</button>
-                </div>
-            <?php endif; ?>
             
-            <div style="margin-top: 16px;">
-                <a class="btn btn-info" href="/modules/medications/list.php">⬅️ Back to Medications</a>
+            <!-- Compact Action Buttons -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="/modules/medications/edit.php?id=<?= $medication['id'] ?>" 
+                   class="btn btn-primary" 
+                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
+                    ✏️ Edit
+                </a>
+                <a href="/modules/reports/history.php?medication_id=<?= $medication['id'] ?>" 
+                   class="btn btn-secondary" 
+                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
+                    📜 History
+                </a>
+                <a href="/modules/medications/dashboard.php" 
+                   class="btn btn-secondary" 
+                   style="padding: 8px 16px; font-size: 14px; text-decoration: none;">
+                    ← Back
+                </a>
             </div>
         </div>
-    </div>
-    
-    <!-- Add Stock Modal -->
-    <div id="addStockModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📦 Add Stock</h3>
-            </div>
-            <form method="POST" action="/modules/medications/add_stock_handler.php" id="addStockForm">
-                <div class="modal-body">
-                    <input type="hidden" name="medication_id" id="medication_id">
-                    
-                    <div class="form-group">
-                        <label>Medication</label>
-                        <input type="text" id="medication_name" readonly style="background: var(--color-bg-gray); padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; width: 100%;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Quantity to Add *</label>
-                        <input type="number" name="quantity" id="quantity" min="1" required placeholder="e.g., 30" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; width: 100%;">
-                        <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                            Enter the number of tablets/doses to add to current stock
-                        </small>
+        
+        <!-- Medication Details Card -->
+        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 18px; margin-bottom: 20px;">
+                📋 Medication Information
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <label style="display: block; font-weight: 600; color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 6px;">
+                        Medication Name
+                    </label>
+                    <div style="font-size: 16px; color: var(--color-text);">
+                        <?= htmlspecialchars($medication['name']) ?>
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary cancel-stock-modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">✅ Add Stock</button>
+                <div>
+                    <label style="display: block; font-weight: 600; color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 6px;">
+                        Instructions
+                    </label>
+                    <div style="font-size: 16px; color: var(--color-text);">
+                        <?= htmlspecialchars($medication['instructions'] ?? 'No instructions provided') ?>
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Unarchive Confirmation Modal -->
-    <div id="unarchiveModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3>📤 Unarchive Medication</h3>
-            <p>Are you sure you want to unarchive <strong><?= htmlspecialchars($med['name']) ?></strong>?</p>
-            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                <button class="btn btn-secondary" onclick="closeUnarchiveModal()">No, Cancel</button>
-                <button class="btn btn-primary" onclick="confirmUnarchive(<?= $medId ?>)">Yes, Unarchive</button>
+                
+                <div>
+                    <label style="display: block; font-weight: 600; color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 6px;">
+                        Refill Date
+                    </label>
+                    <div style="font-size: 16px; color: var(--color-text);">
+                        <?= $medication['refill_date'] ? date('M d, Y', strtotime($medication['refill_date'])) : 'Not set' ?>
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-weight: 600; color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 6px;">
+                        Status
+                    </label>
+                    <div style="font-size: 16px; color: var(--color-text);">
+                        <span style="background: <?= $medication['status'] === 'active' ? '#dcfce7' : '#fee2e2' ?>; color: <?= $medication['status'] === 'active' ? '#16a34a' : '#dc2626' ?>; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600;">
+                            <?= ucfirst($medication['status']) ?>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Generic Confirmation Modal -->
-    <div id="confirmModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3 id="confirmModalTitle">Confirm Action</h3>
-            <p id="confirmModalMessage">Are you sure?</p>
-            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
-                <button class="btn btn-primary" id="confirmModalAction">Confirm</button>
-            </div>
+        
+        <!-- Dose Times Card -->
+        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 18px; margin-bottom: 16px;">
+                ⏰ Dose Times
+            </h3>
+            
+            <?php if (empty($doseTimes)): ?>
+                <p style="color: var(--color-text-secondary); margin: 0;">No dose times set</p>
+            <?php else: ?>
+                <div style="display: grid; gap: 12px;">
+                    <?php foreach ($doseTimes as $dose): ?>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--color-bg-light); border-radius: 6px;">
+                        <span style="font-size: 16px; font-weight: 600;">
+                            <?= $timeFormatter->formatTime($dose['dose_time']) ?>
+                        </span>
+                        <span style="font-size: 14px; color: var(--color-text-secondary);">
+                            <?= htmlspecialchars($dose['label'] ?? 'Dose') ?>
+                        </span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Notes Card -->
+        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 18px; margin-bottom: 16px;">
+                📝 Notes
+            </h3>
+            
+            <?php if (empty($notes)): ?>
+                <p style="color: var(--color-text-secondary); margin: 0;">No notes yet</p>
+            <?php else: ?>
+                <div style="display: grid; gap: 12px;">
+                    <?php foreach ($notes as $note): ?>
+                    <div style="padding: 16px; background: var(--color-bg-light); border-radius: 6px; border-left: 4px solid var(--color-primary);">
+                        <div style="font-size: 14px; color: var(--color-text); margin-bottom: 8px;">
+                            <?= nl2br(htmlspecialchars($note['note_text'])) ?>
+                        </div>
+                        <div style="font-size: 12px; color: var(--color-text-secondary);">
+                            <?= date('M d, Y g:i A', strtotime($note['created_at'])) ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
-    
-    <style>
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-        background: none !important;
-    }
-    
-    .modal.active {
-        display: flex !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    .modal-content {
-        background: var(--color-bg-white);
-        border-radius: var(--radius-md);
-        padding: 32px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .modal-header {
-        margin-bottom: 24px;
-    }
-    
-    .modal-header h3 {
-        margin: 0;
-        font-size: 24px;
-        color: var(--color-primary);
-    }
-    
-    .modal-body {
-        margin-bottom: 24px;
-    }
-    
-    .form-group {
-        margin-bottom: 16px;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--color-text);
-    }
-    
-    .btn-success {
-        background: #28a745;
-        color: #ffffff;
-    }
-    
-    .btn-success:hover {
-        background: #218838;
-    }
-    </style>
-    
-    <script>
-    // Wait for DOM to be ready
-    document.addEventListener('DOMContentLoaded', function() {
-        // Force close add stock modal on page load to prevent dark overlay behind success modal
-        var addStockModal = document.getElementById('addStockModal');
-        if (addStockModal) {
-            addStockModal.classList.remove('active');
-        }
-        
-        // Add Stock button handler
-        var addStockBtn = document.getElementById('addStockBtn');
-        if (addStockBtn) {
-            addStockBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                var medId = this.getAttribute('data-med-id');
-                var medName = this.getAttribute('data-med-name');
-                showAddStockModal(medId, medName);
-            });
-        }
-        
-        // Cancel button handler
-        var cancelBtn = document.querySelector('.cancel-stock-modal');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', closeAddStockModal);
-        }
-        
-        // Close modal when clicking outside
-        var modal = document.getElementById('addStockModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeAddStockModal();
-                }
-            });
-        }
-        
-        var unarchiveModal = document.getElementById('unarchiveModal');
-        if (unarchiveModal) {
-            unarchiveModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeUnarchiveModal();
-                }
-            });
-        }
-        
-        var confirmModal = document.getElementById('confirmModal');
-        if (confirmModal) {
-            confirmModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeConfirmModal();
-                }
-            });
-        }
-        
-        // Check for success messages from session
-        <?php if (isset($_SESSION['success'])): ?>
-            showSuccessModal('<?= htmlspecialchars($_SESSION['success'], ENT_QUOTES) ?>');
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
-    });
-    
-    function showAddStockModal(medId, medName) {
-        document.getElementById('medication_id').value = medId;
-        document.getElementById('medication_name').value = medName;
-        document.getElementById('quantity').value = '';
-        document.getElementById('addStockModal').classList.add('active');
-    }
-    
-    function closeAddStockModal() {
-        document.getElementById('addStockModal').classList.remove('active');
-    }
-    
-    function showUnarchiveModal(medId) {
-        document.getElementById('unarchiveModal').style.display = 'flex';
-    }
-    
-    function closeUnarchiveModal() {
-        document.getElementById('unarchiveModal').style.display = 'none';
-    }
-    
-    function confirmUnarchive(medId) {
-        window.location.href = '/modules/medications/archive_handler.php?id=' + medId + '&action=unarchive';
-    }
-    
-    function showConfirmModal(title, message, onConfirm) {
-        document.getElementById('confirmModalTitle').textContent = title;
-        document.getElementById('confirmModalMessage').textContent = message;
-        document.getElementById('confirmModalAction').onclick = function() {
-            closeConfirmModal();
-            onConfirm();
-        };
-        document.getElementById('confirmModal').style.display = 'flex';
-    }
-    
-    function closeConfirmModal() {
-        document.getElementById('confirmModal').style.display = 'none';
-    }
-    </script>
 </body>
 </html>

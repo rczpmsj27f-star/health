@@ -78,21 +78,32 @@ unset($_SESSION['error'], $_SESSION['success']);
                 
                 <div class="section-header">Time Display</div>
 
-                <div class="form-group">
-                    <label>Time Format</label>
-                    <select name="time_format" class="form-control">
-                        <option value="12h" <?= $preferences['time_format'] === '12h' ? 'selected' : '' ?>>12-hour (AM/PM)</option>
-                        <option value="24h" <?= $preferences['time_format'] === '24h' ? 'selected' : '' ?>>24-hour</option>
-                    </select>
-                    <p class="help-text">Choose how times are displayed throughout the app</p>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="use_24_hour" value="1" <?= (!empty($preferences['use_24_hour'])) ? 'checked' : '' ?>>
-                        <span>Use 24-hour time format</span>
-                    </label>
-                    <p class="help-text">Display times as 14:00 instead of 2:00 PM</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--color-bg-light);">
+                    <div>
+                        <strong style="display: block; margin-bottom: 4px;">Time Format</strong>
+                        <small style="color: var(--color-text-secondary);">
+                            Choose how times are displayed throughout the app
+                        </small>
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; background: var(--color-bg-light); padding: 4px; border-radius: 8px;">
+                        <button type="button" 
+                                onclick="setTimeFormat(false)" 
+                                id="time-12h"
+                                class="time-format-btn <?= !($preferences['use_24_hour'] ?? 0) ? 'active' : '' ?>"
+                                style="padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; background: <?= !($preferences['use_24_hour'] ?? 0) ? 'var(--color-primary)' : 'transparent' ?>; color: <?= !($preferences['use_24_hour'] ?? 0) ? 'white' : 'var(--color-text)' ?>;">
+                            12-hour
+                        </button>
+                        <button type="button" 
+                                onclick="setTimeFormat(true)" 
+                                id="time-24h"
+                                class="time-format-btn <?= ($preferences['use_24_hour'] ?? 0) ? 'active' : '' ?>"
+                                style="padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; background: <?= ($preferences['use_24_hour'] ?? 0) ? 'var(--color-primary)' : 'transparent' ?>; color: <?= ($preferences['use_24_hour'] ?? 0) ? 'white' : 'var(--color-text)' ?>;">
+                            24-hour
+                        </button>
+                    </div>
+                    
+                    <input type="hidden" name="use_24_hour" id="use_24_hour_input" value="<?= ($preferences['use_24_hour'] ?? 0) ?>">
                 </div>
 
                 <div class="section-header">Stock Notifications</div>
@@ -136,6 +147,44 @@ unset($_SESSION['error'], $_SESSION['success']);
     <?php if ($ok): ?>
         showSuccessModal('<?= addslashes($ok) ?>');
     <?php endif; ?>
+    
+    // Time format toggle functionality
+    function setTimeFormat(use24Hour) {
+        document.getElementById('use_24_hour_input').value = use24Hour ? '1' : '0';
+        
+        // Update button styles
+        const btn12 = document.getElementById('time-12h');
+        const btn24 = document.getElementById('time-24h');
+        
+        if (use24Hour) {
+            btn24.style.background = 'var(--color-primary)';
+            btn24.style.color = 'white';
+            btn12.style.background = 'transparent';
+            btn12.style.color = 'var(--color-text)';
+        } else {
+            btn12.style.background = 'var(--color-primary)';
+            btn12.style.color = 'white';
+            btn24.style.background = 'transparent';
+            btn24.style.color = 'var(--color-text)';
+        }
+        
+        // Auto-save the preference
+        const formData = new FormData();
+        formData.append('use_24_hour', use24Hour ? '1' : '0');
+        
+        fetch('/modules/settings/preferences_handler.php', {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload page to apply changes
+                window.location.reload();
+            }
+        }).catch(error => {
+            console.error('Error saving time format:', error);
+        });
+    }
     </script>
 </body>
 </html>

@@ -120,14 +120,33 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
 
     <div style="max-width: 1000px; margin: 0 auto; padding: 80px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
-            📊 <?= $viewingLinkedUser ? htmlspecialchars($targetUserName) . "'s " : 'My ' ?>Compliance Report
+            📊 Activity & Compliance
         </h2>
         <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
-            Medication adherence from <?= date('M d, Y', strtotime($startDate)) ?> to <?= date('M d, Y', strtotime($endDate)) ?>
+            Track medication adherence, view activity, and analyze patterns
         </p>
         
+        <!-- Quick Navigation -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+            <a href="#compliance-report" 
+               class="btn btn-secondary" 
+               style="text-decoration: none; padding: 10px 16px;">
+                📊 Compliance
+            </a>
+            <a href="/modules/reports/activity.php" 
+               class="btn btn-secondary" 
+               style="text-decoration: none; padding: 10px 16px;">
+                📰 Activity Feed
+            </a>
+            <a href="/modules/reports/export.php?format=csv" 
+               class="btn btn-secondary" 
+               style="text-decoration: none; padding: 10px 16px;">
+                💾 Export CSV
+            </a>
+        </div>
+        
         <!-- Date Range Filter -->
-        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div id="compliance-report" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
                 <?php if ($viewingLinkedUser): ?>
                     <input type="hidden" name="view" value="linked">
@@ -225,11 +244,7 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
                    style="text-decoration: none; text-align: center; display: block; padding: 14px;">
                     💾 Export CSV
                 </a>
-                <a href="/modules/reports/export.php?format=json" 
-                   class="btn btn-secondary" 
-                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
-                    📄 Export JSON
-                </a>
+                <!-- Export JSON removed - only CSV export needed -->
             </div>
         </div>
         

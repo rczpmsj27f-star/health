@@ -29,7 +29,6 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
     <title>Linked Users</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
-    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>"></script>
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>

@@ -709,6 +709,22 @@ foreach ($prnMedications as $med) {
         </div>
         <?php endif; ?>
         
+        <!-- Report Links -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+            <a href="/modules/reports/compliance.php<?= $viewingLinkedUser ? '?view=linked' : '' ?>" 
+               class="btn btn-secondary" style="text-decoration: none;">
+                📊 Compliance Report
+            </a>
+            <?php if ($linkedUser && $linkedUser['status'] === 'active'): ?>
+            <a href="/modules/reports/activity.php" class="btn btn-secondary" style="text-decoration: none;">
+                📰 Activity Feed
+            </a>
+            <?php endif; ?>
+            <a href="/modules/reports/export.php?format=csv" class="btn btn-secondary" style="text-decoration: none;">
+                💾 Export CSV
+            </a>
+        </div>
+        
         <!-- Today's Schedule Section -->
         <div class="schedule-section">
             <h3>Today's Schedule</h3>

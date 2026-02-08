@@ -5,6 +5,11 @@
         <div>
             <strong style="font-size: 15px;"><?= htmlspecialchars($med['name']) ?></strong>
             <span style="color: var(--color-text-secondary);"> • <?= htmlspecialchars(rtrim(rtrim(number_format($med['dose_amount'], 2, '.', ''), '0'), '.') . ' ' . $med['dose_unit']) ?></span>
+            <br>
+            <a href="/modules/reports/history.php?medication_id=<?= $med['id'] ?>" 
+               style="font-size: 13px; color: var(--color-primary); text-decoration: none;">
+                📜 View History
+            </a>
         </div>
     </div>
     

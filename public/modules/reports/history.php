@@ -1,0 +1,136 @@
+<?php 
+session_start();
+require_once "../../../app/config/database.php";
+require_once "../../../app/core/auth.php";
+require_once "../../../app/core/LinkedUserHelper.php";
+
+if (empty($_SESSION['user_id'])) {
+    header("Location: /login.php");
+    exit;
+}
+
+$medicationId = $_GET['medication_id'] ?? 0;
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+
+// Get medication details
+$stmt = $pdo->prepare("SELECT * FROM medications WHERE id = ?");
+$stmt->execute([$medicationId]);
+$medication = $stmt->fetch();
+
+if (!$medication) {
+    $_SESSION['error_msg'] = "Medication not found";
+    header("Location: /modules/medications/dashboard.php");
+    exit;
+}
+
+// Check permissions if viewing linked user's medication
+if ($medication['user_id'] != $_SESSION['user_id']) {
+    if (!$linkedUser || $linkedUser['linked_user_id'] != $medication['user_id']) {
+        $_SESSION['error_msg'] = "No permission to view this medication";
+        header("Location: /modules/medications/dashboard.php");
+        exit;
+    }
+    
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_view_schedule']) {
+        $_SESSION['error_msg'] = "No permission to view medication history";
+        header("Location: /modules/medications/dashboard.php");
+        exit;
+    }
+}
+
+// Get history (last 90 days)
+$stmt = $pdo->prepare("
+    SELECT 
+        ml.*,
+        u.first_name as logged_by_name
+    FROM medication_logs ml
+    LEFT JOIN users u ON ml.logged_by_user_id = u.id
+    WHERE ml.medication_id = ?
+    AND ml.scheduled_date_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+    ORDER BY ml.scheduled_date_time DESC
+    LIMIT 100
+");
+$stmt->execute([$medicationId]);
+$history = $stmt->fetchAll();
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication History</title>
+    <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+</head>
+<body>
+    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+
+    <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+        <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
+            📜 <?= htmlspecialchars($medication['name']) ?> History
+        </h2>
+        <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
+            <?= htmlspecialchars($medication['dosage']) ?> - Last 90 days
+        </p>
+        
+        <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <?php if (empty($history)): ?>
+                <div class="empty-state">
+                    <div class="empty-state-icon">📜</div>
+                    <div class="empty-state-text">No history yet</div>
+                </div>
+            <?php else: ?>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--color-bg-light);">
+                                <th style="text-align: left; padding: 12px;">Date/Time</th>
+                                <th style="text-align: left; padding: 12px;">Status</th>
+                                <th style="text-align: left; padding: 12px;">Logged By</th>
+                                <th style="text-align: left; padding: 12px;">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($history as $log): ?>
+                            <tr style="border-bottom: 1px solid var(--color-bg-light);">
+                                <td style="padding: 12px;">
+                                    <?= date('M d, Y g:i A', strtotime($log['scheduled_date_time'])) ?>
+                                </td>
+                                <td style="padding: 12px;">
+                                    <?php if ($log['status'] === 'taken'): ?>
+                                        <span style="color: #10b981; font-weight: 600;">✓ Taken</span>
+                                        <?php if ($log['taken_at']): ?>
+                                            <br><small style="color: var(--color-text-secondary);">
+                                                at <?= date('g:i A', strtotime($log['taken_at'])) ?>
+                                            </small>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span style="color: #ef4444; font-weight: 600;">✗ Skipped</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="padding: 12px;">
+                                    <?= $log['logged_by_name'] ? htmlspecialchars($log['logged_by_name']) : 'Self' ?>
+                                </td>
+                                <td style="padding: 12px;">
+                                    <?php if ($log['status'] === 'skipped' && $log['skipped_reason']): ?>
+                                        <small style="color: var(--color-text-secondary);">
+                                            <?= htmlspecialchars($log['skipped_reason']) ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+        
+        <div style="margin-top: 24px; text-align: center;">
+            <a href="/modules/medications/dashboard.php" style="color: var(--color-text-secondary);">← Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

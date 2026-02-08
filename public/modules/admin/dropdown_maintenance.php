@@ -144,6 +144,8 @@ if ($selected_category_id) {
         
         .section-header p {
             color: white;
+            margin: 4px 0 0 0;
+            font-size: 13px;
         }
         
         .options-grid {
@@ -193,6 +195,12 @@ if ($selected_category_id) {
             display: flex;
             align-items: center;
             gap: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--color-text-secondary);
         }
         
         .option-actions {
@@ -369,7 +377,7 @@ if ($selected_category_id) {
                 <div class="section-header">
                     <div>
                         <h3 class="section-title"><?= htmlspecialchars($selected_category['category_name']) ?></h3>
-                        <p style="margin: 4px 0 0 0; font-size: 13px; color: white;">
+                        <p>
                             <?= htmlspecialchars($selected_category['description'] ?? '') ?>
                         </p>
                     </div>
@@ -377,7 +385,7 @@ if ($selected_category_id) {
                 </div>
                 
                 <?php if (empty($options)): ?>
-                    <div style="text-align: center; padding: 40px; color: var(--color-text-secondary);">
+                    <div class="empty-state">
                         No options yet. Click "Add Option" to create one.
                     </div>
                 <?php else: ?>

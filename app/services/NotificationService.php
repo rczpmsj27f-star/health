@@ -101,7 +101,7 @@ class NotificationService {
         curl_setopt($ch, CURLOPT_URL, 'https://onesignal.com/api/v1/notifications');
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json; charset=utf-8',
-            'Authorization: Basic ' . $this->restApiKey
+            'Authorization: Bearer ' . $this->restApiKey
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, false);
@@ -168,3 +168,4 @@ class NotificationService {
         return $this->sendNotification($playerIds, $title, $message, $data);
     }
 }
+

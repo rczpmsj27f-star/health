@@ -24,13 +24,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Request notification permission from user
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if let error = error {
+                NSLog("Notification permission request error: \(error.localizedDescription)")
+                return
+            }
+            
             if granted {
+                NSLog("Notification permission granted")
                 DispatchQueue.main.async {
                     UIApplication.shared.registerForRemoteNotifications()
                 }
-            }
-            if let error = error {
-                NSLog("Notification permission request error: \(error.localizedDescription)")
+            } else {
+                NSLog("Notification permission denied by user")
             }
         }
         

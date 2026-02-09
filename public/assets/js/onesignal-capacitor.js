@@ -39,7 +39,7 @@ window.OneSignalCapacitor = {
                 return result.accepted;
             } else {
                 console.error('❌ PushPermission plugin not available');
-                console.error('💡 The plugin files may need to be added to Xcode. See IOS_PUSH_PLUGIN_SETUP.md for instructions.');
+                console.error('Note: The plugin files may need to be added to Xcode. See IOS_PUSH_PLUGIN_SETUP.md for instructions.');
                 return null;
             }
         } catch (error) {

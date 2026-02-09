@@ -44,10 +44,10 @@ The new Swift and Objective-C files (`PushPermissionPlugin.swift` and `PushPermi
 4. Navigate to the `App` folder and select:
    - `PushPermissionPlugin.swift`
    - `PushPermissionPlugin.m`
-5. Ensure these options are checked:
-   - ✅ "Copy items if needed" (should be unchecked since files are already in place)
-   - ✅ "Create groups"
-   - ✅ "Add to targets: App"
+5. Ensure these options are set correctly:
+   - ❌ "Copy items if needed" (should be UNCHECKED since files are already in correct location)
+   - ✅ "Create groups" (should be CHECKED)
+   - ✅ "Add to targets: App" (should be CHECKED)
 6. Click "Add"
 7. Build the project (⌘+B) to verify there are no errors
 

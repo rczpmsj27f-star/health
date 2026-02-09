@@ -152,13 +152,13 @@ function showNotificationAlert(title, body) {
 window.OneSignalCapacitor = {
     initialize: initializeOneSignalCapacitor,
     getPlayerId: async () => {
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.OneSignal) {
+        if (isNativePlatform() && window.Capacitor.Plugins.OneSignal) {
             return await getAndStorePlayerId(window.Capacitor.Plugins.OneSignal);
         }
         return null;
     },
     requestPermission: async () => {
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.OneSignal) {
+        if (isNativePlatform() && window.Capacitor.Plugins.OneSignal) {
             return await requestNotificationPermission(window.Capacitor.Plugins.OneSignal);
         }
         return null;
@@ -168,9 +168,9 @@ window.OneSignalCapacitor = {
 // Auto-initialize when Capacitor is ready
 // Wait for Capacitor to be fully loaded with retry mechanism
 let initRetryCount = 0;
-const MAX_INIT_RETRIES = 50; // 50 retries × 100ms = 5 seconds max
 const RETRY_DELAY_MS = 100;
-const MAX_INIT_TIMEOUT_MS = MAX_INIT_RETRIES * RETRY_DELAY_MS;
+const MAX_INIT_TIMEOUT_MS = 5000; // 5 seconds max
+const MAX_RETRIES = MAX_INIT_TIMEOUT_MS / RETRY_DELAY_MS;
 
 function initializeWhenReady() {
     // Check if Capacitor is available and has native platform
@@ -180,7 +180,7 @@ function initializeWhenReady() {
     } else {
         // Retry after a short delay (Capacitor might still be loading)
         initRetryCount++;
-        if (initRetryCount < MAX_INIT_RETRIES) {
+        if (initRetryCount < MAX_RETRIES) {
             setTimeout(initializeWhenReady, RETRY_DELAY_MS);
         } else {
             console.log('⚠️ Capacitor native platform not detected after', MAX_INIT_TIMEOUT_MS, 'ms - OneSignal initialization skipped');

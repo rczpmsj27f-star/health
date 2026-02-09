@@ -43,8 +43,8 @@ try {
             ml.user_id,
             ml.scheduled_date_time,
             m.name as medication_name,
-            m.dose_amount,
-            m.dose_unit,
+            md.dose_amount,
+            md.dose_unit,
             uns.notify_at_time,
             uns.notify_after_10min,
             uns.notify_after_20min,
@@ -53,6 +53,7 @@ try {
             uns.onesignal_player_id
         FROM medication_logs ml
         INNER JOIN medications m ON ml.medication_id = m.id
+        LEFT JOIN medication_doses md ON m.id = md.medication_id
         INNER JOIN user_notification_settings uns ON ml.user_id = uns.user_id
         WHERE ml.status = 'pending'
         AND uns.notifications_enabled = 1

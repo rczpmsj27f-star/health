@@ -7,13 +7,6 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
     
-    # Serve PWA static files directly from /pwa directory
-    # Required for Progressive Web App installation and push notifications
-    # Includes: manifest.json, service workers, OneSignal worker, icons, and all PWA frontend assets
-    RewriteCond %{REQUEST_URI} ^/(OneSignalSDKWorker\.js|app\.js|styles\.css)$ [OR]
-    RewriteCond %{REQUEST_URI} ^/icons/
-    RewriteRule ^(.*)$ /pwa/$1 [L]
-    
     # Clean URL routing - handle these before sending to public folder
     # Dashboard
     RewriteRule ^dashboard$ /public/dashboard.php [L]
@@ -56,6 +49,5 @@
     # Send other requests to public folder
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteCond %{REQUEST_URI} !^/uploads/
-    RewriteCond %{REQUEST_URI} !^/pwa/
     RewriteRule ^(.*)$ /public/$1 [L,QSA]
 </IfModule>

@@ -244,13 +244,38 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             return true;
         }
         
-        // Only load Web SDK if all checks pass
-        if (shouldLoadWebSDK()) {
-            const script = document.createElement('script');
-            script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-            script.defer = true;
-            document.head.appendChild(script);
+        // Wait for Capacitor to initialize before checking (race condition fix)
+        // Capacitor runtime may not be available immediately on page load
+        const CHECK_INTERVAL_MS = 50;
+        const MAX_ATTEMPTS = 20; // 20 attempts × 50ms = 1 second max wait
+        let checkAttempts = 0;
+        
+        function checkAndLoadWebSDK() {
+            checkAttempts++;
+            
+            // If Capacitor hasn't appeared after max attempts, assume we're in a browser
+            if (checkAttempts >= MAX_ATTEMPTS) {
+                if (shouldLoadWebSDK()) {
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+                    script.defer = true;
+                    document.head.appendChild(script);
+                }
+                return;
+            }
+            
+            // If Capacitor is detected, don't load Web SDK
+            if (window.Capacitor) {
+                console.log('🚫 Capacitor detected early - skipping OneSignal Web SDK');
+                return;
+            }
+            
+            // Check again after a short delay
+            setTimeout(checkAndLoadWebSDK, CHECK_INTERVAL_MS);
         }
+        
+        // Start checking immediately for better responsiveness
+        checkAndLoadWebSDK();
     </script>
     
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>

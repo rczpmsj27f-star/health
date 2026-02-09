@@ -28,16 +28,18 @@ pod install --repo-update
 
 ## Configuration
 
-The OneSignal App ID is already configured in the code:
+The OneSignal App ID is configured in the code:
 - **App ID**: `27f8d4d3-3a69-4a4d-8f7b-113d16763c4b`
 
-This matches the app ID defined in `config.php`.
+This matches the app ID defined in `config.php`. The App ID is a public identifier (not a secret) and is safe to include in version control.
+
+**Note**: Debug logging is only enabled in DEBUG builds and disabled in production builds for security and performance.
 
 ## How It Works
 
 1. **Silent Initialization**: The SDK initializes without showing notification permission prompts automatically
 2. **Custom UI**: The app's own notification settings UI handles permission requests by calling `OneSignal.Notifications.requestPermission()` when needed
-3. **Debug Logging**: Verbose logging is enabled for troubleshooting
+3. **Debug Logging**: Verbose logging is enabled only in DEBUG builds for troubleshooting (disabled in production for security and performance)
 4. **Launch Options**: Passing launch options allows OneSignal to handle notifications that launched the app
 
 ## Testing

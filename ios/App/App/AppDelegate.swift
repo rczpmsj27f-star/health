@@ -14,7 +14,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Initialize OneSignal SDK
         // NOTE: Does not prompt for notification permission automatically
         // The app has its own notification settings UI that will handle permission requests
+        #if DEBUG
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
+        #endif
         
         // Initialize OneSignal with App ID - this sets up the SDK silently
         OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)

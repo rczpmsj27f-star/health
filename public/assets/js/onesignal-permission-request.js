@@ -7,6 +7,10 @@
 (function() {
     'use strict';
     
+    // Configuration constants
+    const ONESIGNAL_LOAD_RETRY_DELAY = 500; // ms - delay between retries when waiting for OneSignal to load
+    const ONESIGNAL_INIT_DELAY = 1000; // ms - delay before requesting permissions to ensure SDK is fully loaded
+    
     console.log('🔔 OneSignal Permission Request: Checking if running in Capacitor...');
     
     // Only run in Capacitor environment (native app)
@@ -24,7 +28,7 @@
             if (typeof window.OneSignal === 'undefined') {
                 console.log('⚠️ OneSignal not available - waiting for it to load...');
                 // Wait a bit and try again
-                setTimeout(requestOneSignalPermissions, 500);
+                setTimeout(requestOneSignalPermissions, ONESIGNAL_LOAD_RETRY_DELAY);
                 return;
             }
             
@@ -52,11 +56,11 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             // Small delay to ensure OneSignal SDK is fully loaded
-            setTimeout(requestOneSignalPermissions, 1000);
+            setTimeout(requestOneSignalPermissions, ONESIGNAL_INIT_DELAY);
         });
     } else {
         // DOM already ready
-        setTimeout(requestOneSignalPermissions, 1000);
+        setTimeout(requestOneSignalPermissions, ONESIGNAL_INIT_DELAY);
     }
     
 })();

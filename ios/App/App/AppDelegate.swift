@@ -20,16 +20,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         #endif
         
         // Initialize OneSignal with App ID - will not prompt for permissions automatically
-        // Permissions will be requested natively immediately after initialization
+        // Permissions will be requested via custom Capacitor plugin when user taps button in Settings
         OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
         
-        NSLog("OneSignal initialized - requesting permissions natively")
-        
-        // Request notification permission from native code
-        // The JavaScript bridge fails silently with empty error {}, so we trigger it here natively
-        OneSignal.Notifications.requestPermission({ accepted in
-            NSLog("OneSignal permission accepted: \(accepted)")
-        }, fallbackToSettings: true)
+        NSLog("OneSignal initialized - permissions will be requested via PushPermissionPlugin")
         
         return true
     }

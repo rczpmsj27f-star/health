@@ -207,9 +207,6 @@ unset($_SESSION['success_msg']);
         button.innerHTML = '⏳ Requesting Permission...';
         
         try {
-            // Wait for OneSignal to be available
-            await waitForOneSignal();
-            
             // Use OneSignalCapacitor bridge to request permission
             if (window.OneSignalCapacitor && typeof window.OneSignalCapacitor.requestPermission === 'function') {
                 console.log('Requesting OneSignal permission...');

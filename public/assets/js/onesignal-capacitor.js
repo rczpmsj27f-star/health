@@ -1,49 +1,74 @@
-// OneSignal Capacitor - Minimal No-Op Implementation
-// This file provides a minimal interface for OneSignal without calling any initialization methods.
-// The native Cordova plugin (onesignal-cordova-plugin v5.3.0) handles push notifications 
-// automatically in the background without requiring JavaScript initialization.
-//
-// IMPORTANT: Calling OneSignal.initialize() triggers the Cordova plugin to inject the Web SDK,
-// which overwrites the native plugin and causes conflicts. This minimal implementation prevents
-// that by not calling any OneSignal methods.
-//
-// AUTHENTICATION CHECK: This script only runs on authenticated pages (loaded in dashboard.php)
-// The dashboard.php file already checks for $_SESSION['user_id'], ensuring notification prompts
-// only appear after login.
+// OneSignal Capacitor - Native Bridge Implementation
+// Uses custom PushPermissionPlugin to request iOS notification permissions
 
-console.log('📱 OneSignal Capacitor: Using native plugin only (no JavaScript initialization)');
-console.log('ℹ️ The native Cordova plugin handles push notifications automatically in the background');
-console.log('ℹ️ No OneSignal methods will be called from JavaScript to prevent Web SDK injection');
-console.log('✅ Script loaded on authenticated page - user is logged in');
+console.log('📱 OneSignal Capacitor: Initializing native bridge');
 
-// Export minimal compatible interface for backward compatibility
-// Any code that references window.OneSignalCapacitor will still work
+// Check if running in Capacitor
+function isCapacitor() {
+    return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+}
+
+// Export interface for requesting push permissions
 window.OneSignalCapacitor = {
     initialize: async () => {
-        console.log('ℹ️ OneSignalCapacitor.initialize() called - no action taken (native plugin handles everything)');
+        console.log('ℹ️ OneSignalCapacitor.initialize() called - native plugin handles initialization');
         return Promise.resolve();
     },
+    
     getPlayerId: async () => {
-        console.log('ℹ️ OneSignalCapacitor.getPlayerId() called - no action taken (native plugin handles everything)');
+        console.log('ℹ️ OneSignalCapacitor.getPlayerId() called');
         return Promise.resolve(null);
     },
+    
     requestPermission: async () => {
         console.log('📱 OneSignalCapacitor.requestPermission() called');
         
-        // Check if OneSignal native SDK is available
-        if (typeof window.OneSignal !== 'undefined' && window.OneSignal.Notifications) {
-            try {
-                console.log('✅ OneSignal.Notifications found - requesting permission...');
-                const result = await window.OneSignal.Notifications.requestPermission(true);
-                console.log('✅ Permission request result:', result);
-                return result;
-            } catch (error) {
-                console.error('❌ Error requesting permission:', error);
+        if (!isCapacitor()) {
+            console.log('⚠️ Not running in Capacitor - cannot request native permissions');
+            return null;
+        }
+        
+        try {
+            // Use our custom Capacitor plugin
+            const { PushPermission } = window.Capacitor.Plugins;
+            
+            if (PushPermission && typeof PushPermission.requestPermission === 'function') {
+                console.log('✅ Calling native PushPermission.requestPermission()...');
+                const result = await PushPermission.requestPermission();
+                console.log('✅ Permission result:', result);
+                return result.accepted;
+            } else {
+                console.error('❌ PushPermission plugin not available');
                 return null;
             }
-        } else {
-            console.warn('⚠️ OneSignal.Notifications not available - native plugin may not be loaded');
-            return null;
+        } catch (error) {
+            console.error('❌ Error requesting permission:', error);
+            throw error;
+        }
+    },
+    
+    checkPermission: async () => {
+        console.log('📱 OneSignalCapacitor.checkPermission() called');
+        
+        if (!isCapacitor()) {
+            return { permission: false };
+        }
+        
+        try {
+            const { PushPermission } = window.Capacitor.Plugins;
+            
+            if (PushPermission && typeof PushPermission.checkPermission === 'function') {
+                const result = await PushPermission.checkPermission();
+                console.log('✅ Permission status:', result);
+                return result;
+            } else {
+                return { permission: false };
+            }
+        } catch (error) {
+            console.error('❌ Error checking permission:', error);
+            return { permission: false };
         }
     }
 };
+
+console.log('✅ OneSignalCapacitor bridge ready');

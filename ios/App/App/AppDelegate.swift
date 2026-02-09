@@ -12,20 +12,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         // Initialize OneSignal SDK
-        // NOTE: Remove initialization observer to prevent SDK from prompting for notification permission
-        // The app has its own notification settings UI, so we initialize silently
+        // NOTE: Does not prompt for notification permission automatically
+        // The app has its own notification settings UI that will handle permission requests
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
         
-        // Initialize OneSignal with App ID
+        // Initialize OneSignal with App ID - this sets up the SDK silently
         OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
         
-        // Request notification permissions - silently for now
-        // The app will handle permission requests through its own UI
-        OneSignal.Notifications.requestPermission({ accepted in
-            print("OneSignal: User accepted notifications: \(accepted)")
-        }, fallbackToSettings: false)
-        
-        // Request notification permissions
+        // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
         return true

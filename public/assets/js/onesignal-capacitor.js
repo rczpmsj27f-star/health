@@ -183,7 +183,7 @@ function initializeWhenReady() {
         if (initRetryCount < MAX_RETRIES) {
             setTimeout(initializeWhenReady, RETRY_DELAY_MS);
         } else {
-            console.log('⚠️ Capacitor native platform not detected after', MAX_INIT_TIMEOUT_MS, 'ms - OneSignal initialization skipped');
+            console.log('⚠️ Capacitor native platform not detected after', (initRetryCount * RETRY_DELAY_MS), 'ms - OneSignal initialization skipped');
         }
     }
 }

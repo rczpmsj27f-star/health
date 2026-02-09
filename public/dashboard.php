@@ -247,26 +247,41 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         // Wait for Capacitor to initialize before checking (race condition fix)
         // Capacitor runtime may not be available immediately on page load
         const CHECK_INTERVAL_MS = 50;
-        const MAX_ATTEMPTS = 20; // 20 attempts × 50ms = 1 second max wait
+        const MAX_ATTEMPTS = 200; // 200 attempts × 50ms = 10 seconds max wait (increased from 1s)
         let checkAttempts = 0;
+        let capacitorDetectedAtAnyPoint = false; // Sentinel to track if Capacitor was ever detected
         
         function checkAndLoadWebSDK() {
             checkAttempts++;
             
-            // If Capacitor hasn't appeared after max attempts, assume we're in a browser
+            // Check if Capacitor is now available
+            const capacitorNowAvailable = !!(window.Capacitor || 
+                (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.bridge) ||
+                (window.OneSignal && typeof window.OneSignal.initialize === 'function') ||
+                (navigator.userAgent && navigator.userAgent.includes('CapacitorWebView')));
+            
+            // Update sentinel if Capacitor is detected
+            if (capacitorNowAvailable) {
+                capacitorDetectedAtAnyPoint = true;
+                console.log('🚫 Capacitor detected (attempt ' + checkAttempts + ') - skipping OneSignal Web SDK');
+                return;
+            }
+            
+            // If Capacitor hasn't appeared after max attempts, check sentinel before loading
             if (checkAttempts >= MAX_ATTEMPTS) {
+                // Don't load Web SDK if Capacitor was EVER detected during polling
+                if (capacitorDetectedAtAnyPoint) {
+                    console.log('🚫 Capacitor was detected during polling - will NOT load Web SDK');
+                    return;
+                }
+                
+                // Final check before loading Web SDK
                 if (shouldLoadWebSDK()) {
                     const script = document.createElement('script');
                     script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
                     script.defer = true;
                     document.head.appendChild(script);
                 }
-                return;
-            }
-            
-            // If Capacitor is detected, don't load Web SDK
-            if (window.Capacitor) {
-                console.log('🚫 Capacitor detected early - skipping OneSignal Web SDK');
                 return;
             }
             

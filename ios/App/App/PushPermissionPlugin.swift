@@ -7,13 +7,8 @@ public class PushPermissionPlugin: CAPPlugin {
     
     @objc func requestPermission(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            // Ensure OneSignal is initialized before requesting permission
-            guard OneSignal.Notifications != nil else {
-                NSLog("OneSignal not initialized")
-                call.reject("OneSignal not initialized")
-                return
-            }
-            
+            // Note: OneSignal.Notifications exists as a namespace even if not initialized
+            // The requestPermission call itself will handle the case where OneSignal isn't ready
             OneSignal.Notifications.requestPermission({ accepted in
                 NSLog("OneSignal permission accepted: \(accepted)")
                 call.resolve([
@@ -25,13 +20,8 @@ public class PushPermissionPlugin: CAPPlugin {
     
     @objc func checkPermission(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            // Ensure OneSignal is initialized before checking permission
-            guard OneSignal.Notifications != nil else {
-                NSLog("OneSignal not initialized")
-                call.reject("OneSignal not initialized")
-                return
-            }
-            
+            // Note: OneSignal.Notifications.permission returns the current permission state
+            // This is safe to call even if OneSignal isn't fully initialized
             let permission = OneSignal.Notifications.permission
             call.resolve([
                 "permission": permission

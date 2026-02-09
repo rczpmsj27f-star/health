@@ -29,6 +29,12 @@ window.OneSignalCapacitor = {
         }
         
         try {
+            // Check if Capacitor and its Plugins are available
+            if (!window.Capacitor || !window.Capacitor.Plugins) {
+                console.error('❌ Capacitor or Capacitor.Plugins not available');
+                return null;
+            }
+            
             // Use our custom Capacitor plugin
             const { PushPermission } = window.Capacitor.Plugins;
             
@@ -58,6 +64,12 @@ window.OneSignalCapacitor = {
         }
         
         try {
+            // Check if Capacitor and its Plugins are available
+            if (!window.Capacitor || !window.Capacitor.Plugins) {
+                console.error('❌ Capacitor or Capacitor.Plugins not available');
+                return { permission: false };
+            }
+            
             const { PushPermission } = window.Capacitor.Plugins;
             
             if (PushPermission && typeof PushPermission.checkPermission === 'function') {

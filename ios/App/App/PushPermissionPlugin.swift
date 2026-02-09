@@ -7,17 +7,12 @@ public class PushPermissionPlugin: CAPPlugin {
     
     @objc func requestPermission(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            do {
-                OneSignal.Notifications.requestPermission({ accepted in
-                    NSLog("OneSignal permission accepted: \(accepted)")
-                    call.resolve([
-                        "accepted": accepted
-                    ])
-                }, fallbackToSettings: true)
-            } catch {
-                NSLog("OneSignal permission request error: \(error)")
-                call.reject("Failed to request permission", "\(error)")
-            }
+            OneSignal.Notifications.requestPermission({ accepted in
+                NSLog("OneSignal permission accepted: \(accepted)")
+                call.resolve([
+                    "accepted": accepted
+                ])
+            }, fallbackToSettings: true)
         }
     }
     

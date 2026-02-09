@@ -1,6 +1,7 @@
 import UIKit
 import Capacitor
 import UserNotifications
+import OneSignalFramework
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -10,7 +11,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        // Request notification permissions
+        // Initialize OneSignal SDK
+        // NOTE: Does not prompt for notification permission automatically
+        // The app has its own notification settings UI that will handle permission requests
+        #if DEBUG
+        OneSignal.Debug.setLogLevel(.LL_VERBOSE)
+        #endif
+        
+        // Initialize OneSignal with App ID - this sets up the SDK silently
+        OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
+        
+        // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
         return true

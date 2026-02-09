@@ -12,6 +12,12 @@ if (empty($_SESSION['user_id'])) {
 $notificationHelper = new NotificationHelper($pdo);
 $preferences = $notificationHelper->getPreferences($_SESSION['user_id']);
 
+// Fetch OneSignal Player ID from database to check if notifications are already enabled
+$stmt = $pdo->prepare("SELECT onesignal_player_id FROM user_notification_settings WHERE user_id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$playerIdRow = $stmt->fetch();
+$storedPlayerId = $playerIdRow['onesignal_player_id'] ?? null;
+
 // Default notification types
 $notificationTypes = [
     'medication_reminder' => 'Medication Reminders',
@@ -114,9 +120,25 @@ unset($_SESSION['success_msg']);
     </div>
     
     <script>
+    // Stored Player ID from database
+    const storedPlayerId = <?= json_encode($storedPlayerId) ?>;
+    
     // Check if running in Capacitor (native app)
     function isCapacitor() {
         return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+    }
+
+    // Helper function to show notification settings as enabled
+    function showNotificationSettings() {
+        const statusElement = document.getElementById('push-permission-status');
+        const button = document.getElementById('enable-push-btn');
+        const deniedMessage = document.getElementById('push-denied-message');
+        
+        statusElement.innerHTML = '✅ Push Notifications Enabled';
+        statusElement.style.background = '#d1fae5';
+        statusElement.style.color = '#065f46';
+        button.style.display = 'none';
+        deniedMessage.style.display = 'none';
     }
 
     // Check and display push notification permission status
@@ -135,6 +157,15 @@ unset($_SESSION['success_msg']);
         // Show the section
         section.style.display = 'block';
         
+        // If we have a stored Player ID in the database, notifications are working
+        // Trust the database rather than the JavaScript permission check
+        if (storedPlayerId && storedPlayerId.length > 0) {
+            console.log('✅ Player ID found in database - notifications are enabled');
+            showNotificationSettings();
+            return;
+        }
+        
+        // For new users without a Player ID, check if we can enable notifications
         try {
             // Wait for OneSignal to be available
             await waitForOneSignal();
@@ -146,15 +177,9 @@ unset($_SESSION['success_msg']);
                 
                 if (pushSubscription && pushSubscription.optedIn) {
                     // User is subscribed - permissions granted
-                    statusElement.innerHTML = '✅ Push Notifications Enabled';
-                    statusElement.style.background = '#d1fae5';
-                    statusElement.style.color = '#065f46';
-                    button.style.display = 'none';
-                    deniedMessage.style.display = 'none';
+                    showNotificationSettings();
                 } else {
-                    // Not subscribed - check if we should show button or denied message
-                    // Try to determine if permission was explicitly denied
-                    // For now, always show the button to allow re-requesting
+                    // Not subscribed - show button to allow enabling
                     statusElement.innerHTML = '⚠️ Push Notifications Not Enabled';
                     statusElement.style.background = '#fef3c7';
                     statusElement.style.color = '#92400e';

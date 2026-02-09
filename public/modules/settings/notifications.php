@@ -35,7 +35,7 @@ unset($_SESSION['success_msg']);
     <title>Notification Preferences</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
-    <script src="/assets/js/capacitor-push.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
@@ -49,19 +49,23 @@ unset($_SESSION['success_msg']);
             </div>
         <?php endif; ?>
         
-        <!-- iOS Native Push Notification Status -->
-        <div id="ios-push-status" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px; display: none;">
-            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 20px; margin-bottom: 16px;">📱 iOS Native Push Notifications</h3>
-            <div id="push-registration-status" style="padding: 12px; background: #f3f4f6; border-radius: 6px; margin-bottom: 16px;">
-                Checking status...
+        <!-- Push Notification Permission Toggle -->
+        <div id="push-permission-section" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px; display: none;">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 20px; margin-bottom: 16px;">📱 Push Notifications</h3>
+            <div id="push-permission-status" style="padding: 12px; background: #f3f4f6; border-radius: 6px; margin-bottom: 16px;">
+                Checking permission status...
             </div>
             <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 12px;">
-                Enable native push notifications to receive medication reminders even when the app is closed.
+                Enable push notifications to receive medication reminders, alerts, and updates even when the app is closed.
             </p>
-            <button type="button" id="enable-ios-push-btn" onclick="enableIOSPush()" 
+            <button type="button" id="enable-push-btn" onclick="enablePushNotifications()" 
                     style="padding: 12px 24px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                🔔 Enable iOS Push Notifications
+                🔔 Enable Push Notifications
             </button>
+            <div id="push-denied-message" style="display: none; margin-top: 16px; padding: 12px; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 14px;">
+                <strong>⚠️ Permission Denied</strong><br>
+                Push notifications are disabled. To enable them, go to your device Settings → Health → Notifications and allow notifications.
+            </div>
         </div>
         
         <form method="POST" action="/modules/settings/notifications_handler.php">
@@ -110,86 +114,159 @@ unset($_SESSION['success_msg']);
     </div>
     
     <script>
-    // Check and display iOS push notification status
-    async function checkIOSPushStatus() {
-        // Only show iOS push section if running in Capacitor
-        if (window.CapacitorPush && window.CapacitorPush.isCapacitor()) {
-            document.getElementById('ios-push-status').style.display = 'block';
+    // Check if running in Capacitor (native app)
+    function isCapacitor() {
+        return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+    }
+
+    // Check and display push notification permission status
+    async function checkPushPermissionStatus() {
+        // Only show push section if running in Capacitor
+        if (!isCapacitor()) {
+            console.log('Not running in Capacitor - skipping push notification section');
+            return;
+        }
+
+        const section = document.getElementById('push-permission-section');
+        const statusElement = document.getElementById('push-permission-status');
+        const button = document.getElementById('enable-push-btn');
+        const deniedMessage = document.getElementById('push-denied-message');
+        
+        // Show the section
+        section.style.display = 'block';
+        
+        try {
+            // Wait for OneSignal to be available
+            await waitForOneSignal();
             
-            try {
-                // Check registration status from backend
-                const response = await fetch('/api/push-devices.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'status' })
-                });
+            // Check current permission status using OneSignal
+            if (window.OneSignal && window.OneSignal.Notifications) {
+                const permission = await window.OneSignal.Notifications.permissionNative;
                 
-                const result = await response.json();
+                console.log('OneSignal permission status:', permission);
                 
-                if (result.success && result.registered) {
-                    document.getElementById('push-registration-status').innerHTML = 
-                        '✅ iOS Push Notifications Enabled';
-                    document.getElementById('push-registration-status').style.color = '#10b981';
-                    document.getElementById('push-registration-status').style.background = '#d1fae5';
-                    document.getElementById('enable-ios-push-btn').style.display = 'none';
+                if (permission === 1) {
+                    // Permission granted
+                    statusElement.innerHTML = '✅ Push Notifications Enabled';
+                    statusElement.style.background = '#d1fae5';
+                    statusElement.style.color = '#065f46';
+                    button.style.display = 'none';
+                    deniedMessage.style.display = 'none';
+                } else if (permission === 2) {
+                    // Permission denied
+                    statusElement.innerHTML = '❌ Push Notifications Disabled';
+                    statusElement.style.background = '#fee2e2';
+                    statusElement.style.color = '#991b1b';
+                    button.style.display = 'none';
+                    deniedMessage.style.display = 'block';
                 } else {
-                    document.getElementById('push-registration-status').innerHTML = 
-                        '⚠️ iOS Push Notifications Not Enabled';
-                    document.getElementById('push-registration-status').style.color = '#f59e0b';
+                    // Permission not determined (0) or unknown
+                    statusElement.innerHTML = '⚠️ Push Notifications Not Enabled';
+                    statusElement.style.background = '#fef3c7';
+                    statusElement.style.color = '#92400e';
+                    button.style.display = 'inline-block';
+                    deniedMessage.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Error checking push status:', error);
-                document.getElementById('push-registration-status').innerHTML = 
-                    'Unable to check status';
+            } else {
+                throw new Error('OneSignal.Notifications not available');
             }
+        } catch (error) {
+            console.error('Error checking push permission status:', error);
+            statusElement.innerHTML = '⚠️ Unable to check permission status';
+            statusElement.style.background = '#f3f4f6';
+            statusElement.style.color = '#6b7280';
         }
     }
     
-    // Enable iOS push notifications
-    async function enableIOSPush() {
-        if (!window.CapacitorPush) {
-            alert('Push notifications are only available in the iOS app');
+    // Wait for OneSignal to be available
+    function waitForOneSignal(maxRetries = 50, retryDelay = 100) {
+        return new Promise((resolve, reject) => {
+            let retries = 0;
+            
+            const checkOneSignal = () => {
+                if (typeof window.OneSignal !== 'undefined' && window.OneSignal.Notifications) {
+                    resolve();
+                } else if (retries < maxRetries) {
+                    retries++;
+                    setTimeout(checkOneSignal, retryDelay);
+                } else {
+                    reject(new Error('OneSignal not available after timeout'));
+                }
+            };
+            
+            checkOneSignal();
+        });
+    }
+    
+    // Enable push notifications
+    async function enablePushNotifications() {
+        if (!isCapacitor()) {
+            alert('Push notifications are only available in the mobile app');
             return;
         }
         
-        const btn = document.getElementById('enable-ios-push-btn');
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Enabling...';
+        const button = document.getElementById('enable-push-btn');
+        const statusElement = document.getElementById('push-permission-status');
+        const deniedMessage = document.getElementById('push-denied-message');
+        
+        button.disabled = true;
+        button.innerHTML = '⏳ Requesting Permission...';
         
         try {
-            await window.CapacitorPush.initialize();
+            // Wait for OneSignal to be available
+            await waitForOneSignal();
             
-            // Check status again after initialization
-            setTimeout(checkIOSPushStatus, 2000);
+            // Use OneSignalCapacitor bridge to request permission
+            if (window.OneSignalCapacitor && typeof window.OneSignalCapacitor.requestPermission === 'function') {
+                console.log('Requesting OneSignal permission...');
+                const accepted = await window.OneSignalCapacitor.requestPermission();
+                
+                console.log('Permission request result:', accepted);
+                
+                // Update UI based on result
+                if (accepted) {
+                    statusElement.innerHTML = '✅ Push Notifications Enabled';
+                    statusElement.style.background = '#d1fae5';
+                    statusElement.style.color = '#065f46';
+                    button.style.display = 'none';
+                    deniedMessage.style.display = 'none';
+                } else {
+                    statusElement.innerHTML = '❌ Push Notifications Disabled';
+                    statusElement.style.background = '#fee2e2';
+                    statusElement.style.color = '#991b1b';
+                    button.style.display = 'none';
+                    deniedMessage.style.display = 'block';
+                }
+            } else {
+                throw new Error('OneSignalCapacitor.requestPermission not available');
+            }
         } catch (error) {
-            console.error('Error enabling push:', error);
+            console.error('Error enabling push notifications:', error);
             alert('Failed to enable push notifications. Please try again.');
-            btn.disabled = false;
-            btn.innerHTML = '🔔 Enable iOS Push Notifications';
+            button.disabled = false;
+            button.innerHTML = '🔔 Enable Push Notifications';
         }
     }
     
-    // Check status on page load - wait for CapacitorPush to be available
-    // Note: Uses same timeout as capacitor-push.js (5 seconds) for consistency
-    const MAX_CAPACITOR_WAIT_RETRIES = 50; // 50 * 100ms = 5 seconds
-    const CAPACITOR_RETRY_DELAY_MS = 100;
-    
-    function checkStatusWhenReady(retryCount = 0) {
-        if (typeof window.CapacitorPush !== 'undefined') {
-            checkIOSPushStatus();
-        } else if (retryCount < MAX_CAPACITOR_WAIT_RETRIES) {
-            // Wait for CapacitorPush to be available
-            setTimeout(() => checkStatusWhenReady(retryCount + 1), CAPACITOR_RETRY_DELAY_MS);
+    // Check permission status on page load
+    // Wait for both DOM and OneSignal to be ready
+    function initializePushSection(retryCount = 0) {
+        const MAX_RETRIES = 50; // 50 * 100ms = 5 seconds
+        const RETRY_DELAY = 100;
+        
+        if (typeof window.OneSignal !== 'undefined' || retryCount >= MAX_RETRIES) {
+            // OneSignal is available or we've timed out - check status
+            checkPushPermissionStatus();
         } else {
-            // CapacitorPush not available - probably in web browser
-            console.log('CapacitorPush not available - skipping status check');
+            // Wait and retry
+            setTimeout(() => initializePushSection(retryCount + 1), RETRY_DELAY);
         }
     }
     
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => checkStatusWhenReady(0));
+        document.addEventListener('DOMContentLoaded', () => initializePushSection(0));
     } else {
-        checkStatusWhenReady(0);
+        initializePushSection(0);
     }
     </script>
 </body>

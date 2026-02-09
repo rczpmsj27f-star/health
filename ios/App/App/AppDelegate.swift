@@ -11,22 +11,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        // Initialize OneSignal SDK
-        #if DEBUG
-        OneSignal.Debug.setLogLevel(.LL_VERBOSE)
-        #endif
-        
-        // Initialize OneSignal with App ID - this sets up the SDK silently
-        OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
-        
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
-        // Request notification permission from user
+        // Request notification permission from user BEFORE OneSignal initialization
+        // This ensures OneSignal can immediately set enabled: true if permission is granted
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if let error = error {
                 NSLog("Notification permission request error: \(error.localizedDescription)")
-                return
             }
             
             if granted {
@@ -36,6 +28,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             } else {
                 NSLog("Notification permission denied by user")
+            }
+            
+            // Initialize OneSignal SDK AFTER permission response is received
+            // This ensures OneSignal starts with the correct enabled state
+            DispatchQueue.main.async {
+                #if DEBUG
+                OneSignal.Debug.setLogLevel(.LL_VERBOSE)
+                #endif
+                
+                // Initialize OneSignal with App ID - permission status is now known
+                OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
             }
         }
         

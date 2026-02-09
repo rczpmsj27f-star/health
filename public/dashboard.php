@@ -208,76 +208,9 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 <body>
     <?php include __DIR__ . '/../app/includes/menu.php'; ?>
     
-    <!-- OneSignal SDK - Conditional Loading for Capacitor Compatibility -->
-    <!-- Only load OneSignal Web SDK if NOT running in native Capacitor app -->
-    <script>
-        // Enhanced Capacitor detection to prevent Web SDK from overwriting native plugin
-        // Multiple checks ensure we don't load Web SDK in iOS/Android native apps
-        function shouldLoadWebSDK() {
-            // Check 1: window.Capacitor exists (injected by native runtime)
-            if (window.Capacitor) {
-                console.log('🚫 Capacitor detected - skipping OneSignal Web SDK');
-                return false;
-            }
-            
-            // Check 2: Check for Capacitor-specific bridges
-            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.bridge) {
-                console.log('🚫 iOS Capacitor bridge detected - skipping OneSignal Web SDK');
-                return false;
-            }
-            
-            // Check 3: Check for native OneSignal plugin presence (belt and suspenders)
-            if (window.OneSignal && typeof window.OneSignal.initialize === 'function') {
-                console.log('🚫 Native OneSignal plugin detected - skipping OneSignal Web SDK');
-                return false;
-            }
-            
-            // Check 4: User agent check for Capacitor webview
-            const ua = navigator.userAgent || '';
-            if (ua.includes('CapacitorWebView')) {
-                console.log('🚫 Capacitor WebView detected in user agent - skipping OneSignal Web SDK');
-                return false;
-            }
-            
-            // All checks passed - safe to load Web SDK for browser
-            console.log('✅ Browser environment detected - loading OneSignal Web SDK');
-            return true;
-        }
-        
-        // Wait for Capacitor to initialize before checking (race condition fix)
-        // Capacitor runtime may not be available immediately on page load
-        const CHECK_INTERVAL_MS = 50;
-        const MAX_ATTEMPTS = 20; // 20 attempts × 50ms = 1 second max wait
-        let checkAttempts = 0;
-        
-        function checkAndLoadWebSDK() {
-            checkAttempts++;
-            
-            // If Capacitor hasn't appeared after max attempts, assume we're in a browser
-            if (checkAttempts >= MAX_ATTEMPTS) {
-                if (shouldLoadWebSDK()) {
-                    const script = document.createElement('script');
-                    script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-                    script.defer = true;
-                    document.head.appendChild(script);
-                }
-                return;
-            }
-            
-            // If Capacitor is detected, don't load Web SDK
-            if (window.Capacitor) {
-                console.log('🚫 Capacitor detected early - skipping OneSignal Web SDK');
-                return;
-            }
-            
-            // Check again after a short delay
-            setTimeout(checkAndLoadWebSDK, CHECK_INTERVAL_MS);
-        }
-        
-        // Start checking immediately for better responsiveness
-        checkAndLoadWebSDK();
-    </script>
-    
+    <!-- OneSignal Native Plugin Only - Web SDK completely removed -->
+    <!-- This app uses ONLY the native Capacitor plugin (onesignal-cordova-plugin) -->
+    <!-- No conditional loading needed - native plugin works in both web and native contexts -->
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
 
     <div class="dashboard-container">

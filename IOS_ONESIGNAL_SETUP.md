@@ -38,9 +38,10 @@ This matches the app ID defined in `config.php`. The App ID is a public identifi
 ## How It Works
 
 1. **Silent Initialization**: The SDK initializes without showing notification permission prompts automatically
-2. **Custom UI**: The app's own notification settings UI handles permission requests by calling `OneSignal.Notifications.requestPermission()` when needed
-3. **Debug Logging**: Verbose logging is enabled only in DEBUG builds for troubleshooting (disabled in production for security and performance)
-4. **Launch Options**: Passing launch options allows OneSignal to handle notifications that launched the app
+2. **Custom Capacitor Plugin**: A custom `PushPermissionPlugin` bridges JavaScript to native iOS to request permissions when the user taps the button in Settings
+3. **Permission Flow**: `onesignal-capacitor.js` → `PushPermissionPlugin` → `OneSignal.Notifications.requestPermission()`
+4. **Debug Logging**: Verbose logging is enabled only in DEBUG builds for troubleshooting (disabled in production for security and performance)
+5. **Launch Options**: Passing launch options allows OneSignal to handle notifications that launched the app
 
 ## Testing
 

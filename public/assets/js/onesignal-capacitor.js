@@ -108,9 +108,9 @@ async function getAndStorePlayerId(OneSignal) {
         
         const result = await OneSignal.getIds();
         
-        if (result && result.pushToken) {
-            console.log('✅ OneSignal Player ID:', result.pushToken);
-            console.log('✅ User ID:', result.userId);
+        if (result && result.userId) {
+            console.log('✅ OneSignal Player ID:', result.userId);
+            console.log('✅ Push Token:', result.pushToken);
             
             // Store player ID globally for other scripts to use
             window.oneSignalPlayerId = result.userId;
@@ -162,7 +162,7 @@ window.OneSignalCapacitor = {
 // Wait for Capacitor to be fully loaded with retry mechanism
 function initializeWhenReady() {
     // Check if Capacitor is available and native
-    if (window.Capacitor && typeof window.Capacitor.isNativePlatform !== 'undefined') {
+    if (window.Capacitor && window.Capacitor.isNativePlatform) {
         if (window.Capacitor.isNativePlatform()) {
             console.log('🚀 Capacitor ready - initializing OneSignal...');
             initializeOneSignalCapacitor();

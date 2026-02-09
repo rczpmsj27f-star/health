@@ -160,16 +160,22 @@ window.OneSignalCapacitor = {
 
 // Auto-initialize when Capacitor is ready
 // Wait for Capacitor to be fully loaded with retry mechanism
+let initRetryCount = 0;
+const MAX_INIT_RETRIES = 50; // 50 retries × 100ms = 5 seconds max
+
 function initializeWhenReady() {
     // Check if Capacitor is available and native
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
         console.log('🚀 Capacitor ready - initializing OneSignal...');
         initializeOneSignalCapacitor();
-    } else if (window.Capacitor && window.Capacitor.isNativePlatform && !window.Capacitor.isNativePlatform()) {
-        console.log('ℹ️ Not a native platform - skipping OneSignal initialization');
     } else {
         // Retry after a short delay (Capacitor might still be loading)
-        setTimeout(initializeWhenReady, 100);
+        initRetryCount++;
+        if (initRetryCount < MAX_INIT_RETRIES) {
+            setTimeout(initializeWhenReady, 100);
+        } else {
+            console.log('⚠️ Capacitor native platform not detected after', MAX_INIT_RETRIES * 100, 'ms - OneSignal initialization skipped');
+        }
     }
 }
 

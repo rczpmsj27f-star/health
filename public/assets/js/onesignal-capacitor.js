@@ -27,10 +27,27 @@ async function initializeOneSignalCapacitor() {
         
         if (!OneSignal) {
             console.error('❌ OneSignal plugin not found at window.OneSignal');
+            console.error('⚠️ Ensure onesignal-cordova-plugin is installed and the app is running on a native device/simulator');
             return;
         }
         
-        console.log('📱 Found OneSignal plugin, initializing...');
+        // CRITICAL: Detect if Web SDK was loaded by mistake (it would overwrite the native plugin)
+        // The native Cordova plugin has 'initialize' as a function
+        // The Web SDK has 'init' instead of 'initialize'
+        if (typeof OneSignal.initialize !== 'function') {
+            console.error('❌ CONFLICT DETECTED: OneSignal Web SDK has overwritten the native plugin!');
+            console.error('❌ Expected: Native plugin with initialize() method');
+            console.error('❌ Found: Web SDK with init() method instead');
+            console.error('⚠️ This is usually caused by the Web SDK being loaded in a Capacitor app.');
+            console.error('⚠️ Check dashboard.php for conditional loading logic.');
+            
+            // List available methods for debugging
+            console.error('Available OneSignal methods:', Object.keys(OneSignal).filter(k => typeof OneSignal[k] === 'function'));
+            
+            return;
+        }
+        
+        console.log('📱 Found OneSignal native plugin, initializing...');
         
         // Initialize OneSignal with App ID as string (Cordova Plugin v5 API)
         await OneSignal.initialize(ONESIGNAL_APP_ID);
@@ -48,6 +65,12 @@ async function initializeOneSignalCapacitor() {
         
     } catch (error) {
         console.error('❌ Failed to initialize OneSignal:', error);
+        
+        // Provide additional context if the error is about 'initialize' not being a function
+        if (error.message && error.message.includes('initialize')) {
+            console.error('💡 This error typically means the OneSignal Web SDK was loaded instead of the native plugin.');
+            console.error('💡 The Web SDK uses init() while the native plugin uses initialize().');
+        }
     }
 }
 

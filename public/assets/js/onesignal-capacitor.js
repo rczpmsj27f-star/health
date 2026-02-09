@@ -36,7 +36,9 @@ window.OneSignalCapacitor = {
                 console.log('✅ Calling native PushPermission.requestPermission()...');
                 const result = await PushPermission.requestPermission();
                 console.log('✅ Permission result:', result);
-                return result.accepted;
+                
+                // Safely extract accepted value with fallback
+                return result && typeof result.accepted === 'boolean' ? result.accepted : null;
             } else {
                 console.error('❌ PushPermission plugin not available');
                 console.error('Note: The plugin files may need to be added to Xcode. See IOS_PUSH_PLUGIN_SETUP.md for instructions.');
@@ -61,7 +63,9 @@ window.OneSignalCapacitor = {
             if (PushPermission && typeof PushPermission.checkPermission === 'function') {
                 const result = await PushPermission.checkPermission();
                 console.log('✅ Permission status:', result);
-                return result;
+                
+                // Ensure result has expected structure
+                return result && typeof result === 'object' ? result : { permission: false };
             } else {
                 return { permission: false };
             }

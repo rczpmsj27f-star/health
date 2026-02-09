@@ -24,7 +24,7 @@ body {
     }
     
     /* Force light color scheme on key elements for better performance */
-    body, .page-card, .content-card {
+    :root, body, .page-card, .content-card {
         color-scheme: light !important;
     }
 }

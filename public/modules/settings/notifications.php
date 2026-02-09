@@ -64,7 +64,7 @@ unset($_SESSION['success_msg']);
             </button>
             <div id="push-denied-message" style="display: none; margin-top: 16px; padding: 12px; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 14px;">
                 <strong>⚠️ Permission Denied</strong><br>
-                Push notifications are disabled. To enable them, go to your device Settings → Health → Notifications and allow notifications.
+                Push notifications are disabled. To enable them, go to your device Settings, find this app, tap Notifications, and allow notifications.
             </div>
         </div>
         
@@ -139,28 +139,22 @@ unset($_SESSION['success_msg']);
             // Wait for OneSignal to be available
             await waitForOneSignal();
             
-            // Check current permission status using OneSignal
-            if (window.OneSignal && window.OneSignal.Notifications) {
-                const permission = await window.OneSignal.Notifications.permissionNative;
+            // Check current permission status using OneSignal User API
+            if (window.OneSignal && window.OneSignal.User) {
+                // Check if user has push subscription
+                const pushSubscription = window.OneSignal.User.PushSubscription;
                 
-                console.log('OneSignal permission status:', permission);
-                
-                if (permission === 1) {
-                    // Permission granted
+                if (pushSubscription && pushSubscription.optedIn) {
+                    // User is subscribed - permissions granted
                     statusElement.innerHTML = '✅ Push Notifications Enabled';
                     statusElement.style.background = '#d1fae5';
                     statusElement.style.color = '#065f46';
                     button.style.display = 'none';
                     deniedMessage.style.display = 'none';
-                } else if (permission === 2) {
-                    // Permission denied
-                    statusElement.innerHTML = '❌ Push Notifications Disabled';
-                    statusElement.style.background = '#fee2e2';
-                    statusElement.style.color = '#991b1b';
-                    button.style.display = 'none';
-                    deniedMessage.style.display = 'block';
                 } else {
-                    // Permission not determined (0) or unknown
+                    // Not subscribed - check if we should show button or denied message
+                    // Try to determine if permission was explicitly denied
+                    // For now, always show the button to allow re-requesting
                     statusElement.innerHTML = '⚠️ Push Notifications Not Enabled';
                     statusElement.style.background = '#fef3c7';
                     statusElement.style.color = '#92400e';
@@ -168,7 +162,7 @@ unset($_SESSION['success_msg']);
                     deniedMessage.style.display = 'none';
                 }
             } else {
-                throw new Error('OneSignal.Notifications not available');
+                throw new Error('OneSignal.User not available');
             }
         } catch (error) {
             console.error('Error checking push permission status:', error);

@@ -14,20 +14,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
-        // DO NOT request notification permission on app launch
-        // Permission will be requested AFTER user logs in via JavaScript
-        // This prevents the prompt from appearing on the login screen
-        
         // Initialize OneSignal SDK silently (no automatic permission prompt)
         #if DEBUG
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
         #endif
         
         // Initialize OneSignal with App ID - will not prompt for permissions automatically
-        // Permissions will be requested from JavaScript after user authentication
+        // Permissions will be requested natively immediately after initialization
         OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
         
-        NSLog("OneSignal initialized - waiting for authenticated user to request permissions")
+        NSLog("OneSignal initialized - requesting permissions natively")
+        
+        // Request notification permission from native code
+        // The JavaScript bridge fails silently with empty error {}, so we trigger it here natively
+        OneSignal.Notifications.requestPermission({ accepted in
+            NSLog("OneSignal permission accepted: \(accepted)")
+        }, fallbackToSettings: true)
         
         return true
     }

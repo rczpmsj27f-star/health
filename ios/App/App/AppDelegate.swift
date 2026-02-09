@@ -30,7 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
             if let error = error {
-                print("Notification permission request error: \(error.localizedDescription)")
+                NSLog("Notification permission request error: \(error.localizedDescription)")
             }
         }
         

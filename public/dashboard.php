@@ -123,9 +123,12 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     <meta name="theme-color" content="#4F46E5">
     
     <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <!-- Commented out for Capacitor iOS - using native plugin instead via onesignal-capacitor.js -->
+    <!-- <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script> -->
     
     <!-- OneSignal Initialization -->
+    <!-- Commented out for Capacitor iOS - using native plugin instead via onesignal-capacitor.js -->
+    <!--
     <script>
         // v16 initialization pattern
         window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -154,6 +157,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             console.log('✅ OneSignal initialized');
         });
     </script>
+    -->
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>

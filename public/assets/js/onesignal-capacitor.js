@@ -138,14 +138,10 @@ async function getAndStorePlayerId(OneSignal) {
 function showNotificationAlert(title, body) {
     const message = body ? `${title}\n\n${body}` : title;
     
-    // Use native alert or custom notification display
-    if (typeof AlertModal !== 'undefined' && AlertModal.show) {
-        // Use custom modal if available
-        AlertModal.show('Notification', message);
-    } else {
-        // Fallback to console log (don't use alert in production)
-        console.log('📬 Notification:', title, body);
-    }
+    // Log to console instead of using AlertModal
+    // Note: AlertModal is defined in confirm-modal.js which is loaded globally
+    // Referencing it here caused "duplicate variable" errors in bundled scripts
+    console.log('📬 Notification:', title, body);
 }
 
 // Export for use in other scripts

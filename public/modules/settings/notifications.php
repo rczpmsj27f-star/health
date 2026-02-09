@@ -15,6 +15,7 @@ $preferences = $notificationHelper->getPreferences($_SESSION['user_id']);
 // Fetch OneSignal Player ID from database to check if notifications are already enabled
 $stmt = $pdo->prepare("SELECT onesignal_player_id FROM user_notification_settings WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
+// Use empty array as fallback when no row exists - both cases (no row, null value) result in null $storedPlayerId
 $playerIdRow = $stmt->fetch() ?: [];
 $storedPlayerId = $playerIdRow['onesignal_player_id'] ?? null;
 
@@ -121,7 +122,7 @@ unset($_SESSION['success_msg']);
     
     <script>
     // Stored Player ID from database
-    const storedPlayerId = <?= json_encode($storedPlayerId, JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+    const storedPlayerId = <?= json_encode($storedPlayerId, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS) ?>;
     
     // Check if running in Capacitor (native app)
     function isCapacitor() {

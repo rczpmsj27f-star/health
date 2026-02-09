@@ -6,10 +6,15 @@
 // IMPORTANT: Calling OneSignal.initialize() triggers the Cordova plugin to inject the Web SDK,
 // which overwrites the native plugin and causes conflicts. This minimal implementation prevents
 // that by not calling any OneSignal methods.
+//
+// AUTHENTICATION CHECK: This script only runs on authenticated pages (loaded in dashboard.php)
+// The dashboard.php file already checks for $_SESSION['user_id'], ensuring notification prompts
+// only appear after login.
 
 console.log('📱 OneSignal Capacitor: Using native plugin only (no JavaScript initialization)');
 console.log('ℹ️ The native Cordova plugin handles push notifications automatically in the background');
 console.log('ℹ️ No OneSignal methods will be called from JavaScript to prevent Web SDK injection');
+console.log('✅ Script loaded on authenticated page - user is logged in');
 
 // Export minimal compatible interface for backward compatibility
 // Any code that references window.OneSignalCapacitor will still work

@@ -16,7 +16,7 @@ if (php_sapi_name() !== 'cli') {
 }
 
 // Configuration constants
-const NOTIFICATION_TOLERANCE_MINUTES = 1; // Tolerance window for matching scheduled times
+const NOTIFICATION_TOLERANCE_MINUTES = 5; // Tolerance window for matching scheduled times (increased to handle cron delays)
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../config/database.php';

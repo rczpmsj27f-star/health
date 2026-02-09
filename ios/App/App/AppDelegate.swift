@@ -12,8 +12,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         // Initialize OneSignal SDK
-        // NOTE: Does not prompt for notification permission automatically
-        // The app has its own notification settings UI that will handle permission requests
         #if DEBUG
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
         #endif
@@ -23,6 +21,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
+        
+        // Request notification permission from user
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if granted {
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
+            }
+            if let error = error {
+                print("Notification permission request error: \(error.localizedDescription)")
+            }
+        }
         
         return true
     }

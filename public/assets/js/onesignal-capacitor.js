@@ -4,11 +4,18 @@
 
 const ONESIGNAL_APP_ID = '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b';
 
+// Helper function to check if running on native platform
+function isNativePlatform() {
+    return window.Capacitor && 
+           typeof window.Capacitor.isNativePlatform === 'function' && 
+           window.Capacitor.isNativePlatform();
+}
+
 async function initializeOneSignalCapacitor() {
     console.log('🔔 Initializing OneSignal for Capacitor...');
     
-    // Check if we're in a Capacitor app
-    if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) {
+    // Check if we're in a native Capacitor app
+    if (!isNativePlatform()) {
         console.log('ℹ️ Not running in native Capacitor - skipping native OneSignal setup');
         return;
     }
@@ -166,8 +173,8 @@ const RETRY_DELAY_MS = 100;
 const MAX_INIT_TIMEOUT_MS = MAX_INIT_RETRIES * RETRY_DELAY_MS;
 
 function initializeWhenReady() {
-    // Check if Capacitor is available and has native platform check
-    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
+    // Check if Capacitor is available and has native platform
+    if (isNativePlatform()) {
         console.log('🚀 Capacitor ready - initializing OneSignal...');
         initializeOneSignalCapacitor();
     } else {

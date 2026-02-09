@@ -1,6 +1,6 @@
 // OneSignal Capacitor Initialization
 // This file handles OneSignal setup for Capacitor iOS apps using the native plugin
-// No CDN dependency - uses native Capacitor.Plugins.OneSignal instead
+// No CDN dependency - uses window.OneSignal from onesignal-cordova-plugin v5.3.0
 
 const ONESIGNAL_APP_ID = '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b';
 
@@ -21,20 +21,18 @@ async function initializeOneSignalCapacitor() {
     }
     
     try {
-        // Get OneSignal plugin from Capacitor
-        const { OneSignal } = window.Capacitor.Plugins;
+        // Access OneSignal directly from window (Cordova Plugin v5)
+        const OneSignal = window.OneSignal;
         
         if (!OneSignal) {
-            console.error('❌ OneSignal plugin not found in Capacitor.Plugins');
+            console.error('❌ OneSignal plugin not found at window.OneSignal');
             return;
         }
         
         console.log('📱 Found OneSignal plugin, initializing...');
         
-        // Initialize OneSignal with App ID
-        await OneSignal.initialize({
-            appId: ONESIGNAL_APP_ID
-        });
+        // Initialize OneSignal with App ID as string (Cordova Plugin v5 API)
+        await OneSignal.initialize(ONESIGNAL_APP_ID);
         
         console.log('✅ OneSignal initialized for Capacitor with App ID:', ONESIGNAL_APP_ID);
         
@@ -148,14 +146,14 @@ function showNotificationAlert(title, body) {
 window.OneSignalCapacitor = {
     initialize: initializeOneSignalCapacitor,
     getPlayerId: async () => {
-        if (isNativePlatform() && window.Capacitor.Plugins.OneSignal) {
-            return await getAndStorePlayerId(window.Capacitor.Plugins.OneSignal);
+        if (isNativePlatform() && window.OneSignal) {
+            return await getAndStorePlayerId(window.OneSignal);
         }
         return null;
     },
     requestPermission: async () => {
-        if (isNativePlatform() && window.Capacitor.Plugins.OneSignal) {
-            return await requestNotificationPermission(window.Capacitor.Plugins.OneSignal);
+        if (isNativePlatform() && window.OneSignal) {
+            return await requestNotificationPermission(window.OneSignal);
         }
         return null;
     }

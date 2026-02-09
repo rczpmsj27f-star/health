@@ -8,7 +8,7 @@ async function initializeOneSignalCapacitor() {
     console.log('🔔 Initializing OneSignal for Capacitor...');
     
     // Check if we're in a Capacitor app
-    if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform) {
+    if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) {
         console.log('ℹ️ Not running in native Capacitor - skipping native OneSignal setup');
         return;
     }
@@ -109,8 +109,8 @@ async function getAndStorePlayerId(OneSignal) {
         const result = await OneSignal.getIds();
         
         if (result && result.userId) {
-            console.log('✅ OneSignal Player ID:', result.userId);
-            console.log('✅ Push Token:', result.pushToken);
+            console.log('✅ OneSignal Player ID received');
+            console.log('✅ Push Token received');
             
             // Store player ID globally for other scripts to use
             window.oneSignalPlayerId = result.userId;
@@ -162,13 +162,11 @@ window.OneSignalCapacitor = {
 // Wait for Capacitor to be fully loaded with retry mechanism
 function initializeWhenReady() {
     // Check if Capacitor is available and native
-    if (window.Capacitor && window.Capacitor.isNativePlatform) {
-        if (window.Capacitor.isNativePlatform()) {
-            console.log('🚀 Capacitor ready - initializing OneSignal...');
-            initializeOneSignalCapacitor();
-        } else {
-            console.log('ℹ️ Not a native platform - skipping OneSignal initialization');
-        }
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        console.log('🚀 Capacitor ready - initializing OneSignal...');
+        initializeOneSignalCapacitor();
+    } else if (window.Capacitor && window.Capacitor.isNativePlatform && !window.Capacitor.isNativePlatform()) {
+        console.log('ℹ️ Not a native platform - skipping OneSignal initialization');
     } else {
         // Retry after a short delay (Capacitor might still be loading)
         setTimeout(initializeWhenReady, 100);

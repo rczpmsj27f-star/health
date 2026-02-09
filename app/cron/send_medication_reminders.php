@@ -122,7 +122,7 @@ try {
                 'medication_id' => $dose['medication_id'],
                 'log_id' => $dose['log_id'],
                 'type' => $notificationType,
-                'url' => '/dashboard.php',
+                'url' => 'https://ht.ianconroy.co.uk/dashboard.php',
                 'tag' => "medication-{$dose['medication_id']}-{$scheduledTime}"
             ];
             

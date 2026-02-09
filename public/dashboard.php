@@ -240,6 +240,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 </head>
 <body>
     <?php include __DIR__ . '/../app/includes/menu.php'; ?>
+    <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
 
     <div class="dashboard-container">
         <!-- User Profile Header (Issue #51) -->

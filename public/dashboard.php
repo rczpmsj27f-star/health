@@ -207,6 +207,25 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 </head>
 <body>
     <?php include __DIR__ . '/../app/includes/menu.php'; ?>
+    
+    <!-- OneSignal Web SDK - Conditional Loading -->
+    <!-- Only load for web browsers, NOT for native Capacitor apps -->
+    <script>
+        // Check if running in Capacitor native app before loading Web SDK
+        // The Web SDK would conflict with the native plugin by overwriting window.OneSignal
+        if (!window.Capacitor) {
+            // Running in web browser - load OneSignal Web SDK for web push notifications
+            var script = document.createElement('script');
+            script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+            script.defer = true;
+            document.head.appendChild(script);
+            console.log('🌐 Loading OneSignal Web SDK for browser');
+        } else {
+            // Running in Capacitor - native plugin will be used instead
+            console.log('📱 Skipping OneSignal Web SDK - using native Capacitor plugin');
+        }
+    </script>
+    
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
 
     <div class="dashboard-container">

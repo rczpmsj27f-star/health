@@ -3,9 +3,22 @@
  * Handles iOS native push notifications via Capacitor Push Notifications plugin
  */
 
+// Configuration constants
+const MAX_CAPACITOR_WAIT_RETRIES = 50; // Max 5 seconds (50 * 100ms)
+const CAPACITOR_RETRY_DELAY_MS = 100;
+
 // Check if running in native Capacitor environment
 function isCapacitor() {
     return window.Capacitor && window.Capacitor.isNativePlatform();
+}
+
+// Show the iOS push notification section in the UI
+function showIOSPushSection() {
+    const iosPushSection = document.getElementById('ios-push-status');
+    if (iosPushSection) {
+        iosPushSection.style.display = 'block';
+        console.log('iOS push section made visible');
+    }
 }
 
 // Initialize push notifications for native iOS
@@ -14,6 +27,11 @@ async function initializeNativePush() {
         console.log('Not running in Capacitor - skipping native push setup');
         return;
     }
+
+    console.log('Running in Capacitor environment - setting up push notifications');
+    
+    // Show iOS push section in UI
+    showIOSPushSection();
 
     try {
         const { PushNotifications } = window.Capacitor.Plugins;
@@ -30,6 +48,7 @@ async function initializeNativePush() {
         
         if (permStatus.receive !== 'granted') {
             console.warn('Push notification permission denied');
+            updatePushRegistrationStatus(false);
             return;
         }
 
@@ -47,6 +66,7 @@ async function initializeNativePush() {
         // Listen for registration errors
         await PushNotifications.addListener('registrationError', (error) => {
             console.error('Push registration error:', error);
+            updatePushRegistrationStatus(false);
         });
 
         // Listen for push notifications received
@@ -71,6 +91,7 @@ async function initializeNativePush() {
         
     } catch (error) {
         console.error('Error initializing native push:', error);
+        updatePushRegistrationStatus(false);
     }
 }
 
@@ -191,6 +212,11 @@ function updatePushRegistrationStatus(isRegistered) {
             statusElement.style.color = '#f59e0b';
         }
     }
+    
+    // Also ensure the iOS push section is visible when running in Capacitor
+    if (isCapacitor()) {
+        showIOSPushSection();
+    }
 }
 
 // Helper function to escape HTML
@@ -228,11 +254,26 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize on page load if running in Capacitor
+// Initialize on page load - wait for both DOM and Capacitor to be ready
+function initializeWhenReady(retryCount = 0) {
+    // Check if Capacitor is available
+    if (typeof window.Capacitor !== 'undefined') {
+        console.log('Capacitor detected - initializing push notifications');
+        initializeNativePush();
+    } else if (retryCount < MAX_CAPACITOR_WAIT_RETRIES) {
+        // If Capacitor is not yet available, wait a bit and try again
+        // This handles the case where Capacitor runtime is still loading
+        setTimeout(() => initializeWhenReady(retryCount + 1), CAPACITOR_RETRY_DELAY_MS);
+    } else {
+        console.log('Capacitor not detected after timeout - running in web browser');
+    }
+}
+
+// Wait for DOM to be ready first
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeNativePush);
+    document.addEventListener('DOMContentLoaded', () => initializeWhenReady(0));
 } else {
-    initializeNativePush();
+    initializeWhenReady(0);
 }
 
 // Export functions for use in other scripts

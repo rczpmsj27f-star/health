@@ -138,7 +138,9 @@ async function getAndStorePlayerId(OneSignal) {
 function showNotificationAlert(title, body) {
     const message = body ? `${title}\n\n${body}` : title;
     
-    // Log to console (no AlertModal to avoid duplicate variable error)
+    // Log to console instead of using AlertModal
+    // Note: AlertModal is defined in confirm-modal.js which is loaded globally
+    // Referencing it here caused "duplicate variable" errors in bundled scripts
     console.log('📬 Notification:', title, body);
 }
 

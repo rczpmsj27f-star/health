@@ -160,7 +160,7 @@ unset($_SESSION['success_msg']);
         
         // If we have a stored Player ID in the database, notifications are working
         // Trust the database rather than the JavaScript permission check
-        if (storedPlayerId && storedPlayerId.length > 0) {
+        if (storedPlayerId) {
             console.log('✅ Player ID found in database - notifications are enabled');
             showNotificationSettings();
             return;

@@ -51,5 +51,7 @@
 	</array>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Health Tracker needs permission to send you medication reminders and notifications.</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>

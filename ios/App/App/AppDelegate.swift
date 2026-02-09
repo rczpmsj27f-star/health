@@ -29,6 +29,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         NSLog("OneSignal initialized - waiting for authenticated user to request permissions")
         
+        // Request notification permission from native code
+        // The JavaScript bridge doesn't work properly, so we trigger it here
+        OneSignal.Notifications.requestPermission({ accepted in
+            NSLog("OneSignal permission accepted: \(accepted)")
+        }, fallbackToSettings: true)
+        
         return true
     }
 

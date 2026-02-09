@@ -1,6 +1,7 @@
 // OneSignal Capacitor Initialization
-// This file handles OneSignal setup for Capacitor iOS apps using the native plugin
-// No CDN dependency - uses window.OneSignal from onesignal-cordova-plugin v5.3.0
+// This file handles OneSignal setup for Capacitor iOS apps
+// Uses onesignal-cordova-plugin v5.3.0 (Cordova plugins are compatible with Capacitor)
+// No CDN dependency - accesses window.OneSignal directly from the Cordova plugin
 
 const ONESIGNAL_APP_ID = '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b';
 

@@ -105,8 +105,8 @@ OneSignal.Notifications.requestPermission()
 ```
 
 ### Return Values
-- `requestPermission()`: Returns `{ accepted: boolean }`
-- `checkPermission()`: Returns `{ permission: boolean }`
+- `requestPermission()`: Returns `{ accepted: boolean }` - true if user granted permission, false if denied
+- `checkPermission()`: Returns `{ permission: <value> }` - the current OneSignal permission status (type depends on OneSignal SDK version)
 
 ## Files Modified/Created
 

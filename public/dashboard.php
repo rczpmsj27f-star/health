@@ -207,6 +207,20 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 </head>
 <body>
     <?php include __DIR__ . '/../app/includes/menu.php'; ?>
+    
+    <!-- OneSignal SDK - Conditional Loading for Capacitor Compatibility -->
+    <!-- Only load OneSignal Web SDK if NOT running in native Capacitor app -->
+    <script>
+        // Capacitor injects window.Capacitor before page load, so it's safe to check immediately
+        // If Capacitor is not present, load the Web SDK for browser-based push notifications
+        if (!window.Capacitor) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+    </script>
+    
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
 
     <div class="dashboard-container">

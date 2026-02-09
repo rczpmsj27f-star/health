@@ -28,7 +28,22 @@ window.OneSignalCapacitor = {
         return Promise.resolve(null);
     },
     requestPermission: async () => {
-        console.log('ℹ️ OneSignalCapacitor.requestPermission() called - no action taken (native plugin handles everything)');
-        return Promise.resolve(null);
+        console.log('📱 OneSignalCapacitor.requestPermission() called');
+        
+        // Check if OneSignal native SDK is available
+        if (typeof window.OneSignal !== 'undefined' && window.OneSignal.Notifications) {
+            try {
+                console.log('✅ OneSignal.Notifications found - requesting permission...');
+                const result = await window.OneSignal.Notifications.requestPermission(true);
+                console.log('✅ Permission request result:', result);
+                return result;
+            } catch (error) {
+                console.error('❌ Error requesting permission:', error);
+                return null;
+            }
+        } else {
+            console.warn('⚠️ OneSignal.Notifications not available - native plugin may not be loaded');
+            return null;
+        }
     }
 };

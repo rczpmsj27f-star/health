@@ -211,9 +211,41 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     <!-- OneSignal SDK - Conditional Loading for Capacitor Compatibility -->
     <!-- Only load OneSignal Web SDK if NOT running in native Capacitor app -->
     <script>
-        // Capacitor injects window.Capacitor before page load, so it's safe to check immediately
-        // If Capacitor is not present, load the Web SDK for browser-based push notifications
-        if (!window.Capacitor) {
+        // Enhanced Capacitor detection to prevent Web SDK from overwriting native plugin
+        // Multiple checks ensure we don't load Web SDK in iOS/Android native apps
+        function shouldLoadWebSDK() {
+            // Check 1: window.Capacitor exists (injected by native runtime)
+            if (window.Capacitor) {
+                console.log('🚫 Capacitor detected - skipping OneSignal Web SDK');
+                return false;
+            }
+            
+            // Check 2: Check for Capacitor-specific bridges
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.bridge) {
+                console.log('🚫 iOS Capacitor bridge detected - skipping OneSignal Web SDK');
+                return false;
+            }
+            
+            // Check 3: Check for native OneSignal plugin presence (belt and suspenders)
+            if (window.OneSignal && typeof window.OneSignal.initialize === 'function') {
+                console.log('🚫 Native OneSignal plugin detected - skipping OneSignal Web SDK');
+                return false;
+            }
+            
+            // Check 4: User agent check for Capacitor webview
+            const ua = navigator.userAgent || '';
+            if (ua.includes('CapacitorWebView')) {
+                console.log('🚫 Capacitor WebView detected in user agent - skipping OneSignal Web SDK');
+                return false;
+            }
+            
+            // All checks passed - safe to load Web SDK for browser
+            console.log('✅ Browser environment detected - loading OneSignal Web SDK');
+            return true;
+        }
+        
+        // Only load Web SDK if all checks pass
+        if (shouldLoadWebSDK()) {
             const script = document.createElement('script');
             script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
             script.defer = true;

@@ -14,33 +14,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
-        // Request notification permission from user BEFORE OneSignal initialization
-        // This ensures OneSignal can immediately set enabled: true if permission is granted
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-            if let error = error {
-                NSLog("Notification permission request error: \(error.localizedDescription)")
-            }
-            
-            if granted {
-                NSLog("Notification permission granted")
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-            } else {
-                NSLog("Notification permission denied by user")
-            }
-            
-            // Initialize OneSignal SDK AFTER permission response is received
-            // This ensures OneSignal starts with the correct enabled state
-            DispatchQueue.main.async {
-                #if DEBUG
-                OneSignal.Debug.setLogLevel(.LL_VERBOSE)
-                #endif
-                
-                // Initialize OneSignal with App ID - permission status is now known
-                OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
-            }
-        }
+        // DO NOT request notification permission on app launch
+        // Permission will be requested AFTER user logs in via JavaScript
+        // This prevents the prompt from appearing on the login screen
+        
+        // Initialize OneSignal SDK silently (no automatic permission prompt)
+        #if DEBUG
+        OneSignal.Debug.setLogLevel(.LL_VERBOSE)
+        #endif
+        
+        // Initialize OneSignal with App ID - will not prompt for permissions automatically
+        // Permissions will be requested from JavaScript after user authentication
+        OneSignal.initialize("27f8d4d3-3a69-4a4d-8f7b-113d16763c4b", withLaunchOptions: launchOptions)
+        
+        NSLog("OneSignal initialized - waiting for authenticated user to request permissions")
         
         return true
     }

@@ -1,3 +1,21 @@
+/* Force Light Mode - Override System Preferences */
+html {
+    color-scheme: light;
+}
+
+/* Override any dark mode preferences */
+@media (prefers-color-scheme: dark) {
+    html, body {
+        background-color: #f5f5f5 !important;
+        color: #333 !important;
+    }
+    
+    /* Force light color scheme on key elements for better performance */
+    :root, body, .page-card, .content-card {
+        color-scheme: light !important;
+    }
+}
+
 /* Base Styles - Mobile First */
 * {
     box-sizing: border-box;
@@ -93,15 +111,18 @@ body {
     padding: 0;
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     background: var(--color-bg-light);
+    background-color: #f5f5f5 !important; /* Force light background */
     font-size: 16px;
     line-height: 1.6;
     color: var(--color-text);
+    color: #333 !important; /* Force dark text */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Card Layout (for all pages) */
 .page-card, .content-card {
     background: var(--color-bg-white);
+    background-color: #fff !important; /* Force white background */
     padding: 24px;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);

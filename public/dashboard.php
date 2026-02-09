@@ -212,6 +212,10 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     <!-- This app uses ONLY the native Capacitor plugin (onesignal-cordova-plugin) -->
     <!-- No conditional loading needed - native plugin works in both web and native contexts -->
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
+    
+    <!-- Request OneSignal permissions for authenticated users only -->
+    <!-- This script only runs on authenticated pages, preventing prompts on login page -->
+    <script src="/assets/js/onesignal-permission-request.js?v=<?= time() ?>" defer></script>
 
     <div class="dashboard-container">
         <!-- User Profile Header (Issue #51) -->

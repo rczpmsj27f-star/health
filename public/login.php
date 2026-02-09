@@ -22,12 +22,19 @@ unset($_SESSION['error'], $_SESSION['success']);
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <style>
+        /* Force Light Mode */
+        html {
+            color-scheme: light;
+        }
+        
         body {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 16px;
+            background-color: #f5f5f5 !important;
+            color: #333 !important;
         }
         .login-card {
             background: #fff;

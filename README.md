@@ -4,6 +4,19 @@
 
 A Progressive Web App (PWA) for medication reminders with push notifications. Never miss a dose!
 
+---
+
+## 🔴 Database Error Fix Required
+
+**Are you seeing this error?**
+```
+Column 'early_logging_reason' not found
+```
+
+**Quick Fix**: See **[URGENT_FIX_DATABASE_ERROR.md](URGENT_FIX_DATABASE_ERROR.md)** for immediate resolution.
+
+---
+
 ### 📱 iOS Native App Available
 
 This application is also available as a native iOS app for the Apple App Store. The iOS app wraps the web application using Capacitor, providing a native app experience.

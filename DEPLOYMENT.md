@@ -119,6 +119,25 @@ For detailed migration instructions, see [database/migrations/README.md](databas
 ### Available Migrations
 
 - **migration_add_archive_and_dose_times.sql** - Adds archive functionality and dose time tracking
+- **migration_add_late_logging.sql** - Adds late_logging_reason column for tracking late medication logs
+- **migration_add_early_logging.sql** ⚠️ **CRITICAL** - Adds early_logging_reason column (REQUIRED to fix database error)
+
+### Critical Migration Required
+
+⚠️ **Action Required**: If you're experiencing database errors when logging medications, you must run the early logging migration:
+
+```bash
+# Via browser (recommended)
+https://your-domain.com/run_early_logging_migration.php
+
+# OR via command line
+php run_early_logging_migration.php
+
+# OR manually via MySQL
+mysql -u username -p database_name < database/migrations/migration_add_early_logging.sql
+```
+
+**See detailed instructions**: [DEPLOYMENT_EARLY_LOGGING_FIX.md](DEPLOYMENT_EARLY_LOGGING_FIX.md)
 
 ## Issue: 404 Error When Accessing the Application
 

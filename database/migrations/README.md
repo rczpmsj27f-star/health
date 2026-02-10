@@ -18,12 +18,26 @@ Migration files follow the naming convention: `migration_<description>.sql`
    - Tracks individual dose times for medications taken multiple times per day
    - Foreign key relationship with medications table (CASCADE on delete)
 
-3. **migration_create_notification_settings.sql** ⭐ NEW
+3. **migration_create_notification_settings.sql**
    - Creates the user_notification_settings table for storing user notification preferences
    - Tracks notification enable/disable status per user
    - Stores notification timing preferences (at time, 10min, 20min, 30min, 60min after)
    - Stores OneSignal player ID for push notification targeting
    - Foreign key relationship with users table (CASCADE on delete)
+
+4. **migration_add_late_logging.sql**
+   - Adds late_logging_reason VARCHAR(255) column to medication_logs table
+   - Tracks why medications were logged late (after scheduled time)
+   - Includes performance index on the column
+   - Migration runner: `run_late_logging_migration.php`
+
+5. **migration_add_early_logging.sql** ⭐ REQUIRED FOR FIX
+   - Adds early_logging_reason VARCHAR(255) column to medication_logs table
+   - Tracks why medications were logged early (before scheduled time)
+   - Includes performance index on the column
+   - Migration runner: `run_early_logging_migration.php`
+   - **Status**: MUST BE RUN to fix database error
+   - See: `DEPLOYMENT_EARLY_LOGGING_FIX.md` for deployment instructions
 
 ## How to Apply Migrations
 

@@ -48,7 +48,7 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 ?>
 
 <div class="app-footer">
-    <div class="footer-content">
+    <div class="footer-content <?= $contextShortcut ? 'has-context-pill' : '' ?>">
         <a href="/dashboard.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'dashboard.php' && !isset($_GET['view'])) ? 'active' : '' ?>">
             <div class="footer-icon">🏠</div>
             <div class="footer-label">Home</div>
@@ -103,6 +103,11 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     margin: 0 auto;
     padding: 8px 0;
     position: relative;
+}
+
+.footer-content.has-context-pill {
+    justify-content: flex-start;
+    padding-right: 160px;
 }
 
 .footer-item {
@@ -198,6 +203,10 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
         right: 8px;
         gap: 4px;
     }
+    
+    .footer-content.has-context-pill {
+        padding-right: 140px;
+    }
 }
 
 @media (max-width: 400px) {
@@ -209,6 +218,10 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     
     .footer-shortcut span:last-child {
         display: none;
+    }
+    
+    .footer-content.has-context-pill {
+        padding-right: 50px;
     }
 }
 </style>

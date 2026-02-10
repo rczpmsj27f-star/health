@@ -795,7 +795,12 @@ foreach ($prnMedications as $med) {
                 </div>
             <?php else: ?>
                 <?php
-                $currentTime = strtotime(date('H:i'));
+                // For overdue checking, we need to compare full datetime, not just time
+                // Only consider items overdue if viewing today AND the scheduled time has passed
+                $currentRealDateTime = new DateTime();
+                $viewDateTime = new DateTime($viewDate);
+                $isViewingToday = $viewDateTime->format('Y-m-d') === $currentRealDateTime->format('Y-m-d');
+                
                 // Check if any daily medication group has medications
                 $hasDailyMeds = false;
                 foreach ($dailyMedications as $group) {
@@ -859,8 +864,11 @@ foreach ($prnMedications as $med) {
                 <?php
                     $meds = $timeData['meds'];
                     $timeDisplay = $timeData['display'];
-                    $scheduleTime = strtotime($time);
-                    // Only consider it overdue if time has passed AND there are pending medications
+                    
+                    // Only consider it overdue if:
+                    // 1. We're viewing today (not a past or future date)
+                    // 2. The scheduled time has passed
+                    // 3. There are pending medications
                     $hasPendingMeds = false;
                     foreach ($meds as $med) {
                         if ($med['log_status'] === 'pending') {
@@ -868,7 +876,22 @@ foreach ($prnMedications as $med) {
                             break;
                         }
                     }
-                    $isOverdue = $currentTime > $scheduleTime && $hasPendingMeds;
+                    
+                    // Compare full datetime values instead of just time
+                    $isOverdue = false;
+                    if ($isViewingToday && $hasPendingMeds) {
+                        // For timed medications, check if ANY medication in this time group has a scheduled_date_time in the past
+                        foreach ($meds as $med) {
+                            if ($med['log_status'] === 'pending' && isset($med['scheduled_date_time'])) {
+                                $scheduledDT = new DateTime($med['scheduled_date_time']);
+                                if ($scheduledDT < $currentRealDateTime) {
+                                    $isOverdue = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
                     $medCount = count($meds);
                     // Sanitize time for use in HTML ID - ensure it's HH:MM format
                     if (preg_match('/^\d{2}:\d{2}$/', $time)) {

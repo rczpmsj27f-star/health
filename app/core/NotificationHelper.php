@@ -153,41 +153,47 @@ class NotificationHelper {
      * Send email notification
      */
     private function sendEmailNotification($userId, $title, $message) {
-        $stmt = $this->pdo->prepare("SELECT email, first_name FROM users WHERE id = ?");
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
-        
-        if (!$user || !$user['email']) {
-            return;
+        try {
+            $stmt = $this->pdo->prepare("SELECT email, first_name FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+            
+            if (!$user || !$user['email']) {
+                return;
+            }
+            
+            // Use PHPMailer for reliable email delivery
+            require_once __DIR__ . '/../config/mailer.php';
+            $mail = mailer();
+            
+            $mail->addAddress($user['email'], $user['first_name']);
+            $mail->Subject = "Health Tracker: " . $title;
+            
+            $body = "
+            <html>
+            <body style='font-family: Arial, sans-serif; padding: 20px;'>
+                <div style='max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;'>
+                    <div style='background: #6366f1; color: white; padding: 20px;'>
+                        <h2 style='margin: 0;'>💊 Health Tracker</h2>
+                    </div>
+                    <div style='padding: 30px;'>
+                        <h3 style='color: #374151; margin-top: 0;'>{$title}</h3>
+                        <p style='color: #4b5563; line-height: 1.6;'>{$message}</p>
+                    </div>
+                    <div style='background: #f3f4f6; padding: 20px; text-align: center;'>
+                        <p style='color: #6b7280; font-size: 12px; margin: 0;'>This is an automated notification from Health Tracker.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            ";
+            
+            $mail->Body = $body;
+            $mail->send();
+            
+        } catch (Exception $e) {
+            error_log("Error sending email notification: " . $e->getMessage());
         }
-        
-        $to = $user['email'];
-        $subject = "Health Tracker: " . $title;
-        
-        $body = "
-        <html>
-        <body style='font-family: Arial, sans-serif; padding: 20px;'>
-            <div style='max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;'>
-                <div style='background: #6366f1; color: white; padding: 20px;'>
-                    <h2 style='margin: 0;'>💊 Health Tracker</h2>
-                </div>
-                <div style='padding: 30px;'>
-                    <h3 style='color: #374151; margin-top: 0;'>{$title}</h3>
-                    <p style='color: #4b5563; line-height: 1.6;'>{$message}</p>
-                </div>
-                <div style='background: #f3f4f6; padding: 20px; text-align: center;'>
-                    <p style='color: #6b7280; font-size: 12px; margin: 0;'>This is an automated notification from Health Tracker.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        ";
-        
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-        $headers .= "From: Health Tracker <noreply@healthtracker.com>\r\n";
-        
-        mail($to, $subject, $body, $headers);
     }
     
     /**

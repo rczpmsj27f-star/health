@@ -860,7 +860,15 @@ foreach ($prnMedications as $med) {
                     $meds = $timeData['meds'];
                     $timeDisplay = $timeData['display'];
                     $scheduleTime = strtotime($time);
-                    $isOverdue = $currentTime > $scheduleTime;
+                    // Only consider it overdue if time has passed AND there are pending medications
+                    $hasPendingMeds = false;
+                    foreach ($meds as $med) {
+                        if ($med['log_status'] === 'pending') {
+                            $hasPendingMeds = true;
+                            break;
+                        }
+                    }
+                    $isOverdue = $currentTime > $scheduleTime && $hasPendingMeds;
                     $medCount = count($meds);
                     // Sanitize time for use in HTML ID - ensure it's HH:MM format
                     if (preg_match('/^\d{2}:\d{2}$/', $time)) {

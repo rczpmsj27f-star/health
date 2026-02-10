@@ -28,6 +28,14 @@ if (!$user) {
     exit;
 }
 
+// Ensure two_factor_enabled key exists (default to 0 if column doesn't exist)
+if (!isset($user['two_factor_enabled'])) {
+    $user['two_factor_enabled'] = 0;
+}
+if (!isset($user['two_factor_secret'])) {
+    $user['two_factor_secret'] = null;
+}
+
 // Generate secret if not exists
 if (empty($user['two_factor_secret'])) {
     $secret = $google2fa->generateSecretKey();

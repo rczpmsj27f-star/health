@@ -46,8 +46,17 @@ server/medications.json
 server/settings.json
 
 # Environment variables
+# IMPORTANT: Never commit .env with real credentials
 .env
 .env.local
+.env.production
+
+# Server configuration with credentials
+# If you add SetEnv directives with real credentials to .htaccess, 
+# create a separate .htaccess file and add it here to prevent committing credentials
+# Example: 
+# .htaccess  (if it contains SetEnv with real credentials)
+# Or use .htaccess.local for credentials and merge at deployment
 
 # Composer dependencies
 vendor/

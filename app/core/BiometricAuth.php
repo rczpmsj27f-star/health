@@ -19,6 +19,36 @@ class BiometricAuth {
     }
 
     /**
+     * Store challenge for a session
+     */
+    public function storeChallenge(string $challenge): void {
+        $_SESSION['biometric_challenge'] = $challenge;
+        $_SESSION['biometric_challenge_time'] = time();
+    }
+
+    /**
+     * Verify and consume challenge
+     */
+    public function verifyChallenge(string $clientChallenge): bool {
+        if (!isset($_SESSION['biometric_challenge']) || !isset($_SESSION['biometric_challenge_time'])) {
+            return false;
+        }
+
+        // Challenge expires after 2 minutes
+        if (time() - $_SESSION['biometric_challenge_time'] > 120) {
+            unset($_SESSION['biometric_challenge'], $_SESSION['biometric_challenge_time']);
+            return false;
+        }
+
+        $valid = $_SESSION['biometric_challenge'] === $clientChallenge;
+        
+        // Consume the challenge (one-time use)
+        unset($_SESSION['biometric_challenge'], $_SESSION['biometric_challenge_time']);
+        
+        return $valid;
+    }
+
+    /**
      * Register a new biometric credential for a user
      */
     public function registerCredential(int $userId, array $credential): bool {
@@ -54,6 +84,18 @@ class BiometricAuth {
 
     /**
      * Verify a biometric authentication assertion
+     * 
+     * NOTE: This is a simplified implementation for demonstration purposes.
+     * In a production environment, you should perform full WebAuthn verification including:
+     * - Signature verification using the stored public key
+     * - Challenge validation (ensure it matches the one sent to client)
+     * - Origin validation (ensure request comes from expected domain)
+     * - Authenticator data validation
+     * - Counter validation (replay attack prevention)
+     * 
+     * For full implementation, consider using a WebAuthn library like:
+     * - web-auth/webauthn-lib (PHP)
+     * - lbuchs/WebAuthn (PHP)
      */
     public function verifyAssertion(string $credentialId, array $assertion, int &$userId = null): bool {
         try {
@@ -71,9 +113,9 @@ class BiometricAuth {
                 return false;
             }
 
-            // In a production environment, you would perform full WebAuthn verification here
-            // including signature verification, challenge validation, etc.
-            // For this implementation, we're doing basic validation
+            // TODO: Implement full WebAuthn verification here
+            // For now, we're doing basic validation to demonstrate the flow
+            // This should be replaced with proper cryptographic verification
             
             $userId = $user['id'];
             

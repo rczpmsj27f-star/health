@@ -228,28 +228,21 @@ unset($_SESSION['error'], $_SESSION['success']);
             return; // Don't show biometric option
         }
 
-        // Check if user has biometric enabled (check via localStorage or try to get status)
-        try {
-            // Show the biometric section since platform is available
-            // User might have biometric enabled from a previous session
-            const hasStoredCredential = localStorage.getItem('biometric_credential_id');
-            
-            if (hasStoredCredential) {
-                biometricSection.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Error checking biometric status:', error);
+        // Get stored credential ID from localStorage
+        const credentialId = localStorage.getItem('biometric_credential_id');
+        
+        // If no credential stored, don't show biometric option
+        if (!credentialId) {
+            return;
         }
+
+        // Verify credential is valid by checking with server (without authentication)
+        // We show the button if credential exists in localStorage
+        // The server will validate it during authentication
+        biometricSection.style.display = 'block';
 
         // Handle biometric login
         biometricBtn.addEventListener('click', async function() {
-            const credentialId = localStorage.getItem('biometric_credential_id');
-            
-            if (!credentialId) {
-                alert('Biometric authentication not set up. Please sign in with your password and enable it in Settings.');
-                return;
-            }
-
             biometricBtn.disabled = true;
             biometricBtnText.textContent = 'Authenticating...';
 
@@ -264,6 +257,12 @@ unset($_SESSION['error'], $_SESSION['success']);
                 }
             } catch (error) {
                 console.error('Biometric authentication error:', error);
+                
+                // If credential is invalid, remove it from localStorage
+                if (error.message && error.message.includes('not found')) {
+                    localStorage.removeItem('biometric_credential_id');
+                }
+                
                 alert('Biometric authentication failed. Please use your password to sign in.');
                 biometricBtn.disabled = false;
                 biometricBtnText.textContent = 'Sign in with Face ID / Touch ID';

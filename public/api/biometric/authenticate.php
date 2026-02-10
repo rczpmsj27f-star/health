@@ -32,7 +32,8 @@ try {
         // Create session
         $_SESSION['user_id'] = $userId;
         
-        // Update last login time
+        // Note: last_biometric_login is already updated in BiometricAuth::verifyAssertion
+        // Update last_login for consistency with password login
         $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$userId]);
         
         echo json_encode([

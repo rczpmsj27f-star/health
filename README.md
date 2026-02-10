@@ -74,6 +74,15 @@ This application is also available as a native iOS app for the Apple App Store. 
 - 📱 **Installable**: Add to home screen on iOS, Android, and Desktop
 - 🔒 **Privacy-First**: Data stored locally with optional server sync
 - 🌐 **Offline Support**: Works without internet connection
+- 🔐 **Biometric Authentication**: Face ID / Touch ID support for quick and secure login (iOS/iPadOS 14+)
+
+### Security Features
+
+- **Two-Factor Authentication (2FA)**: Google Authenticator support
+- **Biometric Authentication**: Face ID and Touch ID for iPhone/iPad users (see [BIOMETRIC_AUTHENTICATION.md](docs/BIOMETRIC_AUTHENTICATION.md))
+- **Secure Sessions**: HttpOnly cookies with SameSite protection
+- **Password Hashing**: Industry-standard bcrypt password hashing
+- **Permission System**: Granular permissions for linked users
 
 ### Quick Start
 

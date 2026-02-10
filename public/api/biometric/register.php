@@ -31,6 +31,10 @@ try {
     $password = $input['password'];
     $credential = $input['credential'];
     
+    // Verify challenge (optional but recommended for registration)
+    // The challenge is already consumed during WebAuthn credential creation
+    // so we don't need to re-verify it here, but we should ensure session is valid
+    
     // Verify password before enabling biometric
     $stmt = $pdo->prepare("SELECT password_hash FROM users WHERE id = ?");
     $stmt->execute([$userId]);

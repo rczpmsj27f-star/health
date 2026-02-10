@@ -314,7 +314,7 @@ unset($_SESSION['error'], $_SESSION['success']);
                 enableBtn.textContent = 'Enabling...';
 
                 try {
-                    const result = await BiometricAuth.register('<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>', <?= $_SESSION['user_id'] ?>, password);
+                    const result = await BiometricAuth.register('<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>', <?= intval($_SESSION['user_id']) ?>, password);
                     
                     // Store credential ID in localStorage for login page
                     const status = await BiometricAuth.getStatus();

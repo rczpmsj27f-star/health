@@ -60,6 +60,25 @@ const BiometricAuth = {
     },
 
     /**
+     * Get a challenge from the server
+     */
+    getChallenge: async function() {
+        try {
+            const response = await fetch('/api/biometric/challenge.php');
+            const result = await response.json();
+            
+            if (!result.success || !result.challenge) {
+                throw new Error('Failed to get challenge from server');
+            }
+            
+            return this.base64ToArrayBuffer(result.challenge);
+        } catch (error) {
+            console.error('Error getting challenge:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Register a new biometric credential
      */
     register: async function(username, userId, password) {
@@ -69,8 +88,13 @@ const BiometricAuth = {
                 throw new Error('Biometric authentication is not available on this device');
             }
 
-            // Generate challenge
-            const challenge = this.generateChallenge();
+            // Get challenge from server
+            const challenge = await this.getChallenge();
+
+            // Encode user ID properly
+            const userIdBuffer = new Uint8Array(16);
+            const userIdView = new DataView(userIdBuffer.buffer);
+            userIdView.setUint32(0, userId, true); // Little-endian
 
             // Create credential options
             const publicKeyCredentialCreationOptions = {
@@ -80,7 +104,7 @@ const BiometricAuth = {
                     id: window.location.hostname
                 },
                 user: {
-                    id: new Uint8Array(16), // Random user ID
+                    id: userIdBuffer,
                     name: username,
                     displayName: username
                 },
@@ -148,8 +172,8 @@ const BiometricAuth = {
                 throw new Error('Biometric authentication is not available on this device');
             }
 
-            // Generate challenge
-            const challenge = this.generateChallenge();
+            // Get challenge from server
+            const challenge = await this.getChallenge();
 
             // Prepare credential ID
             const credentialIdBuffer = this.base64ToArrayBuffer(credentialId);

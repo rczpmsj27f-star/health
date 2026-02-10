@@ -21,6 +21,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     <meta name="theme-color" content="#4F46E5">
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/biometric-auth.js?v=<?= time() ?>"></script>
     <style>
         /* Force Light Mode */
         html {
@@ -117,6 +118,49 @@ unset($_SESSION['error'], $_SESSION['success']);
         .login-footer a:hover {
             text-decoration: underline;
         }
+        .biometric-section {
+            margin: 20px 0;
+            padding: 20px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+        }
+        .biometric-section p {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin: 0 0 15px 0;
+        }
+        .btn-biometric {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-biometric:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-biometric:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .biometric-icon {
+            font-size: 18px;
+        }
+        #biometricSection {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +176,15 @@ unset($_SESSION['error'], $_SESSION['success']);
         <?php if ($ok): ?>
             <div class="alert alert-success"><?= htmlspecialchars($ok) ?></div>
         <?php endif; ?>
+
+        <!-- Biometric Login Section -->
+        <div id="biometricSection" class="biometric-section">
+            <p>Sign in with biometric authentication</p>
+            <button type="button" id="biometricBtn" class="btn-biometric">
+                <span class="biometric-icon">🔐</span>
+                <span id="biometricBtnText">Sign in with Face ID / Touch ID</span>
+            </button>
+        </div>
 
         <form method="POST" action="login_handler.php">
             <div class="form-group">
@@ -158,6 +211,64 @@ unset($_SESSION['error'], $_SESSION['success']);
             .then(reg => console.log('Service Worker registered'))
             .catch(err => console.error('Service Worker registration failed:', err));
     }
+
+    // Biometric authentication on login page
+    document.addEventListener('DOMContentLoaded', async function() {
+        const biometricSection = document.getElementById('biometricSection');
+        const biometricBtn = document.getElementById('biometricBtn');
+        const biometricBtnText = document.getElementById('biometricBtnText');
+
+        // Check if biometric is supported and available
+        if (!BiometricAuth.isSupported()) {
+            return; // Don't show biometric option
+        }
+
+        const isPlatformAvailable = await BiometricAuth.isPlatformAuthenticatorAvailable();
+        if (!isPlatformAvailable) {
+            return; // Don't show biometric option
+        }
+
+        // Get stored credential ID from localStorage
+        const credentialId = localStorage.getItem('biometric_credential_id');
+        
+        // If no credential stored, don't show biometric option
+        if (!credentialId) {
+            return;
+        }
+
+        // Verify credential is valid by checking with server (without authentication)
+        // We show the button if credential exists in localStorage
+        // The server will validate it during authentication
+        biometricSection.style.display = 'block';
+
+        // Handle biometric login
+        biometricBtn.addEventListener('click', async function() {
+            biometricBtn.disabled = true;
+            biometricBtnText.textContent = 'Authenticating...';
+
+            try {
+                const result = await BiometricAuth.authenticate(credentialId);
+                
+                if (result.success) {
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard.php';
+                } else {
+                    throw new Error(result.error || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('Biometric authentication error:', error);
+                
+                // If credential is invalid, remove it from localStorage
+                if (error.message && error.message.includes('not found')) {
+                    localStorage.removeItem('biometric_credential_id');
+                }
+                
+                alert('Biometric authentication failed. Please use your password to sign in.');
+                biometricBtn.disabled = false;
+                biometricBtnText.textContent = 'Sign in with Face ID / Touch ID';
+            }
+        });
+    });
     </script>
 </body>
 </html>

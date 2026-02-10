@@ -39,6 +39,18 @@ Migration files follow the naming convention: `migration_<description>.sql`
    - **Status**: MUST BE RUN to fix database error
    - See: `DEPLOYMENT_EARLY_LOGGING_FIX.md` for deployment instructions
 
+6. **migration_add_two_factor_auth.sql**
+   - Adds two-factor authentication support to users table
+   - Adds two_factor_secret, two_factor_enabled, two_factor_backup_codes columns
+   - Enables Google Authenticator-based 2FA
+
+7. **migration_add_biometric_auth.sql** 🆕
+   - Adds biometric authentication support to users table (Face ID/Touch ID)
+   - Adds columns: biometric_enabled, biometric_credential_id, biometric_public_key, biometric_counter, last_biometric_login
+   - Enables WebAuthn-based biometric authentication for iOS/iPadOS devices
+   - **Requirements**: HTTPS connection required for WebAuthn to work
+   - See: `docs/BIOMETRIC_AUTHENTICATION.md` for full documentation
+
 ## How to Apply Migrations
 
 Since this project doesn't use an automated migration framework, migrations must be applied manually:

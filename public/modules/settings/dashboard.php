@@ -152,6 +152,12 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
                 <div class="tile-title">Security</div>
                 <div class="tile-desc">Password and 2FA settings</div>
             </a>
+            
+            <a class="tile" href="/logout.php">
+                <div class="tile-icon">🚪</div>
+                <div class="tile-title">Logout</div>
+                <div class="tile-desc">Sign out of your account</div>
+            </a>
         </div>
     </div>
     

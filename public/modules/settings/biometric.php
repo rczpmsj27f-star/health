@@ -191,7 +191,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../components/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="container">
         <a href="/modules/settings/preferences.php" class="back-link">← Back to Settings</a>

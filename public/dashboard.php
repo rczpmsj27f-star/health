@@ -196,8 +196,13 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         }
         
         .tile-gray {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            background: #e9ecef;
             cursor: not-allowed;
+        }
+        
+        .tile-gray .tile-title,
+        .tile-gray .tile-desc {
+            color: #6c757d;
         }
         
         .tile-gray:hover {

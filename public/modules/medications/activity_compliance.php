@@ -118,6 +118,21 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             opacity: 0.9;
             color: #ffffff;
         }
+        
+        .tile-gray {
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
+        
+        .tile-gray:hover {
+            transform: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tile-gray .tile-title,
+        .tile-gray .tile-desc {
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -141,11 +156,11 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
                 <div class="tile-desc">Track adherence rates</div>
             </a>
             
-            <a class="tile" href="/modules/reports/history.php">
+            <div class="tile tile-gray">
                 <div class="tile-icon">📜</div>
                 <div class="tile-title">History</div>
-                <div class="tile-desc">View past medication logs</div>
-            </a>
+                <div class="tile-desc">Coming soon</div>
+            </div>
             
             <a class="tile" href="/modules/reports/exports.php">
                 <div class="tile-icon">📥</div>

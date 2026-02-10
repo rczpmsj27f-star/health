@@ -346,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <a href="/settings/notifications">🔔 Notifications</a>
             <a href="/modules/settings/preferences.php">⚡ Preferences</a>
             <a href="/modules/settings/two_factor.php">🔒 Two-Factor Auth</a>
+            <a href="/modules/settings/biometric.php">🔐 Biometric Auth</a>
         </div>
     </div>
     

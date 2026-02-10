@@ -141,6 +141,9 @@ $archivedMeds = $stmt->fetchAll();
                 <p style="color: var(--color-text-secondary); margin: 0;">No medications added yet. Click "Add Medication" to get started.</p>
             </div>
         <?php else: ?>
+            <!-- Current Medications Section -->
+            <h3 style="margin: 24px 0 16px 0; padding-left: 16px; color: #333; font-size: 20px; font-weight: 600;">Current Medications</h3>
+            
             <?php if (!empty($scheduledMeds)): ?>
                 <div class="expandable-section expanded" id="scheduledSection">
                     <div class="section-header-toggle" onclick="toggleSection('scheduledSection')">
@@ -268,6 +271,12 @@ $archivedMeds = $stmt->fetchAll();
                     </div>
                 </div>
             <?php endif; ?>
+            
+            <!-- Manage Stock Section -->
+            <h3 style="margin: 32px 0 16px 0; padding-left: 16px; color: #333; font-size: 20px; font-weight: 600;">Manage Stock</h3>
+            <div style="padding: 0 16px;">
+                <a class="btn btn-secondary" href="/modules/medications/stock.php" style="display: inline-block; margin-bottom: 16px;">📦 View Stock Levels</a>
+            </div>
         <?php endif; ?>
         
         <div class="action-buttons" style="margin-top: 32px;">

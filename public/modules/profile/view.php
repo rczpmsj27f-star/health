@@ -51,7 +51,7 @@ $user = $stmt->fetch();
 
             <div class="info-item">
                 <div class="info-label">Username</div>
-                <div class="info-value"><?= htmlspecialchars($user['username']) ?></div>
+                <div class="info-value"><?= htmlspecialchars($user['username'] ?? '') ?></div>
             </div>
 
             <div class="info-item">

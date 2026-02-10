@@ -981,21 +981,6 @@ foreach ($prnMedications as $med) {
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
-        
-        <!-- Dashboard Tiles -->
-        <div class="dashboard-tiles-half">
-            <a class="tile tile-purple" href="/modules/medications/list.php">
-                <span class="tile-icon">💊</span>
-                <div class="tile-title">My Medications</div>
-                <div class="tile-desc">View current & archived</div>
-            </a>
-            
-            <a class="tile tile-green" href="/modules/medications/stock.php">
-                <span class="tile-icon">📦</span>
-                <div class="tile-title">Medication Stock</div>
-                <div class="tile-desc">Manage your stock levels</div>
-            </a>
-        </div>
     </div>
     
     <!-- Skip Medication Modal -->

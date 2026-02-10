@@ -9,7 +9,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 // Get current user info
-$stmt = $pdo->prepare("SELECT username, email, biometric_enabled FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT username, email FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 

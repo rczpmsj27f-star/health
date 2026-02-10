@@ -150,7 +150,8 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         
         @media (max-width: 576px) {
             .dashboard-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
         }
         
@@ -274,7 +275,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             </div>
             
             <?php if ($isAdmin): ?>
-            <a class="tile tile-red" href="/modules/admin/users.php">
+            <a class="tile tile-red" href="/modules/admin/dashboard.php">
                 <div class="tile-icon">🔐</div>
                 <div class="tile-title">Admin Panel</div>
                 <div class="tile-desc">Manage system settings</div>

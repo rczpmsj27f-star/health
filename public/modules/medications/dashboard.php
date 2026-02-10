@@ -674,7 +674,7 @@ foreach ($prnMedications as $med) {
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="page-content">
         <div class="page-title">
@@ -1498,5 +1498,6 @@ foreach ($prnMedications as $med) {
         });
     }
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

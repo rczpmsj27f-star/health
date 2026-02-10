@@ -56,7 +56,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="container">
         <div class="content-card">
@@ -190,5 +190,6 @@ unset($_SESSION['error'], $_SESSION['success']);
         }
     }
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

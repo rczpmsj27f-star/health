@@ -324,7 +324,7 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
     <div class="calculator-container">
         <a href="/modules/medications/dashboard.php" class="btn-back">← Back to Dashboard</a>
@@ -465,5 +465,6 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
             icon.textContent = content.classList.contains('hidden') ? '▼' : '▲';
         }
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

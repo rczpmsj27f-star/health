@@ -66,7 +66,7 @@ $history = $stmt->fetchAll();
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
@@ -129,5 +129,6 @@ $history = $stmt->fetchAll();
             <a href="/modules/medications/dashboard.php" style="color: var(--color-text-secondary);">← Back to Dashboard</a>
         </div>
     </div>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

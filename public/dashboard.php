@@ -123,54 +123,16 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     <meta name="theme-color" content="#4F46E5">
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
-    <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
-    <style>
-/* Critical inline styles - fallback if external CSS doesn't load */
-.tile {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 24px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    text-decoration: none;
-    color: #ffffff;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-.tile .tile-title, .tile .tile-desc, .tile .tile-icon {
-    color: #ffffff;
-}
-.btn {
-    padding: 14px 20px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
-    color: #ffffff;
-    display: block;
-    text-align: center;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 500;
-    min-height: 48px;
-}
-.btn-primary { background: #2563eb; color: #fff; }
-.btn-secondary { background: #6c757d; color: #fff; }
-.btn-danger { background: #dc3545; color: #fff; }
-.btn-info { background: #007bff; color: #fff; }
-    </style>
     <style>
         .dashboard-container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            padding-top: 60px;
+            padding: 20px 16px;
         }
         
         .dashboard-title {
             text-align: center;
-            padding: 20px 16px;
+            padding: 20px 0;
             color: #333;
         }
         
@@ -179,10 +141,71 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             font-size: 28px;
         }
         
-        .dashboard-title p {
-            margin: 0;
-            color: #666;
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        @media (max-width: 576px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .tile {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 24px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            color: #ffffff;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tile-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .tile-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        .tile-desc {
             font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.9;
+            color: #ffffff;
+        }
+        
+        .tile-gray {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            cursor: not-allowed;
+        }
+        
+        .tile-gray:hover {
+            transform: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tile-red {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
         }
         
         .overdue-badge {
@@ -206,7 +229,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../app/includes/header.php'; ?>
     
     <!-- OneSignal Native Plugin Only - Web SDK completely removed -->
     <!-- This app uses ONLY the native Capacitor plugin (onesignal-cordova-plugin) -->
@@ -218,57 +241,49 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     <script src="/assets/js/onesignal-permission-request.js?v=<?= time() ?>" defer></script>
 
     <div class="dashboard-container">
-        <!-- User Profile Header (Issue #51) -->
-        <div style="display: flex; align-items: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; margin: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <img src="<?= htmlspecialchars($avatarUrl) ?>" 
-                 alt="Profile" 
-                 onerror="this.src='/assets/images/default-avatar.svg'"
-                 style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; object-fit: cover; margin-right: 16px; background: white;">
-            <div>
-                <h2 style="margin: 0; font-size: 24px; font-weight: 600;">
-                    Welcome back, <?= htmlspecialchars($displayName) ?>!
-                </h2>
-                <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">
-                    <?= date('l, F j, Y') ?>
-                </p>
-            </div>
-        </div>
-        
         <div class="dashboard-title">
             <h2>Health Tracker Dashboard</h2>
-            <p>Welcome back! Manage your health and medications</p>
         </div>
         
         <div class="dashboard-grid">
-            <a class="tile tile-purple" href="<?= $overdueCount === 1 && $firstOverdueMedId ? '/modules/medications/view.php?id=' . $firstOverdueMedId : '/modules/medications/dashboard.php' ?>" style="position: relative;">
+            <a class="tile" href="/modules/medications/medication_dashboard.php">
                 <?php if ($overdueCount > 0): ?>
                     <span class="overdue-badge"><?= $overdueCount ?></span>
                 <?php endif; ?>
-                <div>
-                    <span class="tile-icon">💊</span>
-                    <div class="tile-title">Medication Management</div>
-                    <div class="tile-desc">
-                        Track your medications
-                        <?php if ($overdueCount > 0): ?>
-                            <span style="color: #ffebee; font-weight: 600; display: block; margin-top: 4px; text-decoration: underline;">
-                                • <?= $overdueCount ?> overdue<?= $overdueCount === 1 ? ' - View now' : '' ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                <div class="tile-icon">💊</div>
+                <div class="tile-title">Medication</div>
+                <div class="tile-desc">Manage your medications</div>
             </a>
             
+            <div class="tile tile-gray">
+                <div class="tile-icon">🩺</div>
+                <div class="tile-title">Symptom Tracker</div>
+                <div class="tile-desc">Coming soon</div>
+            </div>
+            
+            <div class="tile tile-gray">
+                <div class="tile-icon">🚽</div>
+                <div class="tile-title">Bowel and Urine Tracker</div>
+                <div class="tile-desc">Coming soon</div>
+            </div>
+            
+            <div class="tile tile-gray">
+                <div class="tile-icon">🍽️</div>
+                <div class="tile-title">Food Diary</div>
+                <div class="tile-desc">Coming soon</div>
+            </div>
+            
             <?php if ($isAdmin): ?>
-            <a class="tile tile-orange" href="/modules/admin/users.php">
-                <div>
-                    <span class="tile-icon">⚙️</span>
-                    <div class="tile-title">User Management</div>
-                    <div class="tile-desc">Manage system users</div>
-                </div>
+            <a class="tile tile-red" href="/modules/admin/users.php">
+                <div class="tile-icon">🔐</div>
+                <div class="tile-title">Admin Panel</div>
+                <div class="tile-desc">Manage system settings</div>
             </a>
             <?php endif; ?>
         </div>
     </div>
+    
+    <?php include __DIR__ . '/../app/includes/footer.php'; ?>
     
     <script>
     if ('serviceWorker' in navigator) {

@@ -34,7 +34,7 @@ $user = $stmt->fetch();
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="padding: 80px 16px 40px 16px; max-width: 600px; margin: 0 auto;">
         <div class="page-card">
@@ -81,5 +81,6 @@ $user = $stmt->fetch();
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

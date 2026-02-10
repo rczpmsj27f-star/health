@@ -85,7 +85,7 @@ $isAdmin = Auth::isAdmin();
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="unified-form-container">
         <div style="text-align: center; margin-bottom: 32px;">
@@ -683,5 +683,6 @@ $isAdmin = Auth::isAdmin();
         updateTimeInputs();
     });
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

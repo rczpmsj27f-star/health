@@ -355,7 +355,7 @@ $medications = $stmt->fetchAll();
         ← Back to Dashboard
     </a>
     
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="page-content">
         <div class="page-title">
@@ -642,5 +642,6 @@ $medications = $stmt->fetchAll();
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

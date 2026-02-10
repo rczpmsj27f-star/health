@@ -96,7 +96,7 @@ unset($_SESSION['success_msg']);
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="max-width: 700px; margin: 0 auto; padding: 80px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">🔒 Privacy Settings</h2>
@@ -258,5 +258,6 @@ unset($_SESSION['success_msg']);
             <a href="/modules/settings/linked_users.php" style="color: var(--color-text-secondary);">← Back to Linked Users</a>
         </div>
     </div>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

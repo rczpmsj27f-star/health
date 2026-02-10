@@ -163,7 +163,7 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
     <div class="page-content">
         <div class="page-title">
@@ -310,5 +310,6 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
             </form>
         </div>
     </div>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

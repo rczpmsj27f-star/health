@@ -1,0 +1,117 @@
+<?php
+// Persistent header component for UI redesign
+// Purple bar with avatar circle (left) and user/date info (right)
+
+// Fetch user details if not already loaded
+if (!isset($user) || !isset($displayName)) {
+    if (isset($pdo) && !empty($_SESSION['user_id'])) {
+        $userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
+        $userStmt->execute([$_SESSION['user_id']]);
+        $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+        
+        $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
+        if (empty($displayName)) {
+            // Fallback to email if no name is set
+            $displayName = explode('@', $user['email'] ?? 'User')[0];
+        }
+        
+        // Default avatar if none set
+        $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
+    } else {
+        $displayName = 'User';
+        $avatarUrl = '/assets/images/default-avatar.svg';
+    }
+}
+?>
+
+<div class="app-header">
+    <div class="header-content">
+        <div class="header-left">
+            <img src="<?= htmlspecialchars($avatarUrl ?? '/assets/images/default-avatar.svg') ?>" 
+                 alt="Profile" 
+                 onerror="this.src='/assets/images/default-avatar.svg'"
+                 class="header-avatar">
+        </div>
+        <div class="header-right">
+            <div class="header-user">Logged in as: <?= htmlspecialchars($displayName) ?></div>
+            <div class="header-date"><?= date('d F Y') ?></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-left {
+    margin-right: 16px;
+}
+
+.header-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover;
+    background: white;
+}
+
+.header-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-user {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.header-date {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Add padding to body to account for fixed header */
+body {
+    padding-top: 70px;
+    padding-bottom: 70px; /* Also account for footer */
+}
+
+@media (max-width: 576px) {
+    .header-user {
+        font-size: 14px;
+    }
+    
+    .header-date {
+        font-size: 12px;
+    }
+    
+    .header-avatar {
+        width: 40px;
+        height: 40px;
+        border-width: 2px;
+    }
+    
+    body {
+        padding-top: 60px;
+    }
+}
+</style>

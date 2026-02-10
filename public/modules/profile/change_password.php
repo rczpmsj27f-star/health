@@ -16,7 +16,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="centered-page">
         <div class="page-card">
@@ -56,5 +56,6 @@ unset($_SESSION['error'], $_SESSION['success']);
         </div>
     </div>
     </div>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

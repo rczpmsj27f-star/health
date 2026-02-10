@@ -321,7 +321,7 @@ foreach ($prnMedications as $med) {
         ← Back to Dashboard
     </a>
     
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="page-content">
         <div class="page-title">
@@ -599,5 +599,6 @@ foreach ($prnMedications as $med) {
         updateCountdowns();
     }
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

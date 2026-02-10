@@ -34,7 +34,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
         <div class="page-card">
@@ -101,5 +101,6 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         </div>
     </div>
     </div>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

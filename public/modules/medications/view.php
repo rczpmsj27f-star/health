@@ -38,7 +38,7 @@ $doseTimes = $stmt->fetchAll();
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
         <!-- Header -->
@@ -230,5 +230,6 @@ $doseTimes = $stmt->fetchAll();
         }
     });
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

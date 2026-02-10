@@ -124,7 +124,7 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="max-width: 1000px; margin: 0 auto; padding: 80px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
@@ -266,5 +266,6 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
                style="color: var(--color-text-secondary);">← Back to Dashboard</a>
         </div>
     </div>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

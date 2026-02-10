@@ -150,7 +150,7 @@ foreach ($instructions as $i) {
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../../app/includes/menu.php'; ?>
+    <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="unified-form-container">
         <div style="text-align: center; margin-bottom: 32px;">
@@ -758,5 +758,6 @@ foreach ($instructions as $i) {
         updateTimeInputs();
     });
     </script>
+<?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

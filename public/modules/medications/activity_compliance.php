@@ -36,7 +36,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity and Compliance – Health Tracker</title>
+    <title>Activity & Compliance – Health Tracker</title>
     
     <!-- PWA Support -->
     <link rel="manifest" href="/manifest.json">
@@ -124,7 +124,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     
     <div class="dashboard-container">
         <div class="dashboard-title">
-            <h2>Activity and Compliance</h2>
+            <h2>Activity & Compliance</h2>
         </div>
         
         <div class="dashboard-grid">

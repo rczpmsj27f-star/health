@@ -23,7 +23,7 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
             <div class="footer-label">Home</div>
         </a>
         
-        <a href="/modules/settings/dashboard.php" class="footer-item <?= (strpos($_SERVER['REQUEST_URI'], '/modules/settings/') !== false) ? 'active' : '' ?>">
+        <a href="/modules/settings/dashboard.php" class="footer-item <?= (strpos($_SERVER['REQUEST_URI'], '/modules/settings/') !== false && basename($_SERVER['PHP_SELF']) !== 'notifications.php') ? 'active' : '' ?>">
             <div class="footer-icon">⚙️</div>
             <div class="footer-label">Settings</div>
         </a>

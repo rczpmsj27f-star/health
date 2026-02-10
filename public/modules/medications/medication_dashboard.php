@@ -142,13 +142,13 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             
             <a class="tile" href="/modules/medications/log_prn.php">
                 <div class="tile-icon">✏️</div>
-                <div class="tile-title">Log Medication</div>
-                <div class="tile-desc">Record PRN medications</div>
+                <div class="tile-title">Log PRN Medication</div>
+                <div class="tile-desc">Record as-needed medications</div>
             </a>
             
             <a class="tile" href="/modules/medications/activity_compliance.php">
                 <div class="tile-icon">📊</div>
-                <div class="tile-title">Activity and Compliance</div>
+                <div class="tile-title">Activity & Compliance</div>
                 <div class="tile-desc">View reports and analytics</div>
             </a>
         </div>

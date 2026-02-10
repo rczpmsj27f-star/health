@@ -34,7 +34,7 @@ if (!isset($user) || !isset($displayName)) {
         </div>
         <div class="header-right">
             <div class="header-user">Logged in as: <?= htmlspecialchars($displayName) ?></div>
-            <div class="header-date">Date <?= date('d F Y') ?></div>
+            <div class="header-date"><?= date('d F Y') ?></div>
         </div>
     </div>
 </div>

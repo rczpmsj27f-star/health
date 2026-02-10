@@ -28,7 +28,7 @@ This application is also available as a native iOS app for the Apple App Store. 
 
 ## Security Setup (REQUIRED)
 
-**⚠️ IMPORTANT**: Before running the application, you must configure database credentials securely.
+**⚠️ IMPORTANT**: Before running the application, you must configure database and OneSignal credentials securely.
 
 ### Quick Setup
 
@@ -37,12 +37,21 @@ This application is also available as a native iOS app for the Apple App Store. 
    cp .env.example .env
    ```
 
-2. **Edit `.env` with your database credentials:**
+2. **Edit `.env` with your credentials:**
    ```env
+   # Database credentials
    DB_HOST=localhost
    DB_USER=your_database_user
    DB_PASS=your_secure_password
    DB_NAME=your_database_name
+   
+   # OneSignal credentials (get from OneSignal Dashboard)
+   ONESIGNAL_APP_ID=your_onesignal_app_id
+   ONESIGNAL_REST_API_KEY=your_onesignal_rest_api_key
+   
+   # Application settings
+   APP_ENV=development
+   ENABLE_DEBUG_LOGGING=false
    ```
 
 3. **Secure the file (Unix/Linux):**
@@ -51,10 +60,11 @@ This application is also available as a native iOS app for the Apple App Store. 
    ```
 
 **Security Notes:**
-- Never commit `.env` to version control
+- Never commit `.env` to version control (already in `.gitignore`)
 - Use strong, unique passwords
 - Different credentials for development and production
-- See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed configuration options
+- OneSignal App ID is safe for client-side but keep REST API Key secret
+- See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment on Hostinger and other hosts
 
 ### Features
 
@@ -76,20 +86,20 @@ npm install
 
 #### 2. Configure OneSignal
 
-Create a free account at [OneSignal.com](https://onesignal.com/) and set up a new web app. Then configure your OneSignal credentials:
+OneSignal credentials are configured in the `.env` file you created in the Security Setup section.
 
-**Option A: Using Environment Variables (Recommended)**
-```bash
-export ONESIGNAL_APP_ID="your-onesignal-app-id"
-export ONESIGNAL_API_KEY="your-onesignal-rest-api-key"
-```
+If you haven't already configured OneSignal:
 
-**Option B: Directly in server/index.js**
-Update lines 11-12 in `server/index.js`:
-```javascript
-const ONESIGNAL_APP_ID = 'your-onesignal-app-id';
-const ONESIGNAL_API_KEY = 'your-onesignal-rest-api-key';
-```
+1. Create a free account at [OneSignal.com](https://onesignal.com/)
+2. Create a new Web Push app
+3. Get your credentials from Settings > Keys & IDs
+4. Add them to your `.env` file:
+   ```env
+   ONESIGNAL_APP_ID=your-onesignal-app-id
+   ONESIGNAL_REST_API_KEY=your-onesignal-rest-api-key
+   ```
+
+**Note:** The `.env` file is used by both the PHP application and the Node.js server for consistent configuration.
 
 #### 3. Start the Server
 
@@ -237,20 +247,21 @@ PORT=8080 npm start
 
 #### OneSignal Configuration
 
-Push notifications require OneSignal configuration:
+Push notifications require OneSignal configuration. This should already be configured in your `.env` file (see Security Setup section above).
+
+If you need to set up OneSignal:
 
 1. Create a free account at [OneSignal.com](https://onesignal.com/)
 2. Create a new Web Push app
-3. Get your App ID from Settings > Keys & IDs
-4. Get your REST API Key from Settings > Keys & IDs
+3. Get your App ID and REST API Key from Settings > Keys & IDs
+4. Add them to your `.env` file:
 
-Set them as environment variables or update `server/index.js`:
-
-```bash
-export ONESIGNAL_APP_ID="your-app-id"
-export ONESIGNAL_API_KEY="your-rest-api-key"
-npm start
+```env
+ONESIGNAL_APP_ID=your-app-id
+ONESIGNAL_REST_API_KEY=your-rest-api-key
 ```
+
+The application will automatically load these credentials from the `.env` file.
 
 ### Troubleshooting
 
@@ -396,15 +407,27 @@ fetch('/modules/settings/save_notifications_handler.php', {
 
 ### Deployment
 
-For production deployment:
+For production deployment, see the comprehensive [DEPLOYMENT.md](DEPLOYMENT.md) guide which includes:
+
+- **Environment variable configuration** for different hosting providers
+- **Hostinger-specific deployment guide** with step-by-step instructions
+- **Database setup and migrations**
+- **PHP dependencies (Composer)**
+- **Apache/Nginx configuration**
+
+#### Quick Deployment Checklist
 
 1. **Use HTTPS**: Required for PWA and push notifications
-2. **Set environment variables**: OneSignal credentials, database credentials
-3. **Use a real database**: Replace file-based storage with PostgreSQL/MongoDB
-4. **Add authentication**: Implement user login/registration
-5. **Configure CORS**: Restrict to specific domains
-6. **Monitor**: Set up logging and error tracking
-7. **Backup**: Regular backups of user data
+2. **Configure environment variables**: 
+   - **Hostinger**: Use `.htaccess` with `SetEnv` directives (see [DEPLOYMENT.md](DEPLOYMENT.md))
+   - **Other hosts**: Use `.env` file or server-specific environment variable configuration
+3. **Never commit credentials**: Keep `.env` and `.htaccess` (with real credentials) in `.gitignore`
+4. **Set file permissions**: `.env` should be 600, `.htaccess` should be 644
+5. **Install dependencies**: Run `composer install` for PHP dependencies
+6. **Apply database migrations**: Check `database/migrations/` for required schema updates
+7. **Configure CORS**: Restrict to specific domains in production
+8. **Monitor**: Set up logging and error tracking
+9. **Backup**: Regular backups of database and user data
 8. **OneSignal setup**: Complete OneSignal web push configuration for your production domain
 
 ### License

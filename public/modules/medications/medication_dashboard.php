@@ -128,7 +128,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         </div>
         
         <div class="dashboard-grid">
-            <a class="tile" href="/modules/medications/schedule.php">
+            <a class="tile" href="/modules/medications/dashboard.php">
                 <div class="tile-icon">📅</div>
                 <div class="tile-title">View Schedule</div>
                 <div class="tile-desc">See today's medications</div>

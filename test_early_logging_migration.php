@@ -64,7 +64,9 @@ try {
     $indexes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($indexes)) {
-        echo "ℹ️  No indexes found for logging reason columns (may impact performance)\n";
+        echo "⚠️  No indexes found for logging reason columns\n";
+        echo "   Note: Indexes should have been created by the migration.\n";
+        echo "   This may impact query performance if columns are used in WHERE clauses.\n";
     } else {
         foreach ($indexes as $index) {
             echo "✅ Index '{$index['Key_name']}' on column '{$index['Column_name']}'\n";

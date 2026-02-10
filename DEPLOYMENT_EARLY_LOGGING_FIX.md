@@ -16,10 +16,12 @@ Run the early logging migration to add the missing database column.
 
 ## Deployment Steps
 
-### Prerequisites
-- Database access (MySQL/MariaDB)
+## Prerequisites
+- Database access (MySQL 8.0.19+ or MariaDB 10.4.0+)
 - Web server access with PHP
 - Backup of database (recommended)
+
+> **Note**: The migration uses `IF NOT EXISTS` syntax which requires MySQL 8.0.19+ or MariaDB 10.4.0+. If you're using an older database version, see "Manual SQL Execution for Older Databases" below.
 
 ### Option 1: Run Migration via Browser (Recommended)
 
@@ -51,7 +53,7 @@ rm run_early_logging_migration.php
 
 ### Option 3: Manual SQL Execution
 
-If you prefer to run the SQL directly:
+If you prefer to run the SQL directly (MySQL 8.0.19+ or MariaDB 10.4.0+):
 
 ```sql
 -- Add early logging reason column
@@ -63,6 +65,23 @@ AFTER late_logging_reason;
 CREATE INDEX IF NOT EXISTS idx_medication_logs_early_reason 
 ON medication_logs(early_logging_reason);
 ```
+
+### Option 4: Manual SQL for Older Database Versions
+
+If you're using MySQL < 8.0.19 or MariaDB < 10.4.0:
+
+```sql
+-- Check if column exists first, then add only if missing
+ALTER TABLE medication_logs 
+ADD COLUMN early_logging_reason VARCHAR(255) NULL 
+AFTER late_logging_reason;
+
+-- Add index (ignore error if exists)
+CREATE INDEX idx_medication_logs_early_reason 
+ON medication_logs(early_logging_reason);
+```
+
+> **Note**: On older database versions, these commands will fail if the column/index already exists. This is expected behavior - if you get "column already exists" or "duplicate key name" errors, the migration has already been applied.
 
 ---
 

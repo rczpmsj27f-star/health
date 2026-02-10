@@ -26,6 +26,7 @@ rm run_early_logging_migration.php  # Delete after running
 ```
 
 #### Option 3: Manual SQL
+Run directly in MySQL/MariaDB (requires MySQL 8.0.19+ or MariaDB 10.4.0+):
 ```sql
 ALTER TABLE medication_logs 
 ADD COLUMN IF NOT EXISTS early_logging_reason VARCHAR(255) NULL 
@@ -34,6 +35,8 @@ AFTER late_logging_reason;
 CREATE INDEX IF NOT EXISTS idx_medication_logs_early_reason 
 ON medication_logs(early_logging_reason);
 ```
+
+For older database versions, omit `IF NOT EXISTS` (will error if already exists, which is safe to ignore).
 
 ---
 

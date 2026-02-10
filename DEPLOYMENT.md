@@ -14,15 +14,24 @@ Copy the example environment file to create your local configuration:
 cp .env.example .env
 ```
 
-#### Step 2: Configure Database Credentials
+#### Step 2: Configure Database and OneSignal Credentials
 
-Edit `.env` and set your actual database credentials:
+Edit `.env` and set your actual credentials:
 
 ```env
+# Database
 DB_HOST=localhost
 DB_USER=your_database_user
 DB_PASS=your_secure_password
 DB_NAME=your_database_name
+
+# OneSignal (get from OneSignal Dashboard > Settings > Keys & IDs)
+ONESIGNAL_APP_ID=your_onesignal_app_id
+ONESIGNAL_REST_API_KEY=your_onesignal_rest_api_key
+
+# Application
+APP_ENV=production
+ENABLE_DEBUG_LOGGING=false
 ```
 
 #### Step 3: Secure the Environment File
@@ -50,6 +59,14 @@ SetEnv DB_HOST "localhost"
 SetEnv DB_USER "your_database_user"
 SetEnv DB_PASS "your_secure_password"
 SetEnv DB_NAME "your_database_name"
+
+# OneSignal credentials
+SetEnv ONESIGNAL_APP_ID "your_onesignal_app_id"
+SetEnv ONESIGNAL_REST_API_KEY "your_onesignal_rest_api_key"
+
+# Application settings
+SetEnv APP_ENV "production"
+SetEnv ENABLE_DEBUG_LOGGING "false"
 ```
 
 **Nginx (with PHP-FPM):**
@@ -59,6 +76,14 @@ location ~ \.php$ {
     fastcgi_param DB_USER "your_database_user";
     fastcgi_param DB_PASS "your_secure_password";
     fastcgi_param DB_NAME "your_database_name";
+    
+    # OneSignal credentials
+    fastcgi_param ONESIGNAL_APP_ID "your_onesignal_app_id";
+    fastcgi_param ONESIGNAL_REST_API_KEY "your_onesignal_rest_api_key";
+    
+    # Application settings
+    fastcgi_param APP_ENV "production";
+    fastcgi_param ENABLE_DEBUG_LOGGING "false";
 }
 ```
 
@@ -66,6 +91,221 @@ location ~ \.php$ {
 ```bash
 docker run -e DB_HOST=localhost -e DB_USER=user -e DB_PASS=pass -e DB_NAME=dbname ...
 ```
+
+## 🌐 Hostinger Deployment Guide
+
+This section provides step-by-step instructions specifically for deploying to Hostinger hosting.
+
+### Issue: Database Credentials Deleted on Deployment
+
+**Problem:** Every time code is deployed to Hostinger, database credentials and OneSignal API keys get overwritten, breaking the application.
+
+**Root Cause:** Deployment processes that sync files from Git will overwrite `config.php` and other configuration files with repository versions (which contain placeholder values, not production credentials).
+
+**Solution:** Use environment variables instead of hardcoded credentials in configuration files.
+
+### Hostinger Deployment Steps
+
+#### Option 1: Using .htaccess (Recommended for Hostinger)
+
+Hostinger uses Apache, so you can set environment variables via `.htaccess`:
+
+1. **Copy the example file:**
+   ```bash
+   cp .htaccess.hostinger.example .htaccess
+   ```
+   
+   Or if you already have a `.htaccess` file, add the environment variables to the top of your existing file.
+
+2. **Edit `.htaccess` with your production credentials:**
+   ```apache
+   # Database Configuration
+   SetEnv DB_HOST "localhost"
+   SetEnv DB_NAME "u123456789_health"
+   SetEnv DB_USER "u123456789_admin"
+   SetEnv DB_PASS "your_secure_production_password"
+   
+   # OneSignal Configuration
+   SetEnv ONESIGNAL_APP_ID "27f8d4d3-3a69-4a4d-8f7b-113d16763c4b"
+   SetEnv ONESIGNAL_REST_API_KEY "yos_v2_app_..."
+   
+   # Application Settings
+   SetEnv APP_ENV "production"
+   SetEnv ENABLE_DEBUG_LOGGING "false"
+   ```
+
+3. **Add `.htaccess` to `.gitignore`** to prevent committing credentials:
+   ```bash
+   echo ".htaccess" >> .gitignore
+   git add .gitignore
+   git commit -m "Ignore .htaccess with production credentials"
+   ```
+
+4. **Important:** Keep a backup of your `.htaccess` file outside the Git repository, as it will not be overwritten during deployments.
+
+#### Option 2: Using .env File on Server
+
+If you prefer using a `.env` file on Hostinger:
+
+1. **SSH into your Hostinger account** (if available on your plan)
+
+2. **Create `.env` file in your web root:**
+   ```bash
+   cd ~/public_html  # or your domain's directory
+   cp .env.example .env
+   nano .env  # or vi .env
+   ```
+
+3. **Configure with production credentials:**
+   ```env
+   DB_HOST=localhost
+   DB_NAME=u123456789_health
+   DB_USER=u123456789_admin
+   DB_PASS=your_secure_production_password
+   
+   ONESIGNAL_APP_ID=27f8d4d3-3a69-4a4d-8f7b-113d16763c4b
+   ONESIGNAL_REST_API_KEY=yos_v2_app_...
+   
+   APP_ENV=production
+   ENABLE_DEBUG_LOGGING=false
+   ```
+
+4. **Secure the file:**
+   ```bash
+   chmod 600 .env
+   ```
+
+5. **Verify `.env` is in `.gitignore`** (it already is by default)
+
+**Note:** This option requires SSH access. If you don't have SSH access on Hostinger, use Option 1 (.htaccess method).
+
+#### Option 3: Using Hostinger File Manager
+
+If you don't have SSH access:
+
+1. **Log into Hostinger Control Panel (hPanel)**
+
+2. **Navigate to File Manager**
+
+3. **Go to your website's directory** (e.g., `public_html` or domain directory)
+
+4. **Create/Edit `.htaccess`:**
+   - Click "New File" → Name it `.htaccess`
+   - Or edit existing `.htaccess`
+   - Add the `SetEnv` directives as shown in Option 1
+
+5. **Save and close**
+
+### Verifying Environment Variables
+
+After setting up environment variables, verify they're loaded correctly:
+
+1. **Create a test file** `test_env.php` in your web root:
+   ```php
+   <?php
+   // test_env.php - Delete this file after testing!
+   echo "<pre>";
+   echo "DB_HOST: " . (getenv('DB_HOST') ? '✅ Set' : '❌ Not Set') . "\n";
+   echo "DB_NAME: " . (getenv('DB_NAME') ? '✅ Set' : '❌ Not Set') . "\n";
+   echo "DB_USER: " . (getenv('DB_USER') ? '✅ Set' : '❌ Not Set') . "\n";
+   echo "DB_PASS: " . (getenv('DB_PASS') ? '✅ Set (length: ' . strlen(getenv('DB_PASS')) . ')' : '❌ Not Set') . "\n";
+   echo "ONESIGNAL_APP_ID: " . (getenv('ONESIGNAL_APP_ID') ? '✅ Set' : '❌ Not Set') . "\n";
+   echo "ONESIGNAL_REST_API_KEY: " . (getenv('ONESIGNAL_REST_API_KEY') ? '✅ Set' : '❌ Not Set') . "\n";
+   echo "</pre>";
+   ?>
+   ```
+
+2. **Visit** `https://yourdomain.com/test_env.php`
+
+3. **Verify all variables show ✅ Set**
+
+4. **DELETE the test file immediately** for security:
+   ```bash
+   rm test_env.php
+   ```
+
+### Deployment Workflow for Hostinger
+
+With environment variables properly configured, your deployment workflow becomes:
+
+1. **Make changes locally and commit to Git**
+   ```bash
+   git add .
+   git commit -m "Your changes"
+   git push origin main
+   ```
+
+2. **Deploy to Hostinger** using one of these methods:
+
+   **Method A: Git Deployment (if available on your plan)**
+   - Use Hostinger's Git deployment feature in hPanel
+   - It will pull latest code from your repository
+   - Your `.htaccess` or `.env` with credentials remains untouched
+   
+   **Method B: FTP/SFTP Upload**
+   - Upload changed files via FileZilla or similar
+   - **DO NOT** upload `.htaccess` or `.env` files from local
+   - Keep production credentials file on server only
+   
+   **Method C: File Manager**
+   - Upload files through Hostinger File Manager
+   - **DO NOT** upload `.htaccess` or `.env` files from local
+
+3. **After deployment, verify:**
+   - Application loads correctly
+   - Database connection works
+   - Push notifications work
+   - No credential errors in logs
+
+### Troubleshooting Hostinger Deployments
+
+#### Issue: "Database configuration error: Missing required environment variables"
+
+**Solution:**
+1. Check that `.htaccess` exists and has `SetEnv` directives
+2. Verify Apache mod_env is enabled (it usually is on Hostinger)
+3. Check file permissions on `.htaccess` (should be 644)
+4. Check that `.htaccess` is in the correct directory (web root)
+
+#### Issue: "OneSignal credentials not configured"
+
+**Solution:**
+1. Verify `ONESIGNAL_APP_ID` and `ONESIGNAL_REST_API_KEY` are set in `.htaccess` or `.env`
+2. Check that values are not placeholder strings
+3. Visit `/test_env.php` to verify environment variables are loaded
+
+#### Issue: Environment variables work locally but not on Hostinger
+
+**Solution:**
+1. Local development uses `.env` file, but Hostinger should use `.htaccess`
+2. Ensure `.htaccess` file exists on Hostinger server
+3. Verify mod_env is enabled: `php -i | grep -i environment`
+4. Contact Hostinger support if mod_env is disabled
+
+#### Issue: Git deployment overwrites .htaccess
+
+**Solution:**
+1. Add `.htaccess` to `.gitignore` before committing
+2. Keep a backup of `.htaccess` outside Git
+3. After Git deployment, restore `.htaccess` from backup if needed
+4. Consider using Hostinger's exclude feature if available
+
+### Security Best Practices for Hostinger
+
+✅ **DO:**
+- Use `.htaccess` method for environment variables (most reliable on shared hosting)
+- Keep different credentials for development and production
+- Set file permissions: `.htaccess` = 644, `.env` = 600
+- Add `.htaccess` and `.env` to `.gitignore`
+- Rotate passwords regularly
+- Use strong, unique passwords
+
+❌ **DON'T:**
+- Commit `.htaccess` with real credentials to Git
+- Use the same database password for dev and production
+- Leave test files like `test_env.php` on the server
+- Expose environment variables in error messages
+- Share credentials in chat/email without encryption
 
 ## PHP Dependencies (Composer)
 

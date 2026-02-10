@@ -1,0 +1,32 @@
+# Example .htaccess for Hostinger Deployment
+# This file demonstrates how to set environment variables on Apache servers like Hostinger
+# 
+# INSTRUCTIONS:
+# 1. Copy this file to .htaccess in your web root (or merge with existing .htaccess)
+# 2. Replace the placeholder values with your actual credentials
+# 3. NEVER commit this file with real credentials to Git
+
+# =================== Environment Variables ======================
+
+# Database Configuration
+# Replace these with your actual Hostinger database credentials
+SetEnv DB_HOST "localhost"
+SetEnv DB_NAME "your_database_name"
+SetEnv DB_USER "your_database_user"
+SetEnv DB_PASS "your_database_password"
+
+# OneSignal Configuration
+# Get these from OneSignal Dashboard > Settings > Keys & IDs
+# Replace with your actual OneSignal credentials
+SetEnv ONESIGNAL_APP_ID "your_onesignal_app_id"
+SetEnv ONESIGNAL_REST_API_KEY "your_onesignal_rest_api_key"
+
+# Application Settings
+SetEnv APP_ENV "production"
+SetEnv ENABLE_DEBUG_LOGGING "false"
+
+# =================== End Environment Variables ==================
+
+# NOTE: If you already have an .htaccess file with rewrite rules,
+# add the SetEnv lines above to the top of that file instead of
+# replacing it entirely.

@@ -21,6 +21,7 @@ const NOTIFICATION_TOLERANCE_MINUTES = 5; // Tolerance window for matching sched
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/NotificationService.php';
+require_once __DIR__ . '/../core/NotificationHelper.php';
 
 // Initialize notification service
 $notificationService = new NotificationService();
@@ -42,6 +43,11 @@ try {
             ml.medication_id,
             ml.user_id,
             ml.scheduled_date_time,
+            ml.notification_sent_at_time,
+            ml.notification_sent_10min,
+            ml.notification_sent_20min,
+            ml.notification_sent_30min,
+            ml.notification_sent_60min,
             m.name as medication_name,
             md.dose_amount,
             md.dose_unit,
@@ -78,24 +84,25 @@ try {
         
         // Check if we should send a notification based on user preferences
         // Note: Using tolerance to account for cron timing variations
-        if ($diffMinutes >= 0 && $diffMinutes <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_at_time']) {
-            // At scheduled time (within tolerance, not before)
+        // IMPORTANT: Also check if notification was already sent to prevent duplicates
+        if ($diffMinutes >= 0 && $diffMinutes <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_at_time'] && !$dose['notification_sent_at_time']) {
+            // At scheduled time (within tolerance, not before) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'scheduled';
-        } elseif ($diffMinutes >= (10 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (10 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_10min']) {
-            // 10 minutes after (within tolerance)
+        } elseif ($diffMinutes >= (10 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (10 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_10min'] && !$dose['notification_sent_10min']) {
+            // 10 minutes after (within tolerance) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-10';
-        } elseif ($diffMinutes >= (20 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (20 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_20min']) {
-            // 20 minutes after
+        } elseif ($diffMinutes >= (20 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (20 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_20min'] && !$dose['notification_sent_20min']) {
+            // 20 minutes after - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-20';
-        } elseif ($diffMinutes >= (30 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (30 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_30min']) {
-            // 30 minutes after
+        } elseif ($diffMinutes >= (30 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (30 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_30min'] && !$dose['notification_sent_30min']) {
+            // 30 minutes after - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-30';
-        } elseif ($diffMinutes >= (60 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (60 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_60min']) {
-            // 60 minutes after
+        } elseif ($diffMinutes >= (60 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (60 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_60min'] && !$dose['notification_sent_60min']) {
+            // 60 minutes after - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-60';
         }
@@ -126,19 +133,51 @@ try {
                 'tag' => "medication-{$dose['medication_id']}-{$scheduledTime}"
             ];
             
-            // Send notification to this user's device
-            $result = $notificationService->sendNotification(
-                [$dose['onesignal_player_id']],
-                $title,
-                $message,
-                $data
-            );
-            
-            if ($result['success']) {
+            // Use NotificationHelper to create in-app notification and send via enabled channels
+            // This will create a record in the notifications table AND send push/email based on preferences
+            $notificationHelper = new NotificationHelper($pdo);
+            try {
+                // Create in-app notification and send via channels (push/email)
+                $notificationId = $notificationHelper->create(
+                    $dose['user_id'],
+                    'medication_reminder',
+                    $title,
+                    $message,
+                    null, // no related user
+                    $dose['medication_id'],
+                    $data
+                );
+                
+                // Mark this notification type as sent in medication_logs to prevent duplicates
+                // Using switch to safely build query without SQL injection risk
+                $updateQuery = null;
+                switch ($notificationType) {
+                    case 'scheduled':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_at_time = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-10':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_10min = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-20':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_20min = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-30':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_30min = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-60':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_60min = NOW() WHERE id = ?";
+                        break;
+                }
+                
+                if ($updateQuery) {
+                    $updateStmt = $pdo->prepare($updateQuery);
+                    $updateStmt->execute([$dose['log_id']]);
+                }
+                
                 echo "[{$currentDateTime}] Sent {$notificationType} notification for {$medicationName} to user {$dose['user_id']}\n";
-            } else {
+            } catch (Exception $e) {
                 echo "[{$currentDateTime}] Failed to send notification for {$medicationName} to user {$dose['user_id']}: " . 
-                     json_encode($result['error']) . "\n";
+                     $e->getMessage() . "\n";
             }
         }
     }

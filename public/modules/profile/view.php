@@ -67,6 +67,7 @@ $user = $stmt->fetch();
             <a class="btn btn-primary" href="/modules/profile/edit.php">✏️ Edit Profile</a>
             <a class="btn btn-info" href="/modules/profile/change_password.php">🔒 Change Password</a>
             <a class="btn btn-info" href="/modules/profile/update_picture.php">📷 Update Picture</a>
+            <a class="btn btn-danger" href="/logout.php">🚪 Logout</a>
             
             <div class="page-footer">
                 <p><a href="/dashboard.php">⬅️ Back to Dashboard</a></p>

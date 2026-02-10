@@ -47,15 +47,6 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 }
 ?>
 
-<?php if ($contextShortcut): ?>
-<div class="context-shortcut-bar">
-    <a href="<?= htmlspecialchars($contextShortcut['url']) ?>" class="context-shortcut">
-        <span><?= $contextShortcut['icon'] ?></span>
-        <span><?= htmlspecialchars($contextShortcut['label']) ?></span>
-    </a>
-</div>
-<?php endif; ?>
-
 <div class="app-footer">
     <div class="footer-content">
         <a href="/dashboard.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'dashboard.php' && !isset($_GET['view'])) ? 'active' : '' ?>">
@@ -82,46 +73,17 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
             <div class="footer-icon">👤</div>
             <div class="footer-label">Profile</div>
         </a>
+        
+        <?php if ($contextShortcut): ?>
+        <a href="<?= htmlspecialchars($contextShortcut['url']) ?>" class="footer-shortcut">
+            <span><?= $contextShortcut['icon'] ?></span>
+            <span><?= htmlspecialchars($contextShortcut['label']) ?></span>
+        </a>
+        <?php endif; ?>
     </div>
 </div>
 
 <style>
-.context-shortcut-bar {
-    position: fixed;
-    bottom: 70px;
-    left: 0;
-    right: 0;
-    background: rgba(102, 126, 234, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 8px 16px;
-    z-index: 999;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: center;
-}
-
-.context-shortcut {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: white;
-    color: #667eea;
-    padding: 8px 20px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.context-shortcut:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    background: #f8f9fa;
-}
-
 .app-footer {
     position: fixed;
     bottom: 0;
@@ -140,6 +102,7 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     max-width: 1200px;
     margin: 0 auto;
     padding: 8px 0;
+    position: relative;
 }
 
 .footer-item {
@@ -193,6 +156,33 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     text-align: center;
 }
 
+.footer-shortcut {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    color: #667eea;
+    padding: 6px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    border: 2px solid #667eea;
+}
+
+.footer-shortcut:hover {
+    transform: translateY(-50%) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: #f8f9fa;
+}
+
 @media (max-width: 576px) {
     .footer-label {
         font-size: 11px;
@@ -200,6 +190,25 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     
     .footer-icon {
         font-size: 22px;
+    }
+    
+    .footer-shortcut {
+        font-size: 11px;
+        padding: 5px 12px;
+        right: 8px;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 400px) {
+    .footer-shortcut {
+        font-size: 10px;
+        padding: 4px 10px;
+        right: 4px;
+    }
+    
+    .footer-shortcut span:last-child {
+        display: none;
     }
 }
 </style>

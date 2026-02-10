@@ -159,12 +159,17 @@ try {
                 };
                 
                 if ($notificationField) {
-                    $updateStmt = $pdo->prepare("
-                        UPDATE medication_logs 
-                        SET {$notificationField} = NOW() 
-                        WHERE id = ?
-                    ");
-                    $updateStmt->execute([$dose['log_id']]);
+                    // Use prepared statement with column name validation for security
+                    $allowedFields = ['notification_sent_at_time', 'notification_sent_10min', 
+                                     'notification_sent_20min', 'notification_sent_30min', 'notification_sent_60min'];
+                    if (in_array($notificationField, $allowedFields, true)) {
+                        $updateStmt = $pdo->prepare("
+                            UPDATE medication_logs 
+                            SET {$notificationField} = NOW() 
+                            WHERE id = ?
+                        ");
+                        $updateStmt->execute([$dose['log_id']]);
+                    }
                 }
                 
                 echo "[{$currentDateTime}] Sent {$notificationType} notification for {$medicationName} to user {$dose['user_id']}\n";

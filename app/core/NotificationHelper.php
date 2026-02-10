@@ -169,6 +169,10 @@ class NotificationHelper {
             $mail->addAddress($user['email'], $user['first_name']);
             $mail->Subject = "Health Tracker: " . $title;
             
+            // Escape HTML to prevent injection
+            $titleEscaped = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+            $messageEscaped = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+            
             $body = "
             <html>
             <body style='font-family: Arial, sans-serif; padding: 20px;'>
@@ -177,8 +181,8 @@ class NotificationHelper {
                         <h2 style='margin: 0;'>💊 Health Tracker</h2>
                     </div>
                     <div style='padding: 30px;'>
-                        <h3 style='color: #374151; margin-top: 0;'>{$title}</h3>
-                        <p style='color: #4b5563; line-height: 1.6;'>{$message}</p>
+                        <h3 style='color: #374151; margin-top: 0;'>{$titleEscaped}</h3>
+                        <p style='color: #4b5563; line-height: 1.6;'>{$messageEscaped}</p>
                     </div>
                     <div style='background: #f3f4f6; padding: 20px; text-align: center;'>
                         <p style='color: #6b7280; font-size: 12px; margin: 0;'>This is an automated notification from Health Tracker.</p>

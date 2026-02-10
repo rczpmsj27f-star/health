@@ -17,6 +17,12 @@ if (empty($_SESSION['user_id'])) {
 // Check if user is admin
 $isAdmin = Auth::isAdmin();
 
+if (!$isAdmin) {
+    $_SESSION['error_msg'] = "Access denied. Admin privileges required.";
+    header("Location: /dashboard.php");
+    exit;
+}
+
 // Fetch user details for header
 $userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
 $userStmt->execute([$_SESSION['user_id']]);
@@ -36,7 +42,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medication – Health Tracker</title>
+    <title>Admin – Health Tracker</title>
     
     <!-- PWA Support -->
     <link rel="manifest" href="/manifest.json">
@@ -75,13 +81,12 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         
         @media (max-width: 576px) {
             .dashboard-grid {
-                grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
             }
         }
         
         .tile {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
             padding: 24px;
             border-radius: 10px;
             text-align: center;
@@ -125,32 +130,20 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     
     <div class="dashboard-container">
         <div class="dashboard-title">
-            <h2>Medication</h2>
+            <h2>Admin Dashboard</h2>
         </div>
         
         <div class="dashboard-grid">
-            <a class="tile" href="/modules/medications/dashboard.php">
-                <div class="tile-icon">📅</div>
-                <div class="tile-title">View Schedule</div>
-                <div class="tile-desc">See today's medications</div>
+            <a class="tile" href="/modules/admin/users.php">
+                <div class="tile-icon">👥</div>
+                <div class="tile-title">User Management</div>
+                <div class="tile-desc">Manage users and permissions</div>
             </a>
             
-            <a class="tile" href="/modules/medications/list.php">
-                <div class="tile-icon">💊</div>
-                <div class="tile-title">Manage Medications</div>
-                <div class="tile-desc">View and edit all medications</div>
-            </a>
-            
-            <a class="tile" href="/modules/medications/log_prn.php">
-                <div class="tile-icon">✏️</div>
-                <div class="tile-title">Log PRN Medication</div>
-                <div class="tile-desc">Record as-needed medications</div>
-            </a>
-            
-            <a class="tile" href="/modules/medications/activity_compliance.php">
-                <div class="tile-icon">📊</div>
-                <div class="tile-title">Activity & Compliance</div>
-                <div class="tile-desc">View reports and analytics</div>
+            <a class="tile" href="/modules/admin/dropdown_maintenance.php">
+                <div class="tile-icon">🗄️</div>
+                <div class="tile-title">Database Management</div>
+                <div class="tile-desc">Manage dropdown options</div>
             </a>
         </div>
     </div>

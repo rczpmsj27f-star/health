@@ -126,8 +126,8 @@ Hostinger uses Apache, so you can set environment variables via `.htaccess`:
    SetEnv DB_PASS "your_secure_production_password"
    
    # OneSignal Configuration
-   SetEnv ONESIGNAL_APP_ID "27f8d4d3-3a69-4a4d-8f7b-113d16763c4b"
-   SetEnv ONESIGNAL_REST_API_KEY "yos_v2_app_..."
+   SetEnv ONESIGNAL_APP_ID "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+   SetEnv ONESIGNAL_REST_API_KEY "yos_v2_app_your_rest_api_key_here"
    
    # Application Settings
    SetEnv APP_ENV "production"
@@ -163,8 +163,8 @@ If you prefer using a `.env` file on Hostinger:
    DB_USER=u123456789_admin
    DB_PASS=your_secure_production_password
    
-   ONESIGNAL_APP_ID=27f8d4d3-3a69-4a4d-8f7b-113d16763c4b
-   ONESIGNAL_REST_API_KEY=yos_v2_app_...
+   ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   ONESIGNAL_REST_API_KEY=yos_v2_app_your_rest_api_key_here
    
    APP_ENV=production
    ENABLE_DEBUG_LOGGING=false
@@ -208,7 +208,7 @@ After setting up environment variables, verify they're loaded correctly:
    echo "DB_HOST: " . (getenv('DB_HOST') ? '✅ Set' : '❌ Not Set') . "\n";
    echo "DB_NAME: " . (getenv('DB_NAME') ? '✅ Set' : '❌ Not Set') . "\n";
    echo "DB_USER: " . (getenv('DB_USER') ? '✅ Set' : '❌ Not Set') . "\n";
-   echo "DB_PASS: " . (getenv('DB_PASS') ? '✅ Set (length: ' . strlen(getenv('DB_PASS')) . ')' : '❌ Not Set') . "\n";
+   echo "DB_PASS: " . (getenv('DB_PASS') ? '✅ Set' : '❌ Not Set') . "\n";
    echo "ONESIGNAL_APP_ID: " . (getenv('ONESIGNAL_APP_ID') ? '✅ Set' : '❌ Not Set') . "\n";
    echo "ONESIGNAL_REST_API_KEY: " . (getenv('ONESIGNAL_REST_API_KEY') ? '✅ Set' : '❌ Not Set') . "\n";
    echo "</pre>";

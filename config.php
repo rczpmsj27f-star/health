@@ -6,7 +6,7 @@ if (file_exists(__DIR__ . '/.env')) {
     $env = parse_ini_file(__DIR__ . '/.env', false, INI_SCANNER_RAW);
     
     if ($env === false) {
-        error_log('Configuration warning: Failed to parse .env file. Please check the file format.');
+        error_log('Configuration warning: Failed to parse .env file. Check for syntax errors such as missing quotes, invalid characters, or incorrectly formatted lines.');
     } else {
         // Load all environment variables from .env
         foreach ($env as $key => $value) {

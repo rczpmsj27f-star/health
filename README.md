@@ -428,7 +428,7 @@ For production deployment, see the comprehensive [DEPLOYMENT.md](DEPLOYMENT.md) 
 7. **Configure CORS**: Restrict to specific domains in production
 8. **Monitor**: Set up logging and error tracking
 9. **Backup**: Regular backups of database and user data
-8. **OneSignal setup**: Complete OneSignal web push configuration for your production domain
+10. **OneSignal setup**: Complete OneSignal web push configuration for your production domain
 
 ### License
 

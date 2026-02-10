@@ -81,7 +81,6 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         
         @media (max-width: 576px) {
             .dashboard-grid {
-                grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
             }
         }

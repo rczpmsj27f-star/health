@@ -1,13 +1,36 @@
 <?php
-// ... (other configuration and PHP opening tag)
+// =================== Environment Configuration ======================
+
+// Load environment variables from .env file if it exists
+if (file_exists(__DIR__ . '/.env')) {
+    $env = parse_ini_file(__DIR__ . '/.env', false, INI_SCANNER_RAW);
+    
+    if ($env === false) {
+        error_log('Configuration warning: Failed to parse .env file. Check for syntax errors such as missing quotes, invalid characters, or incorrectly formatted lines.');
+    } else {
+        // Load all environment variables from .env
+        foreach ($env as $key => $value) {
+            // Only set if not already set in the environment
+            if (!isset($_ENV[$key])) {
+                $_ENV[$key] = $value;
+            }
+        }
+    }
+}
+
+// ================ End Environment Configuration =====================
 
 // =================== OneSignal Configuration =======================
 
 // OneSignal App ID (Safe for client-side JS - required for OneSignal SDK)
-define('ONESIGNAL_APP_ID', '27f8d4d3-3a69-4a4d-8f7b-113d16763c4b');
+// Read from environment variable or use placeholder
+$onesignalAppId = $_ENV['ONESIGNAL_APP_ID'] ?? getenv('ONESIGNAL_APP_ID');
+define('ONESIGNAL_APP_ID', $onesignalAppId ?: 'YOUR_ONESIGNAL_APP_ID');
 
 // OneSignal REST API Key (SERVER-SIDE ONLY! Never expose this to client-side JS)
-define('ONESIGNAL_REST_API_KEY', 'yos_v2_app_e74njuz2nffe3d33ce6rm5r4jobuamioediusjfadwrwiwi53chrv6zoomac3yfthlsb5ws6e4tjhpytgvqzvv5gir44qxfiznor6pi');
+// Read from environment variable or use placeholder
+$onesignalApiKey = $_ENV['ONESIGNAL_REST_API_KEY'] ?? getenv('ONESIGNAL_REST_API_KEY');
+define('ONESIGNAL_REST_API_KEY', $onesignalApiKey ?: 'YOUR_ONESIGNAL_REST_API_KEY');
 
 /**
  * Helper: Check if OneSignal credentials are configured
@@ -37,7 +60,8 @@ function onesignal_validate_config($throw_on_error = false) {
         if ($throw_on_error) {
             throw new Exception(
                 'OneSignal credentials not configured. ' .
-                'Please update config.php with your actual OneSignal App ID and REST API Key. '
+                'Please set ONESIGNAL_APP_ID and ONESIGNAL_REST_API_KEY in your .env file or environment variables. ' .
+                'See .env.example for the required format.'
             );
         }
         return false;
@@ -61,10 +85,15 @@ function onesignal_validate_config($throw_on_error = false) {
  * Disable in production to avoid performance impact and log bloat.
  * 
  * To enable:
- * 1. Set this constant to true, OR
- * 2. Set environment variable: DEBUG_MODE=true
+ * 1. Set environment variable: ENABLE_DEBUG_LOGGING=true in .env, OR
+ * 2. Set environment variable: DEBUG_MODE=true in .env
  */
-define('ENABLE_DEBUG_LOGGING', false);
+$debugEnabled = filter_var(
+    $_ENV['ENABLE_DEBUG_LOGGING'] ?? getenv('ENABLE_DEBUG_LOGGING') ?? 
+    $_ENV['DEBUG_MODE'] ?? getenv('DEBUG_MODE') ?? 'false',
+    FILTER_VALIDATE_BOOLEAN
+);
+define('ENABLE_DEBUG_LOGGING', $debugEnabled);
 
 // ================= End Debug/Logging Configuration =================
 

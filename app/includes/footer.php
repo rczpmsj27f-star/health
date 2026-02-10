@@ -47,8 +47,19 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 }
 ?>
 
+<!-- Dynamic context button - appears above footer when in sub-area -->
+<?php if ($contextShortcut): ?>
+<div class="context-button-container">
+    <a href="<?= htmlspecialchars($contextShortcut['url']) ?>" class="context-button">
+        <span><?= $contextShortcut['icon'] ?></span>
+        <span><?= htmlspecialchars($contextShortcut['label']) ?></span>
+    </a>
+</div>
+<?php endif; ?>
+
+<!-- Footer with 4 base icons -->
 <div class="app-footer">
-    <div class="footer-content <?= $contextShortcut ? 'has-context-pill' : '' ?>">
+    <div class="footer-content">
         <a href="/dashboard.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'dashboard.php' && !isset($_GET['view'])) ? 'active' : '' ?>">
             <div class="footer-icon">🏠</div>
             <div class="footer-label">Home</div>
@@ -73,17 +84,42 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
             <div class="footer-icon">👤</div>
             <div class="footer-label">Profile</div>
         </a>
-        
-        <?php if ($contextShortcut): ?>
-        <a href="<?= htmlspecialchars($contextShortcut['url']) ?>" class="footer-shortcut">
-            <span><?= $contextShortcut['icon'] ?></span>
-            <span><?= htmlspecialchars($contextShortcut['label']) ?></span>
-        </a>
-        <?php endif; ?>
     </div>
 </div>
 
 <style>
+/* Context button - positioned above footer, right-aligned */
+.context-button-container {
+    position: fixed;
+    bottom: 70px; /* Just above footer height */
+    right: 16px;
+    z-index: 999;
+}
+
+.context-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    color: #667eea;
+    padding: 8px 18px;
+    border-radius: 24px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+    border: 2px solid #667eea;
+}
+
+.context-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(102, 126, 234, 0.4);
+    background: #f8f9fa;
+}
+
+/* Footer styles */
 .app-footer {
     position: fixed;
     bottom: 0;
@@ -102,12 +138,6 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     max-width: 1200px;
     margin: 0 auto;
     padding: 8px 0;
-    position: relative;
-}
-
-.footer-content.has-context-pill {
-    justify-content: flex-start;
-    padding-right: 160px;
 }
 
 .footer-item {
@@ -161,33 +191,7 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     text-align: center;
 }
 
-.footer-shortcut {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: white;
-    color: #667eea;
-    padding: 6px 16px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
-    border: 2px solid #667eea;
-}
-
-.footer-shortcut:hover {
-    transform: translateY(-50%) translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    background: #f8f9fa;
-}
-
+/* Mobile responsive */
 @media (max-width: 576px) {
     .footer-label {
         font-size: 11px;
@@ -197,31 +201,33 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
         font-size: 22px;
     }
     
-    .footer-shortcut {
-        font-size: 11px;
-        padding: 5px 12px;
-        right: 8px;
-        gap: 4px;
+    .context-button {
+        font-size: 12px;
+        padding: 6px 14px;
     }
     
-    .footer-content.has-context-pill {
-        padding-right: 140px;
+    .context-button-container {
+        right: 12px;
+        bottom: 65px;
     }
 }
 
 @media (max-width: 400px) {
-    .footer-shortcut {
-        font-size: 10px;
-        padding: 4px 10px;
-        right: 4px;
+    .context-button {
+        font-size: 11px;
+        padding: 5px 12px;
     }
     
-    .footer-shortcut span:last-child {
-        display: none;
+    .context-button span:last-child {
+        /* Keep label visible on very small screens */
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
-    .footer-content.has-context-pill {
-        padding-right: 50px;
+    .context-button-container {
+        right: 8px;
     }
 }
 </style>

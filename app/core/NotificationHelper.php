@@ -167,9 +167,10 @@ class NotificationHelper {
             $mail = mailer();
             
             $mail->addAddress($user['email'], $user['first_name']);
+            // Note: PHPMailer's Subject header is automatically encoded/escaped by the library
             $mail->Subject = "Health Tracker: " . $title;
             
-            // Escape HTML to prevent injection
+            // Escape HTML to prevent injection in email body
             $titleEscaped = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
             $messageEscaped = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
             

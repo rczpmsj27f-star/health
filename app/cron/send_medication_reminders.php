@@ -149,27 +149,29 @@ try {
                 );
                 
                 // Mark this notification type as sent in medication_logs to prevent duplicates
-                $notificationField = match($notificationType) {
-                    'scheduled' => 'notification_sent_at_time',
-                    'reminder-10' => 'notification_sent_10min',
-                    'reminder-20' => 'notification_sent_20min',
-                    'reminder-30' => 'notification_sent_30min',
-                    'reminder-60' => 'notification_sent_60min',
-                    default => null
-                };
+                // Using switch to safely build query without SQL injection risk
+                $updateQuery = null;
+                switch ($notificationType) {
+                    case 'scheduled':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_at_time = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-10':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_10min = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-20':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_20min = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-30':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_30min = NOW() WHERE id = ?";
+                        break;
+                    case 'reminder-60':
+                        $updateQuery = "UPDATE medication_logs SET notification_sent_60min = NOW() WHERE id = ?";
+                        break;
+                }
                 
-                if ($notificationField) {
-                    // Use prepared statement with column name validation for security
-                    $allowedFields = ['notification_sent_at_time', 'notification_sent_10min', 
-                                     'notification_sent_20min', 'notification_sent_30min', 'notification_sent_60min'];
-                    if (in_array($notificationField, $allowedFields, true)) {
-                        $updateStmt = $pdo->prepare("
-                            UPDATE medication_logs 
-                            SET {$notificationField} = NOW() 
-                            WHERE id = ?
-                        ");
-                        $updateStmt->execute([$dose['log_id']]);
-                    }
+                if ($updateQuery) {
+                    $updateStmt = $pdo->prepare($updateQuery);
+                    $updateStmt->execute([$dose['log_id']]);
                 }
                 
                 echo "[{$currentDateTime}] Sent {$notificationType} notification for {$medicationName} to user {$dose['user_id']}\n";

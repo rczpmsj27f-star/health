@@ -44,7 +44,7 @@ $user = $stmt->fetch();
             </div>
 
             <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success" style="background: #efe; border: 1px solid #cfc; padding: 12px; border-radius: 6px; color: #3c3; margin-bottom: 16px;">
+                <div class="alert alert-success">
                     <?= htmlspecialchars($_SESSION['success']) ?>
                 </div>
                 <?php unset($_SESSION['success']); ?>

@@ -38,7 +38,7 @@ $user = $stmt->fetch();
         </div>
 
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger" style="background: #fee; border: 1px solid #fcc; padding: 12px; border-radius: 6px; color: #c33; margin-bottom: 16px;">
+            <div class="alert alert-error">
                 <?= htmlspecialchars($_SESSION['error']) ?>
             </div>
             <?php unset($_SESSION['error']); ?>

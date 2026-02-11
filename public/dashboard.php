@@ -62,8 +62,8 @@ foreach ($medications as $med) {
         continue;
     }
     
-    // Create deduplication key: medication_id + dose_time
-    $dedupeKey = $med['id'] . '|' . $med['dose_time'];
+    // Create deduplication key: medication_id + dose_time using hash for robustness
+    $dedupeKey = md5($med['id'] . '||' . $med['dose_time']);
     if (isset($countedDoses[$dedupeKey])) {
         // Already counted this dose, skip to avoid duplicate counting
         continue;

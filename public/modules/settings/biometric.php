@@ -251,7 +251,6 @@ unset($_SESSION['error'], $_SESSION['success']);
             </div>
         </div>
     </div>
-    </div> <!-- #main-content -->
 
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
@@ -358,5 +357,6 @@ unset($_SESSION['error'], $_SESSION['success']);
             });
         });
     </script>
+    </div> <!-- #main-content -->
 </body>
 </html>

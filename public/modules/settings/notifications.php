@@ -86,7 +86,7 @@ unset($_SESSION['success_msg']);
         
         <form method="POST" action="/modules/settings/notifications_handler.php">
             <!-- Notification Types Section (Expandable) -->
-            <div class="expandable-section expanded" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
+            <div class="expandable-section" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
                 <div class="section-header-toggle" onclick="toggleSection(this)" style="cursor: pointer; user-select: none; margin: -8px -8px 16px -8px; padding: 12px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-light);">
                     <h3 style="margin: 0; color: var(--color-primary); font-size: 18px;">📬 Notification Types</h3>
                     <span class="toggle-icon" style="font-size: 20px;">▶</span>
@@ -127,7 +127,7 @@ unset($_SESSION['success_msg']);
             </div>
             
             <!-- Medicine Reminder Frequency Section (Expandable) -->
-            <div class="expandable-section expanded" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
+            <div class="expandable-section" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
                 <div class="section-header-toggle" onclick="toggleSection(this)" style="cursor: pointer; user-select: none; margin: -8px -8px 16px -8px; padding: 12px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-light);">
                     <h3 style="margin: 0; color: var(--color-primary); font-size: 18px;">⏰ Medicine Reminder Frequency</h3>
                     <span class="toggle-icon" style="font-size: 20px;">▶</span>
@@ -468,21 +468,26 @@ unset($_SESSION['success_msg']);
     <style>
     /* Expandable section styles */
     .expandable-section .section-content {
-        max-height: 5000px;
+        max-height: 0;
         overflow: hidden;
         transition: max-height 0.3s ease;
     }
     
-    .expandable-section:not(.expanded) .section-content {
-        max-height: 0;
+    .expandable-section.expanded .section-content {
+        max-height: 5000px;
+    }
+    
+    .expandable-section .toggle-icon {
+        transition: transform 0.3s ease;
+        display: inline-block;
+    }
+    
+    .expandable-section.expanded .toggle-icon {
+        transform: rotate(90deg);
     }
     
     .section-header-toggle:hover {
         background: #e5e7eb !important;
-    }
-    
-    .toggle-icon {
-        transition: transform 0.3s ease;
     }
     
     /* Hover effect for reminder labels */

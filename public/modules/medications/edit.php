@@ -242,7 +242,7 @@ foreach ($instructions as $i) {
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Dose Amount *</label>
-                        <input type="number" step="0.01" name="dose_amount" value="<?= htmlspecialchars($dose['dose_amount']) ?>" inputmode="decimal" required>
+                        <input type="number" step="0.01" name="dose_amount" value="<?= htmlspecialchars(number_format($dose['dose_amount'], 2, '.', '')) ?>" inputmode="decimal" required>
                     </div>
 
                     <div class="form-group">

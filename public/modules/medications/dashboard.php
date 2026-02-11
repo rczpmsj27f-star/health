@@ -203,7 +203,8 @@ ksort($timedMedications);
 
 // Get PRN medications
 $stmt = $pdo->prepare("
-    SELECT m.id, m.name, m.current_stock, md.dose_amount, md.dose_unit, 
+    SELECT m.id, m.name, m.current_stock, m.icon, m.color, m.secondary_color, 
+           md.dose_amount, md.dose_unit, 
            ms.doses_per_administration, ms.max_doses_per_day, ms.min_hours_between_doses
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id

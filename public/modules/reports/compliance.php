@@ -126,6 +126,7 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div style="max-width: 1000px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
             📊 Activity & Compliance
@@ -266,6 +267,7 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
                style="color: var(--color-text-secondary);">← Back to Dashboard</a>
         </div>
     </div>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

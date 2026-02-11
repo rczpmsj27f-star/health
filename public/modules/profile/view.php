@@ -37,6 +37,7 @@ $user = $stmt->fetch();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div style="padding: 16px 16px 40px 16px; max-width: 600px; margin: 0 auto;">
         <div class="page-card">
             <div class="page-header">
@@ -90,6 +91,7 @@ $user = $stmt->fetch();
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

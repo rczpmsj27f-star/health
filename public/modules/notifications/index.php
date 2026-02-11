@@ -20,6 +20,16 @@ error_log("Notifications page - Unread count: " . $unreadCount);
 if (!empty($notifications)) {
     error_log("Notifications page - First notification: " . json_encode($notifications[0]));
 }
+
+// Direct query to verify data exists
+try {
+    $debugStmt = $pdo->prepare("SELECT COUNT(*) as total, SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread FROM notifications WHERE user_id = ?");
+    $debugStmt->execute([$_SESSION['user_id']]);
+    $debugResult = $debugStmt->fetch(PDO::FETCH_ASSOC);
+    error_log("Notifications page - Direct query total: " . $debugResult['total'] . ", unread: " . $debugResult['unread']);
+} catch (Exception $e) {
+    error_log("Notifications page - Debug query error: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html>

@@ -89,7 +89,7 @@
             <a href="/dashboard.php" class="test-link">Dashboard</a>
             <a href="/modules/medications/dashboard.php" class="test-link">Medications</a>
             <a href="/modules/profile/view.php" class="test-link">Profile</a>
-            <a href="/test_ios_black_flash.html" class="test-link">Back to Test Page</a>
+            <a href="/test_ios_black_flash.php" class="test-link">Back to Test Page</a>
         </div>
 
         <h2>Expected Behavior</h2>

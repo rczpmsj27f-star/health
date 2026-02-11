@@ -32,6 +32,18 @@ try {
         // Create session
         $_SESSION['user_id'] = $userId;
         
+        // Get user details for header caching
+        $stmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        // Cache header display info in session (one-time lookup)
+        $_SESSION['header_display_name'] = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
+        if (empty($_SESSION['header_display_name'])) {
+            $_SESSION['header_display_name'] = explode('@', $user['email'] ?? 'User')[0];
+        }
+        $_SESSION['header_avatar_url'] = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
+        
         // Note: last_biometric_login is already updated in BiometricAuth::verifyAssertion
         // Update last_login for consistency with password login
         $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$userId]);

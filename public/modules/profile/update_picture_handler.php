@@ -114,6 +114,9 @@ $path = "/uploads/profile/" . $filename;
 $stmt = $pdo->prepare("UPDATE users SET profile_picture_path = ? WHERE id = ?");
 $stmt->execute([$path, $_SESSION['user_id']]);
 
+// Refresh session header info after picture change
+$_SESSION['header_avatar_url'] = $path;
+
 $_SESSION['success'] = "Profile picture updated successfully!";
 header("Location: /profile");
 exit;

@@ -60,6 +60,18 @@ if (!$valid) {
 unset($_SESSION['pending_2fa_user_id']);
 $_SESSION['user_id'] = $userId;
 
+// Get user details for header caching
+$stmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
+$stmt->execute([$userId]);
+$user = $stmt->fetch();
+
+// Cache header display info in session (one-time lookup)
+$_SESSION['header_display_name'] = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
+if (empty($_SESSION['header_display_name'])) {
+    $_SESSION['header_display_name'] = explode('@', $user['email'] ?? 'User')[0];
+}
+$_SESSION['header_avatar_url'] = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
+
 // Update last login
 $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$userId]);
 

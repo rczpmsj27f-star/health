@@ -64,6 +64,9 @@ $stmt->execute([
     $_SESSION['user_id']
 ]);
 
+// Refresh session header info after name change
+$_SESSION['header_display_name'] = trim($firstName . ' ' . $surname);
+
 $_SESSION['success'] = "Profile updated successfully.";
 header("Location: /modules/profile/view.php");
 exit;

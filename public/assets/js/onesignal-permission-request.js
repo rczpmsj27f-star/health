@@ -2,7 +2,8 @@
  * OneSignal Permission Request for Authenticated Users
  * This script requests notification permissions ONLY after the user has logged in
  * Prevents the permission prompt from appearing on the login page
- * Only prompts once - respects user's decision (granted/denied)
+ * Only prompts once when permission is 'default' - respects user's decision (granted/denied)
+ * Handles unsupported environments gracefully
  */
 
 (function() {
@@ -13,15 +14,38 @@
     const ONESIGNAL_INIT_DELAY = 1000; // ms - delay before requesting permissions to ensure SDK is fully loaded
     const PERMISSION_CHECK_KEY = 'onesignal_permission_requested'; // LocalStorage key to track if we've already prompted
     
-    console.log('🔔 OneSignal Permission Request: Checking if running in Capacitor...');
+    console.log('🔔 OneSignal Permission Request: Checking environment...');
     
-    // Only run in Capacitor environment (native app)
-    if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform()) {
-        console.log('ℹ️ Not running in Capacitor - skipping OneSignal permission request');
-        return;
+    // Check if push notifications are supported in this environment
+    function isPushSupported() {
+        // Check for Notification API support
+        if (!('Notification' in window)) {
+            console.log('⚠️ Push notifications not supported: Notification API not available');
+            return false;
+        }
+        
+        // Check for ServiceWorker support (required for web push)
+        if (!('serviceWorker' in navigator)) {
+            console.log('⚠️ Push notifications not supported: ServiceWorker API not available');
+            return false;
+        }
+        
+        return true;
     }
     
-    console.log('📱 Running in Capacitor - checking notification permission status');
+    // Prefer Capacitor environment, but also support web browsers
+    const isCapacitor = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+    
+    if (isCapacitor) {
+        console.log('📱 Running in Capacitor native environment');
+    } else if (isPushSupported()) {
+        console.log('🌐 Running in web browser with push notification support');
+    } else {
+        console.log('⚠️ Push notifications not supported in this environment');
+        // Don't return - let OneSignal handle it gracefully
+    }
+    
+    console.log('🔔 Checking notification permission status');
     
     // Function to request OneSignal notification permissions
     async function requestOneSignalPermissions() {
@@ -44,30 +68,48 @@
                 return;
             }
             
-            // Check current permission status
+            // Check current permission status using native Notification API when available
+            if (typeof Notification !== 'undefined' && Notification.permission) {
+                const permission = Notification.permission;
+                console.log('🔔 Current notification permission status:', permission);
+                
+                if (permission === 'granted') {
+                    console.log('✅ Notification permission already granted');
+                    localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                    return;
+                } else if (permission === 'denied') {
+                    console.log('⚠️ Notification permission denied - will not prompt again');
+                    localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                    return;
+                }
+                // If permission === 'default', continue to request permission below
+            }
+            
+            // Additional check for OneSignal's permission status
             if (window.OneSignal.Notifications && window.OneSignal.Notifications.permission) {
                 const hasPermission = window.OneSignal.Notifications.permission;
                 
                 if (hasPermission) {
-                    console.log('✅ Notification permission already granted');
+                    console.log('✅ OneSignal notification permission already granted');
                     localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
                     return;
                 }
             }
             
-            // Check if permission was explicitly denied (check if we have the API)
+            // Check if user has opted out via OneSignal
             if (window.OneSignal.User && window.OneSignal.User.PushSubscription) {
                 const pushSubscription = window.OneSignal.User.PushSubscription;
                 
                 // If user has opted out or denied, don't prompt again
                 if (pushSubscription.optedIn === false) {
-                    console.log('⚠️ User has denied notification permissions - will not prompt again');
+                    console.log('⚠️ User has opted out of notifications - will not prompt again');
                     localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
                     return;
                 }
             }
             
-            console.log('🔔 Requesting notification permissions from user...');
+            // Only request if permission is 'default' (not yet decided)
+            console.log('🔔 Requesting notification permissions from user (permission status: default)...');
             
             // Request permission using OneSignal Notifications API
             if (window.OneSignal.Notifications && typeof window.OneSignal.Notifications.requestPermission === 'function') {
@@ -83,10 +125,19 @@
                 }
             } else {
                 console.log('ℹ️ OneSignal.Notifications.requestPermission not available - may already be initialized');
+                // If push is not supported, surface a message
+                if (!isPushSupported()) {
+                    console.log('⚠️ Push notifications are not supported in this environment');
+                    // Could surface a UI message here if needed
+                }
             }
             
         } catch (error) {
             console.error('❌ Error requesting OneSignal permissions:', error);
+            // Check if error is due to unsupported environment
+            if (!isPushSupported()) {
+                console.log('⚠️ Push notifications are not supported in this environment');
+            }
             // Mark as prompted even on error to avoid infinite loops
             localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
         }

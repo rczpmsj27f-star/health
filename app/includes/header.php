@@ -47,7 +47,7 @@ if (!isset($user) || !isset($displayName)) {
     right: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    z-index: 10000;
+    z-index: 10001;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 

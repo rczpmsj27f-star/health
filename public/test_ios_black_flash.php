@@ -129,7 +129,7 @@
             environmentStatus.innerHTML = `
                 <strong>✅ Capacitor Detected</strong><br>
                 Running in: ${window.Capacitor.isNativePlatform() ? 'Native App' : 'Web View'}<br>
-                Platform: ${window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'Unknown'}
+                Platform: ${window.Capacitor.getPlatform()}
             `;
 
             // Check SplashScreen plugin

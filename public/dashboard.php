@@ -69,7 +69,7 @@ foreach ($medications as $med) {
     }
     
     // Build the full scheduled datetime for today
-    $scheduledDateTime = $todayDate . ' ' . date('H:i:s', strtotime($med['dose_time']));
+    $scheduledDateTime = $todayDate . ' ' . $med['dose_time'];
     $scheduledDT = new DateTime($scheduledDateTime);
     
     // Only count as overdue if the scheduled datetime is in the past

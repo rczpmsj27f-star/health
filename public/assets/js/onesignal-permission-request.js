@@ -109,7 +109,7 @@
             }
             
             // Only request if permission is 'default' (not yet decided)
-            console.log('🔔 Requesting notification permissions from user (permission status: default)...');
+            console.log('🔔 Requesting notification permissions from user...');
             
             // Request permission using OneSignal Notifications API
             if (window.OneSignal.Notifications && typeof window.OneSignal.Notifications.requestPermission === 'function') {

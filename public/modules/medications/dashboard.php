@@ -829,13 +829,13 @@ foreach ($prnMedications as $med) {
                          onclick="toggleTimeGroup('daily-medications-parent')" 
                          style="display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; color: #374151; padding: 8px 12px; border-radius: 6px; cursor: pointer; user-select: none; font-size: 15px; font-weight: 500; border-left: 3px solid #6366f1; margin-bottom: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="toggle-icon" id="icon-daily-medications-parent" style="font-size: 14px;">►</span>
+                            <span class="toggle-icon expanded" id="icon-daily-medications-parent" style="font-size: 14px;">▶</span>
                             <strong>Daily Medications</strong>
                         </div>
                     </div>
                     
                     <!-- Daily Medications Content (expandable) -->
-                    <div class="time-group-content" id="daily-medications-parent" style="padding: 12px 0 0 20px; display: none;">
+                    <div class="time-group-content" id="daily-medications-parent" style="padding: 12px 0 0 20px; display: block;">
                         
                         <!-- DYNAMIC: Loop through all daily medication groups -->
                         <?php foreach ($dailyMedications as $groupName => $meds): ?>
@@ -849,14 +849,14 @@ foreach ($prnMedications as $med) {
                                          onclick="toggleTimeGroup('<?= $groupId ?>')" 
                                          style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; color: #4b5563; padding: 6px 10px; border-radius: 4px; cursor: pointer; user-select: none; font-size: 14px; border-left: 2px solid #a78bfa; margin: 4px 0 4px 16px;">
                                         <div style="display: flex; align-items: center; gap: 6px;">
-                                            <span class="toggle-icon" id="icon-<?= $groupId ?>" style="font-size: 12px;">►</span>
+                                            <span class="toggle-icon expanded" id="icon-<?= $groupId ?>" style="font-size: 12px;">▶</span>
                                             <span><?= htmlspecialchars($groupName) ?></span>
                                             <span style="background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; font-size: 11px;">
                                                 <?= count($meds) ?> med<?= count($meds) !== 1 ? 's' : '' ?>
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="time-group-content" id="<?= $groupId ?>" style="padding: 8px 0; display: none;">
+                                    <div class="time-group-content" id="<?= $groupId ?>" style="padding: 8px 0; display: block;">
                                         <?php foreach ($meds as $med): ?>
                                             <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
                                         <?php endforeach; ?>
@@ -917,7 +917,7 @@ foreach ($prnMedications as $med) {
                          onclick="toggleTimeGroup('<?= $groupId ?>')" 
                          style="display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; color: #374151; padding: 8px 12px; border-radius: 6px; cursor: pointer; user-select: none; font-size: 15px; font-weight: 500; border-left: 3px solid #6366f1; margin-bottom: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="toggle-icon" id="icon-<?= $groupId ?>" style="font-size: 14px;">►</span>
+                            <span class="toggle-icon expanded" id="icon-<?= $groupId ?>" style="font-size: 14px;">▶</span>
                             <strong><?= htmlspecialchars($timeDisplay) ?></strong>
                             <span style="background: #e5e7eb; color: #6b7280; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
                                 <?= $medCount ?> med<?= $medCount !== 1 ? 's' : '' ?>
@@ -931,7 +931,7 @@ foreach ($prnMedications as $med) {
                     </div>
                     
                     <!-- Time Group Content -->
-                    <div class="time-group-content" id="<?= $groupId ?>" style="padding: 8px 0; display: none;">
+                    <div class="time-group-content" id="<?= $groupId ?>" style="padding: 8px 0; display: block;">
                         <?php foreach ($meds as $med): ?>
                             <?php include __DIR__ . '/../../../app/includes/medication_item.php'; ?>
                         <?php endforeach; ?>
@@ -1131,10 +1131,10 @@ foreach ($prnMedications as $med) {
         
         if (content.style.display === 'none') {
             content.style.display = 'block';
-            icon.textContent = '▼';
+            icon.classList.add('expanded');
         } else {
             content.style.display = 'none';
-            icon.textContent = '►';
+            icon.classList.remove('expanded');
         }
     }
 

@@ -81,7 +81,7 @@ Added splash screen script to all main application pages:
 <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
 ```
 
-**Updated Pages (13 total):**
+**Updated Pages (10 total):**
 1. `public/dashboard.php`
 2. `public/login.php`
 3. `public/register.php`

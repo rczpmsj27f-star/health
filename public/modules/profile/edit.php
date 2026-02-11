@@ -40,17 +40,17 @@ $user = $stmt->fetch();
         <form method="POST" action="/modules/profile/edit_handler.php">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
+                <input type="text" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>" required>
             </div>
 
             <div class="form-group">
                 <label>First Name</label>
-                <input type="text" name="first_name" value="<?= htmlspecialchars($user['first_name']) ?>" required>
+                <input type="text" name="first_name" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>" required>
             </div>
 
             <div class="form-group">
                 <label>Surname</label>
-                <input type="text" name="surname" value="<?= htmlspecialchars($user['surname']) ?>" required>
+                <input type="text" name="surname" value="<?= htmlspecialchars($user['surname'] ?? '') ?>" required>
             </div>
 
             <button class="btn btn-accept" type="submit">Save Changes</button>

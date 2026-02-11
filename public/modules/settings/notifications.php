@@ -329,7 +329,8 @@ unset($_SESSION['success_msg']);
                 button.style.display = 'none';
                 deniedMessage.style.display = 'none';
                 
-                // Reload page after short delay to update player ID from database
+                // Reload page after short delay to fetch updated player ID from database
+                // This ensures the UI reflects the newly registered OneSignal subscription
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);

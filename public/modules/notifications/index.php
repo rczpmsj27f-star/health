@@ -25,7 +25,7 @@ $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 900px; margin: 0 auto; padding: 20px 16px 100px 16px;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px 16px 100px 16px;"> <!-- Bottom padding: action bar (60px) + footer (70px) - some overlap -->
         <div style="margin-bottom: 24px;">
             <h2 style="color: var(--color-primary); font-size: 28px; margin: 0;">🔔 Notifications</h2>
         </div>

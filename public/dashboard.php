@@ -25,17 +25,13 @@ $currentDateTime = date('Y-m-d H:i:s');
 // Query for overdue medications with special time handling
 // This query retrieves medications scheduled for today with their dose times
 $stmt = $pdo->prepare("
-    SELECT 
+    SELECT DISTINCT
         m.id, 
         mdt.dose_time, 
-        ms.special_timing,
-        ml.status
+        ms.special_timing
     FROM medications m
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
     LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
-    LEFT JOIN medication_logs ml ON m.id = ml.medication_id 
-        AND DATE(ml.scheduled_date_time) = ?
-        AND TIME(ml.scheduled_date_time) = mdt.dose_time
     WHERE m.user_id = ?
     AND (m.archived = 0 OR m.archived IS NULL)
     AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
@@ -44,7 +40,6 @@ $stmt = $pdo->prepare("
         OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE ?)
     )
     AND mdt.dose_time IS NOT NULL
-    AND (ml.status IS NULL OR ml.status = 'pending')
     AND NOT EXISTS (
         SELECT 1 FROM medication_logs ml2 
         WHERE ml2.medication_id = m.id 
@@ -53,7 +48,7 @@ $stmt = $pdo->prepare("
         AND ml2.status IN ('taken', 'skipped')
     )
 ");
-$stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
+$stmt->execute([$_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Count overdue medications - only those with scheduled_date_time in the past AND still pending

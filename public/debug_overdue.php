@@ -17,19 +17,14 @@ echo "<p><strong>Day of Week:</strong> $todayDayOfWeek</p>";
 echo "<hr>";
 
 $stmt = $pdo->prepare("
-    SELECT 
+    SELECT DISTINCT
         m.id as med_id,
         m.name as med_name,
         mdt.dose_time, 
-        ms.special_timing,
-        ml.status,
-        ml.id as log_id
+        ms.special_timing
     FROM medications m
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
     LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
-    LEFT JOIN medication_logs ml ON m.id = ml.medication_id 
-        AND DATE(ml.scheduled_date_time) = ?
-        AND TIME(ml.scheduled_date_time) = mdt.dose_time
     WHERE m.user_id = ?
     AND (m.archived = 0 OR m.archived IS NULL)
     AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
@@ -38,7 +33,6 @@ $stmt = $pdo->prepare("
         OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE ?)
     )
     AND mdt.dose_time IS NOT NULL
-    AND (ml.status IS NULL OR ml.status = 'pending')
     AND NOT EXISTS (
         SELECT 1 FROM medication_logs ml2 
         WHERE ml2.medication_id = m.id 
@@ -48,12 +42,12 @@ $stmt = $pdo->prepare("
     )
     ORDER BY mdt.dose_time
 ");
-$stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
+$stmt->execute([$_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo "<h2>Query Results (" . count($medications) . " rows)</h2>";
 echo "<table border='1' cellpadding='5'>";
-echo "<tr><th>Med ID</th><th>Name</th><th>Dose Time</th><th>Special Timing</th><th>Log Status</th><th>Log ID</th><th>Overdue?</th></tr>";
+echo "<tr><th>Med ID</th><th>Name</th><th>Dose Time</th><th>Special Timing</th><th>Overdue?</th></tr>";
 
 $overdueCount = 0;
 $currentTimeStamp = strtotime(date('H:i'));
@@ -82,8 +76,6 @@ foreach ($medications as $med) {
     echo "<td>" . htmlspecialchars($med['med_name']) . "</td>";
     echo "<td>{$med['dose_time']}</td>";
     echo "<td>" . ($med['special_timing'] ?? 'null') . "</td>";
-    echo "<td>" . ($med['status'] ?? 'null') . "</td>";
-    echo "<td>" . ($med['log_id'] ?? 'null') . "</td>";
     echo "<td style='background:" . ($isOverdue ? '#ffcccc' : '#ccffcc') . "'>";
     echo ($isOverdue ? 'YES' : 'NO') . " ($logic)";
     echo "</td>";

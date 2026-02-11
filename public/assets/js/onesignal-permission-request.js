@@ -50,6 +50,52 @@
     // Function to request OneSignal notification permissions
     async function requestOneSignalPermissions() {
         try {
+            // FIRST: Check if we're in Capacitor native environment
+            if (isCapacitor) {
+                console.log('📱 Using native Capacitor plugin for permission request');
+                
+                // Check if we've already prompted
+                const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
+                if (alreadyPrompted === 'true') {
+                    console.log('ℹ️ User has already been prompted for notification permissions - skipping');
+                    return;
+                }
+                
+                // Wait for OneSignalCapacitor to be available
+                if (!window.OneSignalCapacitor || typeof window.OneSignalCapacitor.requestPermission !== 'function') {
+                    console.log('⚠️ OneSignalCapacitor not ready - retrying...');
+                    setTimeout(requestOneSignalPermissions, ONESIGNAL_LOAD_RETRY_DELAY);
+                    return;
+                }
+                
+                // First check current permission status
+                try {
+                    const status = await window.OneSignalCapacitor.checkPermission();
+                    if (status && status.permission === true) {
+                        console.log('✅ Native notification permission already granted');
+                        localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                        return;
+                    }
+                } catch (e) {
+                    console.log('ℹ️ Could not check permission status:', e);
+                }
+                
+                // Request permission via native plugin
+                try {
+                    const accepted = await window.OneSignalCapacitor.requestPermission();
+                    localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                    if (accepted) {
+                        console.log('✅ Notification permission granted via native plugin');
+                    } else {
+                        console.log('⚠️ Notification permission denied via native plugin');
+                    }
+                } catch (e) {
+                    console.error('❌ Error requesting native permission:', e);
+                    localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                }
+                return; // Don't fall through to web SDK path
+            }
+            
             // Check if OneSignal is available
             if (typeof window.OneSignal === 'undefined') {
                 console.log('⚠️ OneSignal not available - waiting for it to load...');

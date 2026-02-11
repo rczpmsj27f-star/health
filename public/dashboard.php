@@ -62,22 +62,27 @@ $firstOverdueMedId = null;
 $currentRealDateTime = new DateTime();
 
 foreach ($medications as $med) {
-    // Note: dose_time is already validated as NOT NULL in query at line 45
-    // This check is kept as defensive programming practice
     if (empty($med['dose_time'])) {
         continue;
     }
     
-    // Build the full scheduled datetime for today
-    $scheduledDateTime = $todayDate . ' ' . $med['dose_time'];
-    $scheduledDT = new DateTime($scheduledDateTime);
+    // Handle special timing overrides
+    if ($med['special_timing'] === 'on_waking') {
+        // "On waking" medications are considered overdue after 9:00 AM
+        $effectiveTime = $todayDate . ' 09:00:00';
+    } elseif ($med['special_timing'] === 'before_bed') {
+        // "Before bed" medications are considered overdue after 10:00 PM
+        $effectiveTime = $todayDate . ' 22:00:00';
+    } else {
+        // Regular timed medications use their actual dose_time
+        $effectiveTime = $todayDate . ' ' . $med['dose_time'];
+    }
     
-    // Only count as overdue if the scheduled datetime is in the past
-    // This excludes future doses scheduled for later today
+    $scheduledDT = new DateTime($effectiveTime);
+    
+    // Only count as overdue if the effective scheduled datetime is in the past
     $isOverdue = $scheduledDT < $currentRealDateTime;
     
-    // Count if overdue - status is already filtered in query (line 46: status IS NULL OR pending)
-    // and taken medications are excluded via NOT EXISTS subquery (lines 47-53)
     if ($isOverdue) {
         $overdueCount++;
         if ($firstOverdueMedId === null) {

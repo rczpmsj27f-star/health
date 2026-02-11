@@ -113,20 +113,6 @@ body {
     padding-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom)) !important;
 }
 
-/* iOS-specific fixes for header positioning */
-@supports (-webkit-touch-callout: none) {
-    /* This targets iOS Safari specifically */
-    body {
-        padding-top: calc(var(--header-height) + env(safe-area-inset-top)) !important;
-    }
-    
-    .app-header {
-        position: -webkit-sticky;
-        position: sticky;
-        top: 0;
-    }
-}
-
 @media (max-width: 576px) {
     .header-user {
         font-size: 14px;
@@ -145,13 +131,6 @@ body {
     body {
         /* Use mobile header height variable */
         padding-top: calc(var(--header-height-mobile) + env(safe-area-inset-top)) !important;
-    }
-    
-    /* iOS-specific mobile fixes */
-    @supports (-webkit-touch-callout: none) {
-        body {
-            padding-top: calc(var(--header-height-mobile) + env(safe-area-inset-top)) !important;
-        }
     }
 }
 </style>

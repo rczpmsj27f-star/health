@@ -101,24 +101,24 @@ $history = $stmt->fetchAll();
                                 </td>
                                 <td style="padding: 12px;">
                                     <?php if ($log['status'] === 'taken'): ?>
-                                        <span style="color: #10b981; font-weight: 600;">✓ Taken</span>
+                                        <span style="color: #10b981; font-weight: 600;" aria-label="Taken">✓ Taken</span>
                                         <?php if ($log['taken_at']): ?>
                                             <br><small style="color: var(--color-text-secondary);">
                                                 at <?= $timeFormatter->formatTime($log['taken_at']) ?>
                                             </small>
                                         <?php endif; ?>
                                     <?php elseif ($log['status'] === 'skipped'): ?>
-                                        <span style="color: #ef4444; font-weight: 600;">✗ Skipped</span>
+                                        <span style="color: #ef4444; font-weight: 600;" aria-label="Skipped">✗ Skipped</span>
                                     <?php else: ?>
                                         <?php // Status is null/pending - check if future or past ?>
                                         <?php 
                                         $isToday = date('Y-m-d', strtotime($log['scheduled_date_time'])) === date('Y-m-d');
                                         if (strtotime($log['scheduled_date_time']) > $currentTime): ?>
-                                            <span style="color: #6b7280; font-weight: 600;">⊙ Pending</span>
+                                            <span style="color: #6b7280; font-weight: 600;" aria-label="Pending">⊙ Pending</span>
                                         <?php elseif ($isToday): ?>
-                                            <span style="color: #f59e0b; font-weight: 600;">⏰ Overdue</span>
+                                            <span style="color: #f59e0b; font-weight: 600;" aria-label="Overdue">⏰ Overdue</span>
                                         <?php else: ?>
-                                            <span style="color: #ef4444; font-weight: 600;">✗ Missed</span>
+                                            <span style="color: #ef4444; font-weight: 600;" aria-label="Missed">✗ Missed</span>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </td>

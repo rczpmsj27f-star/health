@@ -50,7 +50,7 @@ if ($linkedUser && $linkedUser['status'] === 'active'):
         <img src="<?= htmlspecialchars($myPic) ?>" 
              alt="My profile" 
              onerror="this.src='/assets/images/default-avatar.svg'"
-             style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid <?= !$isViewingLinked ? 'white' : 'var(--color-border)' ?>;">
+             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid <?= !$isViewingLinked ? 'white' : 'var(--color-border)' ?>;">
         My Medications
     </a>
     <a href="<?= htmlspecialchars($linkedUrl) ?>" 
@@ -58,7 +58,7 @@ if ($linkedUser && $linkedUser['status'] === 'active'):
         <img src="<?= htmlspecialchars($theirPic) ?>" 
              alt="<?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s profile" 
              onerror="this.src='/assets/images/default-avatar.svg'"
-             style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid <?= $isViewingLinked ? 'white' : 'var(--color-border)' ?>;">
+             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid <?= $isViewingLinked ? 'white' : 'var(--color-border)' ?>;">
         Manage <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Meds
     </a>
 </div>

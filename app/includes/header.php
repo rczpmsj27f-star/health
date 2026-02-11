@@ -64,8 +64,8 @@ if (!isset($user) || !isset($displayName)) {
 }
 
 .header-avatar {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     border: 3px solid white;
     object-fit: cover;
@@ -105,8 +105,8 @@ body {
     }
     
     .header-avatar {
-        width: 40px;
-        height: 40px;
+        width: 45px;
+        height: 45px;
         border-width: 2px;
     }
     

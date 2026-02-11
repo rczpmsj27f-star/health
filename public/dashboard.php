@@ -70,12 +70,13 @@ foreach ($medications as $med) {
     $doseTime = strtotime($med['dose_time']);
     $isOverdue = false;
     
-    // Apply special timing rules
-    if ($med['special_timing'] === 'on_waking') {
+    // Apply special timing rules only if special_timing is set
+    // For regular medications (no special timing), compare against actual dose time
+    if (!empty($med['special_timing']) && $med['special_timing'] === 'on_waking') {
         // Overdue after 9am
         $isOverdue = $currentTimeStamp > strtotime('09:00');
-    } elseif ($med['special_timing'] === 'before_bed') {
-        // Overdue after 10pm
+    } elseif (!empty($med['special_timing']) && $med['special_timing'] === 'before_bed') {
+        // Overdue after 10pm  
         $isOverdue = $currentTimeStamp > strtotime('22:00');
     } else {
         // Regular time - overdue after scheduled time

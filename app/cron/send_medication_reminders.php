@@ -16,7 +16,7 @@ if (php_sapi_name() !== 'cli') {
 }
 
 // Configuration constants
-const NOTIFICATION_TOLERANCE_MINUTES = 5; // Tolerance window for matching scheduled times (increased to handle cron delays)
+const NOTIFICATION_TOLERANCE_MINUTES = 1; // Tolerance window for matching scheduled times (±1 minute to handle cron timing jitter)
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../config/database.php';
@@ -83,26 +83,27 @@ try {
         $notificationType = '';
         
         // Check if we should send a notification based on user preferences
-        // Note: Using tolerance to account for cron timing variations
+        // Using exact minute matching with tolerance to ensure each notification fires only once
+        // abs($diffMinutes - targetMinutes) <= TOLERANCE matches within ±1 minute of target
         // IMPORTANT: Also check if notification was already sent to prevent duplicates
-        if ($diffMinutes >= 0 && $diffMinutes <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_at_time'] && !$dose['notification_sent_at_time']) {
-            // At scheduled time (within tolerance, not before) - only if not already sent
+        if (abs($diffMinutes - 0) <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_at_time'] && !$dose['notification_sent_at_time']) {
+            // At scheduled time (within ±1 min tolerance) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'scheduled';
-        } elseif ($diffMinutes >= (10 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (10 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_10min'] && !$dose['notification_sent_10min']) {
-            // 10 minutes after (within tolerance) - only if not already sent
+        } elseif (abs($diffMinutes - 10) <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_after_10min'] && !$dose['notification_sent_10min']) {
+            // 10 minutes after (within ±1 min tolerance) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-10';
-        } elseif ($diffMinutes >= (20 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (20 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_20min'] && !$dose['notification_sent_20min']) {
-            // 20 minutes after - only if not already sent
+        } elseif (abs($diffMinutes - 20) <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_after_20min'] && !$dose['notification_sent_20min']) {
+            // 20 minutes after (within ±1 min tolerance) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-20';
-        } elseif ($diffMinutes >= (30 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (30 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_30min'] && !$dose['notification_sent_30min']) {
-            // 30 minutes after - only if not already sent
+        } elseif (abs($diffMinutes - 30) <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_after_30min'] && !$dose['notification_sent_30min']) {
+            // 30 minutes after (within ±1 min tolerance) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-30';
-        } elseif ($diffMinutes >= (60 - NOTIFICATION_TOLERANCE_MINUTES) && $diffMinutes <= (60 + NOTIFICATION_TOLERANCE_MINUTES) && $dose['notify_after_60min'] && !$dose['notification_sent_60min']) {
-            // 60 minutes after - only if not already sent
+        } elseif (abs($diffMinutes - 60) <= NOTIFICATION_TOLERANCE_MINUTES && $dose['notify_after_60min'] && !$dose['notification_sent_60min']) {
+            // 60 minutes after (within ±1 min tolerance) - only if not already sent
             $shouldNotify = true;
             $notificationType = 'reminder-60';
         }

@@ -44,6 +44,20 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
+        <?php if (isset($_SESSION['success_msg'])): ?>
+            <div class="alert alert-success" style="margin-bottom: 16px;">
+                <?= htmlspecialchars($_SESSION['success_msg']) ?>
+            </div>
+            <?php unset($_SESSION['success_msg']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_msg'])): ?>
+            <div class="alert alert-error" style="margin-bottom: 16px;">
+                <?= htmlspecialchars($_SESSION['error_msg']) ?>
+            </div>
+            <?php unset($_SESSION['error_msg']); ?>
+        <?php endif; ?>
+        
         <div class="page-card">
         <div class="page-header">
             <h2><?= htmlspecialchars($user['username'] ?? 'Unknown User') ?></h2>
@@ -98,9 +112,14 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
                 <?= in_array("admin", $roleList) ? "Remove Admin" : "Make Admin" ?>
             </a>
 
-            <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $id ?>">
-                Force Password Reset
-            </a>
+            <!-- Force reset password form with CSRF protection -->
+            <form id="forceResetForm" method="POST" action="/modules/admin/force_reset.php" style="margin-top: 12px;">
+                <input type="hidden" name="id" value="<?= $id ?>">
+                <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
+                <button type="submit" class="btn btn-deny force-reset-btn" style="width: 100%; cursor: pointer;">
+                    Force Password Reset
+                </button>
+            </form>
             
             <!-- Delete user form with CSRF protection -->
             <form id="deleteUserForm" method="POST" action="/modules/admin/delete_user.php" style="margin-top: 12px;">
@@ -113,12 +132,27 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         </div>
 
         <div class="page-footer">
-            <p><a href="/modules/admin/users.php">Back to User Management</a></p>
+            <p><a class="btn btn-primary" href="/modules/admin/users.php" style="max-width: 300px; display: inline-block;">Back to User Management</a></p>
         </div>
     </div>
     </div>
     
     <script>
+    // Handle force password reset confirmation
+    document.querySelector('.force-reset-btn')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const confirmed = await ConfirmModal.show({
+            title: 'Force Password Reset',
+            message: 'Send password reset email to this user? They will receive an email with instructions to reset their password.',
+            confirmText: 'Send Reset Email',
+            cancelText: 'Cancel',
+            danger: false
+        });
+        if (confirmed) {
+            document.getElementById('forceResetForm').submit();
+        }
+    });
+    
     // Handle delete user confirmation
     document.querySelector('.delete-user-btn')?.addEventListener('click', async function(e) {
         e.preventDefault();

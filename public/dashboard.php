@@ -49,7 +49,7 @@ $stmt = $pdo->prepare("
         WHERE ml2.medication_id = m.id 
         AND DATE(ml2.scheduled_date_time) = ?
         AND TIME(ml2.scheduled_date_time) = mdt.dose_time
-        AND ml2.status = 'taken'
+        AND ml2.status IN ('taken', 'skipped')
     )
 ");
 $stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);

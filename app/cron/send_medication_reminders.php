@@ -112,7 +112,9 @@ try {
             $medicationName = $dose['medication_name'];
             $doseInfo = '';
             if ($dose['dose_amount'] && $dose['dose_unit']) {
-                $doseInfo = ' - ' . $dose['dose_amount'] . ' ' . $dose['dose_unit'];
+                // Format dose amount to 2 decimal places for consistency
+                $formattedAmount = number_format((float)$dose['dose_amount'], 2, '.', '');
+                $doseInfo = ' - ' . $formattedAmount . ' ' . $dose['dose_unit'];
             }
             
             if ($notificationType === 'scheduled') {

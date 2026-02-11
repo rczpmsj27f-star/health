@@ -71,7 +71,12 @@ foreach ($medications as $med) {
     } else {
         // Regular timed medications use their actual dose_time
         // Extract only the time portion to handle both time-only and full datetime formats
-        $doseTimeOnly = date('H:i:s', strtotime($med['dose_time']));
+        $timestamp = strtotime($med['dose_time']);
+        if ($timestamp === false) {
+            // Skip if dose_time is in an invalid format
+            continue;
+        }
+        $doseTimeOnly = date('H:i:s', $timestamp);
         $effectiveTime = $todayDate . ' ' . $doseTimeOnly;
     }
     

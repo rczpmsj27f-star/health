@@ -104,7 +104,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dashboard – Health Tracker</title>
     
     <!-- PWA Support -->

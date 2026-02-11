@@ -23,7 +23,7 @@ $todayDate = date('Y-m-d');
 $currentDateTime = date('Y-m-d H:i:s');
 
 // Query for overdue medications with special time handling
-// This query retrieves medications scheduled for today with their dose times
+// This query retrieves ONLY overdue medications scheduled for today
 $stmt = $pdo->prepare("
     SELECT DISTINCT
         m.id, 
@@ -32,72 +32,42 @@ $stmt = $pdo->prepare("
     FROM medications m
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
     LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
-    WHERE m.user_id = ?
+    WHERE m.user_id = :user_id
     AND (m.archived = 0 OR m.archived IS NULL)
     AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
     AND (
         ms.frequency_type = 'per_day' 
-        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE ?)
+        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE :day_of_week)
     )
     AND mdt.dose_time IS NOT NULL
     AND NOT EXISTS (
         SELECT 1 FROM medication_logs ml2 
         WHERE ml2.medication_id = m.id 
-        AND DATE(ml2.scheduled_date_time) = ?
+        AND DATE(ml2.scheduled_date_time) = :today_date
         AND TIME(ml2.scheduled_date_time) = mdt.dose_time
         AND ml2.status IN ('taken', 'skipped')
     )
+    AND (
+        (ms.special_timing = 'on_waking' AND CONCAT(:today_date, ' 09:00:00') < NOW())
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') < NOW())
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) < NOW())
+    )
+    AND (
+        (ms.special_timing = 'on_waking' AND CONCAT(:today_date, ' 09:00:00') >= m.created_at)
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') >= m.created_at)
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) >= m.created_at)
+    )
 ");
-$stmt->execute([$_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
+$stmt->execute([
+    'user_id' => $_SESSION['user_id'],
+    'day_of_week' => "%$todayDayOfWeek%",
+    'today_date' => $todayDate
+]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Count overdue medications - only those with scheduled_date_time in the past AND still pending
-$overdueCount = 0;
-$firstOverdueMedId = null;
-$currentTime = time(); // Current unix timestamp
-$countedDoses = []; // Track already-counted doses to prevent duplicates
-
-foreach ($medications as $med) {
-    if (empty($med['dose_time'])) {
-        continue;
-    }
-    
-    // Create deduplication key: medication_id + dose_time using hash for robustness
-    $dedupeKey = md5($med['id'] . '||' . $med['dose_time']);
-    if (isset($countedDoses[$dedupeKey])) {
-        // Already counted this dose, skip to avoid duplicate counting
-        continue;
-    }
-    
-    // Handle special timing overrides
-    if ($med['special_timing'] === 'on_waking') {
-        // "On waking" medications are considered overdue after 9:00 AM
-        $scheduledTimestamp = strtotime($todayDate . ' 09:00:00');
-    } elseif ($med['special_timing'] === 'before_bed') {
-        // "Before bed" medications are considered overdue after 10:00 PM
-        $scheduledTimestamp = strtotime($todayDate . ' 22:00:00');
-    } else {
-        // Regular timed medications use their actual dose_time
-        // Build the scheduled timestamp from today's date + dose_time
-        $scheduledTimestamp = strtotime($todayDate . ' ' . $med['dose_time']);
-        if ($scheduledTimestamp === false) {
-            // Skip if dose_time is in an invalid format
-            error_log("Invalid dose_time format for medication ID {$med['id']}: {$med['dose_time']}");
-            continue;
-        }
-    }
-    
-    // Use simple strtotime/time comparison (matching medication_item.php line 48)
-    $isOverdue = $scheduledTimestamp < $currentTime;
-    
-    if ($isOverdue) {
-        $overdueCount++;
-        $countedDoses[$dedupeKey] = true; // Mark as counted
-        if ($firstOverdueMedId === null) {
-            $firstOverdueMedId = $med['id'];
-        }
-    }
-}
+// Count overdue medications - query already filtered to only overdue doses
+$overdueCount = count($medications);
+$firstOverdueMedId = !empty($medications) ? $medications[0]['id'] : null;
 
 // Fetch user details for profile header (Issue #51)
 $userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");

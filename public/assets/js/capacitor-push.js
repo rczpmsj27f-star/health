@@ -23,6 +23,13 @@ function showIOSPushSection() {
 
 // Initialize push notifications for native iOS
 async function initializeNativePush() {
+    // Prevent double initialization
+    if (window.capacitorPushInitialized) {
+        console.log('Push already initialized');
+        return;
+    }
+    window.capacitorPushInitialized = true;
+
     if (!isCapacitor()) {
         console.log('Not running in Capacitor - skipping native push setup');
         return;

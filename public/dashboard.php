@@ -52,7 +52,11 @@ $stmt = $pdo->prepare("
         OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') < NOW())
         OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) < NOW())
     )
-    AND CONCAT(:today_date, ' ', mdt.dose_time) >= m.created_at
+    AND (
+        (ms.special_timing = 'on_waking' AND CONCAT(:today_date, ' 09:00:00') >= m.created_at)
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') >= m.created_at)
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) >= m.created_at)
+    )
 ");
 $stmt->execute([
     'user_id' => $_SESSION['user_id'],

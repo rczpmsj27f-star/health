@@ -109,8 +109,18 @@ foreach ($todaysMeds as $med) {
             
             // Don't show doses that were due BEFORE the medication was added
             if (!empty($med['created_at'])) {
+                // Use effective time for created_at check (matching dashboard.php logic)
+                $checkTime = $doseTime['dose_time'];
+                if (!empty($med['special_timing'])) {
+                    if ($med['special_timing'] === 'on_waking') {
+                        $checkTime = '09:00:00';
+                    } elseif ($med['special_timing'] === 'before_bed') {
+                        $checkTime = '22:00:00';
+                    }
+                }
+                
                 $createdAt = strtotime($med['created_at']);
-                $scheduledAt = strtotime($scheduledDateTime);
+                $scheduledAt = strtotime($todayDate . ' ' . $checkTime);
                 if ($scheduledAt < $createdAt) {
                     continue; // Skip this dose - medication didn't exist yet
                 }

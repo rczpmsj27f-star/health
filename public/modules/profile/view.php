@@ -50,7 +50,7 @@ $user = $stmt->fetch();
                 <?php unset($_SESSION['success']); ?>
             <?php endif; ?>
 
-            <?php if ($user['profile_picture_path']): ?>
+            <?php if (isset($user['profile_picture_path']) && !empty($user['profile_picture_path'])): ?>
                 <img src="<?= htmlspecialchars($user['profile_picture_path']) ?>" class="profile-picture" alt="Profile Picture">
             <?php else: ?>
                 <div class="profile-placeholder"></div>

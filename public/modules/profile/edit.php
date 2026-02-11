@@ -37,6 +37,13 @@ $user = $stmt->fetch();
             <p>Update your account information</p>
         </div>
 
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger" style="background: #fee; border: 1px solid #fcc; padding: 12px; border-radius: 6px; color: #c33; margin-bottom: 16px;">
+                <?= htmlspecialchars($_SESSION['error']) ?>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
         <form method="POST" action="/modules/profile/edit_handler.php">
             <div class="form-group">
                 <label>Username</label>

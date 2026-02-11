@@ -61,6 +61,26 @@ try {
         $notifyLinkedUsers
     ]);
     
+    // Save medication reminder timing settings
+    $notifyAtTime = isset($_POST['notify_at_time']) ? 1 : 0;
+    $notifyAfter10 = isset($_POST['notify_after_10min']) ? 1 : 0;
+    $notifyAfter20 = isset($_POST['notify_after_20min']) ? 1 : 0;
+    $notifyAfter30 = isset($_POST['notify_after_30min']) ? 1 : 0;
+    $notifyAfter60 = isset($_POST['notify_after_60min']) ? 1 : 0;
+
+    $notifStmt = $pdo->prepare("
+        INSERT INTO user_notification_settings 
+            (user_id, notify_at_time, notify_after_10min, notify_after_20min, notify_after_30min, notify_after_60min)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            notify_at_time = VALUES(notify_at_time),
+            notify_after_10min = VALUES(notify_after_10min),
+            notify_after_20min = VALUES(notify_after_20min),
+            notify_after_30min = VALUES(notify_after_30min),
+            notify_after_60min = VALUES(notify_after_60min)
+    ");
+    $notifStmt->execute([$userId, $notifyAtTime, $notifyAfter10, $notifyAfter20, $notifyAfter30, $notifyAfter60]);
+    
     $_SESSION['success'] = "Preferences saved successfully!";
 } catch (PDOException $e) {
     error_log("Failed to save preferences for user $userId: " . $e->getMessage());

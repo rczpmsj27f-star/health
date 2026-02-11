@@ -230,6 +230,26 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 <body>
     <?php include __DIR__ . '/../app/includes/header.php'; ?>
     
+    <!-- Push Notification Permission Banner -->
+    <div id="push-notification-banner" style="display: none; background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: start; gap: 12px;">
+            <div style="font-size: 24px;">🔔</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #92400e; margin-bottom: 4px;">Enable Push Notifications</div>
+                <div style="color: #92400e; font-size: 14px; margin-bottom: 12px;" id="push-banner-message">
+                    Get medication reminders and important alerts even when the app is closed.
+                </div>
+                <button id="enable-push-banner-btn" onclick="requestPushPermissions()" style="background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                    Enable Notifications
+                </button>
+                <button onclick="dismissPushBanner()" style="background: transparent; color: #92400e; border: 1px solid #f59e0b; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-left: 8px; font-size: 14px;">
+                    Not Now
+                </button>
+            </div>
+            <button onclick="dismissPushBanner()" style="background: none; border: none; font-size: 20px; color: #92400e; cursor: pointer; padding: 0; line-height: 1;">×</button>
+        </div>
+    </div>
+    
     <!-- OneSignal Native Plugin Only - Web SDK completely removed -->
     <!-- This app uses ONLY the native Capacitor plugin (onesignal-cordova-plugin) -->
     <!-- No conditional loading needed - native plugin works in both web and native contexts -->
@@ -238,6 +258,118 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
     <!-- Request OneSignal permissions for authenticated users only -->
     <!-- This script only runs on authenticated pages, preventing prompts on login page -->
     <script src="/assets/js/onesignal-permission-request.js?v=<?= time() ?>" defer></script>
+    
+    <script>
+    // Check push notification status and show banner if needed
+    function checkPushNotificationStatus() {
+        const banner = document.getElementById('push-notification-banner');
+        const bannerMessage = document.getElementById('push-banner-message');
+        const enableBtn = document.getElementById('enable-push-banner-btn');
+        
+        // Check if user dismissed the banner
+        if (localStorage.getItem('push_banner_dismissed') === 'true') {
+            return;
+        }
+        
+        // Check if running in Capacitor
+        const isCapacitor = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+        
+        if (isCapacitor) {
+            // Check Capacitor push notification permissions
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+                window.Capacitor.Plugins.PushNotifications.checkPermissions().then(permStatus => {
+                    if (permStatus.receive === 'granted') {
+                        console.log('✅ Push notifications already enabled');
+                    } else if (permStatus.receive === 'denied') {
+                        // Show banner with instructions to enable in system settings
+                        bannerMessage.textContent = 'Push notifications are disabled. To enable them, go to your device Settings > Notifications and allow notifications for Health Tracker.';
+                        enableBtn.style.display = 'none';
+                        banner.style.display = 'block';
+                    } else {
+                        // Permission not yet requested - show banner
+                        banner.style.display = 'block';
+                    }
+                }).catch(err => {
+                    console.log('Could not check push permissions:', err);
+                });
+            }
+        } else {
+            // Web browser - check Notification API
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    console.log('✅ Push notifications already enabled');
+                } else if (Notification.permission === 'denied') {
+                    // Show banner with instructions
+                    bannerMessage.textContent = 'Push notifications are blocked. To enable them, click the lock icon in your browser\'s address bar and allow notifications.';
+                    enableBtn.style.display = 'none';
+                    banner.style.display = 'block';
+                } else {
+                    // Permission not yet requested - show banner
+                    banner.style.display = 'block';
+                }
+            }
+        }
+    }
+    
+    // Request push permissions when user clicks the button
+    async function requestPushPermissions() {
+        const isCapacitor = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+        
+        if (isCapacitor) {
+            // Use Capacitor push notifications
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+                try {
+                    const permStatus = await window.Capacitor.Plugins.PushNotifications.requestPermissions();
+                    if (permStatus.receive === 'granted') {
+                        console.log('✅ Push notification permission granted');
+                        dismissPushBanner();
+                        // Initialize push notifications
+                        if (window.CapacitorPush && window.CapacitorPush.initialize) {
+                            window.CapacitorPush.initialize();
+                        }
+                    } else {
+                        alert('Permission denied. Please enable notifications in your device settings.');
+                    }
+                } catch (err) {
+                    console.error('Error requesting permissions:', err);
+                    alert('Failed to request notification permissions. Please try again.');
+                }
+            }
+        } else {
+            // Web browser - use Notification API or OneSignal
+            if (window.OneSignal && window.OneSignal.Notifications && 
+                typeof window.OneSignal.Notifications.requestPermission === 'function') {
+                try {
+                    const accepted = await window.OneSignal.Notifications.requestPermission();
+                    if (accepted) {
+                        console.log('✅ Notification permission granted');
+                        dismissPushBanner();
+                    } else {
+                        alert('Permission denied. Please enable notifications in your browser settings.');
+                    }
+                } catch (err) {
+                    console.error('Error requesting permissions:', err);
+                    alert('Failed to request notification permissions. Please try again.');
+                }
+            }
+        }
+    }
+    
+    // Dismiss the push notification banner
+    function dismissPushBanner() {
+        document.getElementById('push-notification-banner').style.display = 'none';
+        localStorage.setItem('push_banner_dismissed', 'true');
+    }
+    
+    // Check status when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkPushNotificationStatus, 2000);
+        });
+    } else {
+        setTimeout(checkPushNotificationStatus, 2000);
+    }
+    </script>
 
     <div class="dashboard-container">
         <div class="dashboard-title">

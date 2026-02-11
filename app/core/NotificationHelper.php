@@ -210,7 +210,8 @@ class NotificationHelper {
                 SELECT COUNT(*) as count FROM notifications 
                 WHERE user_id = ? AND is_read = 0
             ");
-            $stmt->execute([$userId]);
+            // Explicitly cast user_id to integer
+            $stmt->execute([(int)$userId]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $count = (int)($result['count'] ?? 0);
             
@@ -238,8 +239,8 @@ class NotificationHelper {
                 ORDER BY n.created_at DESC
                 LIMIT :limit
             ");
-            // Bind user_id as string/int
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            // Bind user_id as integer (explicitly cast from session)
+            $stmt->bindValue(':user_id', (int)$userId, PDO::PARAM_INT);
             // Bind limit as integer explicitly
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->execute();

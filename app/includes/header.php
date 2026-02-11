@@ -40,6 +40,13 @@ if (!isset($user) || !isset($displayName)) {
 </div>
 
 <style>
+/* Define header/footer heights as CSS variables for maintainability */
+:root {
+    --header-height: 90px;
+    --header-height-mobile: 70px;
+    --footer-height: 70px;
+}
+
 .app-header {
     position: fixed;
     top: 0;
@@ -101,16 +108,16 @@ if (!isset($user) || !isset($displayName)) {
 
 /* Add padding to body to account for fixed header */
 body {
-    /* Base padding (90px) + safe area inset for iOS notch */
-    padding-top: calc(90px + env(safe-area-inset-top)) !important;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important; /* Footer + safe area */
+    /* Use CSS variable + safe area inset for iOS notch */
+    padding-top: calc(var(--header-height) + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom)) !important;
 }
 
 /* iOS-specific fixes for header positioning */
 @supports (-webkit-touch-callout: none) {
     /* This targets iOS Safari specifically */
     body {
-        padding-top: calc(90px + env(safe-area-inset-top)) !important;
+        padding-top: calc(var(--header-height) + env(safe-area-inset-top)) !important;
     }
     
     .app-header {
@@ -136,13 +143,14 @@ body {
     }
     
     body {
-        padding-top: 70px !important;
+        /* Use mobile header height variable */
+        padding-top: calc(var(--header-height-mobile) + env(safe-area-inset-top)) !important;
     }
     
     /* iOS-specific mobile fixes */
     @supports (-webkit-touch-callout: none) {
         body {
-            padding-top: 70px !important;
+            padding-top: calc(var(--header-height-mobile) + env(safe-area-inset-top)) !important;
         }
     }
 }

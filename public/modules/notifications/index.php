@@ -43,7 +43,8 @@ try {
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 900px; margin: 0 auto; padding: 80px 16px 100px 16px;">
+    <!-- Use CSS variables from header.php for consistent spacing -->
+    <div style="max-width: 900px; margin: 0 auto; padding: calc(var(--header-height, 90px) - 10px) 16px calc(var(--footer-height, 70px) + 30px) 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <h2 style="color: var(--color-primary); font-size: 28px; margin: 0;">🔔 Notifications</h2>
         </div>
@@ -57,7 +58,7 @@ try {
         </div>
         <?php endif; ?>
         
-        <div id="notificationList" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 80px;">
+        <div id="notificationList" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: calc(var(--footer-height, 70px) + 10px);">
             <?php if (empty($notifications)): ?>
                 <div style="padding: 60px 20px; text-align: center; color: var(--color-text-secondary);">
                     <div style="font-size: 64px; margin-bottom: 16px;">🔔</div>
@@ -109,7 +110,7 @@ try {
         
         <?php if ($unreadCount > 0): ?>
         <!-- Fixed position "Mark All as Read" button above footer -->
-        <div style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: min(900px, calc(100vw - 32px)); z-index: 999;">
+        <div style="position: fixed; bottom: calc(var(--footer-height, 70px) + 10px); left: 50%; transform: translateX(-50%); width: min(900px, calc(100vw - 32px)); z-index: 999;">
             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); text-align: center;">
                 <button onclick="markAllRead()" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;">
                     Mark All as Read

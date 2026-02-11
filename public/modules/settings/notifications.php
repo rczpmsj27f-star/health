@@ -144,57 +144,110 @@ unset($_SESSION['success_msg']);
 
     // Check and display push notification permission status
     async function checkPushPermissionStatus() {
-        // Only show push section if running in Capacitor
-        if (!isCapacitor()) {
-            console.log('Not running in Capacitor - skipping push notification section');
-            return;
-        }
-
         const section = document.getElementById('push-permission-section');
         const statusElement = document.getElementById('push-permission-status');
         const button = document.getElementById('enable-push-btn');
         const deniedMessage = document.getElementById('push-denied-message');
         
-        // Show the section
-        section.style.display = 'block';
+        // Check if push notifications are supported in the browser
+        const isPushSupported = ('Notification' in window) && ('serviceWorker' in navigator);
         
-        // If we have a stored Player ID in the database, notifications are working
-        // Trust the database rather than the JavaScript permission check
-        if (storedPlayerId) {
-            console.log('✅ Player ID found in database - notifications are enabled');
-            showNotificationSettings();
+        // For Capacitor (native app) environments
+        if (isCapacitor()) {
+            console.log('Running in Capacitor - checking native push permissions');
+            section.style.display = 'block';
+            
+            // If we have a stored Player ID in the database, notifications are working
+            if (storedPlayerId) {
+                console.log('✅ Player ID found in database - notifications are enabled');
+                showNotificationSettings();
+                return;
+            }
+            
+            // For new users without a Player ID, check if we can enable notifications
+            try {
+                // Wait for OneSignal to be available
+                await waitForOneSignal();
+                
+                // Check current permission status using OneSignal User API
+                if (window.OneSignal && window.OneSignal.User) {
+                    // Check if user has push subscription
+                    const pushSubscription = window.OneSignal.User.PushSubscription;
+                    
+                    if (pushSubscription && pushSubscription.optedIn) {
+                        // User is subscribed - permissions granted
+                        showNotificationSettings();
+                    } else {
+                        // Not subscribed - show button to allow enabling
+                        statusElement.innerHTML = '⚠️ Push Notifications Not Enabled';
+                        statusElement.style.background = '#fef3c7';
+                        statusElement.style.color = '#92400e';
+                        button.style.display = 'inline-block';
+                        deniedMessage.style.display = 'none';
+                    }
+                } else {
+                    throw new Error('OneSignal.User not available');
+                }
+            } catch (error) {
+                console.error('Error checking push permission status:', error);
+                statusElement.innerHTML = '⚠️ Unable to check permission status';
+                statusElement.style.background = '#f3f4f6';
+                statusElement.style.color = '#6b7280';
+            }
             return;
         }
         
-        // For new users without a Player ID, check if we can enable notifications
-        try {
-            // Wait for OneSignal to be available
-            await waitForOneSignal();
-            
-            // Check current permission status using OneSignal User API
-            if (window.OneSignal && window.OneSignal.User) {
-                // Check if user has push subscription
-                const pushSubscription = window.OneSignal.User.PushSubscription;
-                
-                if (pushSubscription && pushSubscription.optedIn) {
-                    // User is subscribed - permissions granted
-                    showNotificationSettings();
-                } else {
-                    // Not subscribed - show button to allow enabling
-                    statusElement.innerHTML = '⚠️ Push Notifications Not Enabled';
-                    statusElement.style.background = '#fef3c7';
-                    statusElement.style.color = '#92400e';
-                    button.style.display = 'inline-block';
-                    deniedMessage.style.display = 'none';
-                }
+        // For web browsers
+        if (!isPushSupported) {
+            console.log('⚠️ Push notifications not supported in this browser');
+            section.style.display = 'block';
+            statusElement.innerHTML = '⚠️ Push Notifications Not Available';
+            statusElement.style.background = '#fef3c7';
+            statusElement.style.color = '#92400e';
+            button.style.display = 'none';
+            deniedMessage.innerHTML = '<strong>⚠️ Not Supported</strong><br>Push notifications are not supported in this browser or environment.';
+            deniedMessage.style.display = 'block';
+            return;
+        }
+        
+        // Show the section for web browsers with push support
+        section.style.display = 'block';
+        
+        // Check actual browser permission state
+        const permission = Notification.permission;
+        console.log('🔔 Browser notification permission:', permission);
+        
+        if (permission === 'granted') {
+            // Permission granted - check if we have a valid player ID
+            if (storedPlayerId) {
+                console.log('✅ Permission granted and Player ID registered');
+                showNotificationSettings();
             } else {
-                throw new Error('OneSignal.User not available');
+                // Permission granted but no player ID - may need to register
+                statusElement.innerHTML = '⚠️ Notifications Enabled (Registration Pending)';
+                statusElement.style.background = '#fef3c7';
+                statusElement.style.color = '#92400e';
+                button.style.display = 'none';
+                deniedMessage.innerHTML = '<strong>ℹ️ Registration Required</strong><br>Notification permission is granted but registration is not complete. Please reload the page or contact support if this persists.';
+                deniedMessage.style.display = 'block';
             }
-        } catch (error) {
-            console.error('Error checking push permission status:', error);
-            statusElement.innerHTML = '⚠️ Unable to check permission status';
-            statusElement.style.background = '#f3f4f6';
-            statusElement.style.color = '#6b7280';
+        } else if (permission === 'denied') {
+            // Permission explicitly denied
+            console.log('⚠️ Notification permission denied by user');
+            statusElement.innerHTML = '❌ Push Notifications Denied';
+            statusElement.style.background = '#fee2e2';
+            statusElement.style.color = '#991b1b';
+            button.style.display = 'none';
+            deniedMessage.innerHTML = '<strong>⚠️ Permission Denied</strong><br>Push notifications are disabled. To enable them, go to your browser Settings, find this site, and allow notifications.';
+            deniedMessage.style.display = 'block';
+        } else {
+            // Permission is 'default' - not yet decided
+            console.log('🔔 Notification permission is default - showing enable button');
+            statusElement.innerHTML = '⚠️ Push Notifications Not Enabled';
+            statusElement.style.background = '#fef3c7';
+            statusElement.style.color = '#92400e';
+            button.style.display = 'inline-block';
+            deniedMessage.style.display = 'none';
         }
     }
     
@@ -220,11 +273,6 @@ unset($_SESSION['success_msg']);
     
     // Enable push notifications
     async function enablePushNotifications() {
-        if (!isCapacitor()) {
-            alert('Push notifications are only available in the mobile app');
-            return;
-        }
-        
         const button = document.getElementById('enable-push-btn');
         const statusElement = document.getElementById('push-permission-status');
         const deniedMessage = document.getElementById('push-denied-message');
@@ -233,29 +281,62 @@ unset($_SESSION['success_msg']);
         button.innerHTML = '⏳ Requesting Permission...';
         
         try {
-            // Use OneSignalCapacitor bridge to request permission
-            if (window.OneSignalCapacitor && typeof window.OneSignalCapacitor.requestPermission === 'function') {
-                console.log('Requesting OneSignal permission...');
-                const accepted = await window.OneSignalCapacitor.requestPermission();
-                
-                console.log('Permission request result:', accepted);
-                
-                // Update UI based on result
-                if (accepted) {
-                    statusElement.innerHTML = '✅ Push Notifications Enabled';
-                    statusElement.style.background = '#d1fae5';
-                    statusElement.style.color = '#065f46';
-                    button.style.display = 'none';
-                    deniedMessage.style.display = 'none';
+            // Handle Capacitor (native app)
+            if (isCapacitor()) {
+                // Use OneSignalCapacitor bridge to request permission
+                if (window.OneSignalCapacitor && typeof window.OneSignalCapacitor.requestPermission === 'function') {
+                    console.log('Requesting OneSignal permission...');
+                    const accepted = await window.OneSignalCapacitor.requestPermission();
+                    
+                    console.log('Permission request result:', accepted);
+                    
+                    // Update UI based on result
+                    if (accepted) {
+                        statusElement.innerHTML = '✅ Push Notifications Enabled';
+                        statusElement.style.background = '#d1fae5';
+                        statusElement.style.color = '#065f46';
+                        button.style.display = 'none';
+                        deniedMessage.style.display = 'none';
+                    } else {
+                        statusElement.innerHTML = '❌ Push Notifications Disabled';
+                        statusElement.style.background = '#fee2e2';
+                        statusElement.style.color = '#991b1b';
+                        button.style.display = 'none';
+                        deniedMessage.innerHTML = '<strong>⚠️ Permission Denied</strong><br>Push notifications are disabled. To enable them, go to your device Settings, find this app, tap Notifications, and allow notifications.';
+                        deniedMessage.style.display = 'block';
+                    }
                 } else {
-                    statusElement.innerHTML = '❌ Push Notifications Disabled';
-                    statusElement.style.background = '#fee2e2';
-                    statusElement.style.color = '#991b1b';
-                    button.style.display = 'none';
-                    deniedMessage.style.display = 'block';
+                    throw new Error('OneSignalCapacitor.requestPermission not available');
                 }
             } else {
-                throw new Error('OneSignalCapacitor.requestPermission not available');
+                // Handle web browser
+                // Wait for OneSignal to be available
+                await waitForOneSignal();
+                
+                if (window.OneSignal && window.OneSignal.Notifications && 
+                    typeof window.OneSignal.Notifications.requestPermission === 'function') {
+                    console.log('Requesting browser notification permission...');
+                    const accepted = await window.OneSignal.Notifications.requestPermission();
+                    
+                    console.log('Permission request result:', accepted);
+                    
+                    if (accepted) {
+                        statusElement.innerHTML = '✅ Push Notifications Enabled';
+                        statusElement.style.background = '#d1fae5';
+                        statusElement.style.color = '#065f46';
+                        button.style.display = 'none';
+                        deniedMessage.style.display = 'none';
+                    } else {
+                        statusElement.innerHTML = '❌ Push Notifications Disabled';
+                        statusElement.style.background = '#fee2e2';
+                        statusElement.style.color = '#991b1b';
+                        button.style.display = 'none';
+                        deniedMessage.innerHTML = '<strong>⚠️ Permission Denied</strong><br>Push notifications are disabled. To enable them, go to your browser Settings, find this site, and allow notifications.';
+                        deniedMessage.style.display = 'block';
+                    }
+                } else {
+                    throw new Error('OneSignal.Notifications.requestPermission not available');
+                }
             }
         } catch (error) {
             console.error('Error enabling push notifications:', error);

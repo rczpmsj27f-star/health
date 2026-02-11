@@ -210,9 +210,15 @@ class NotificationHelper {
                 SELECT COUNT(*) as count FROM notifications 
                 WHERE user_id = ? AND is_read = 0
             ");
-            $stmt->execute([$userId]);
-            $result = $stmt->fetch();
-            return (int)($result['count'] ?? 0);
+            // Explicitly cast user_id to integer
+            $stmt->execute([(int)$userId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $count = (int)($result['count'] ?? 0);
+            
+            // Debug logging
+            error_log("NotificationHelper::getUnreadCount - User ID: $userId, Count: $count");
+            
+            return $count;
         } catch (PDOException $e) {
             error_log("NotificationHelper::getUnreadCount error: " . $e->getMessage());
             return 0;
@@ -229,12 +235,21 @@ class NotificationHelper {
                 FROM notifications n
                 LEFT JOIN users u ON n.related_user_id = u.id
                 LEFT JOIN medications m ON n.related_medication_id = m.id
-                WHERE n.user_id = ?
+                WHERE n.user_id = :user_id
                 ORDER BY n.created_at DESC
-                LIMIT ?
+                LIMIT :limit
             ");
-            $stmt->execute([$userId, $limit]);
-            return $stmt->fetchAll();
+            // Bind user_id as integer (explicitly cast from session)
+            $stmt->bindValue(':user_id', (int)$userId, PDO::PARAM_INT);
+            // Bind limit as integer explicitly
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug logging
+            error_log("NotificationHelper::getRecent - User ID: $userId, Limit: $limit, Results: " . count($results));
+            
+            return $results;
         } catch (PDOException $e) {
             error_log("NotificationHelper::getRecent error: " . $e->getMessage());
             return [];

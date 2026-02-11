@@ -63,7 +63,7 @@ foreach ($medications as $med) {
     }
     
     // Create deduplication key: medication_id + dose_time
-    $dedupeKey = $med['id'] . '_' . $med['dose_time'];
+    $dedupeKey = $med['id'] . '|' . $med['dose_time'];
     if (isset($countedDoses[$dedupeKey])) {
         // Already counted this dose, skip to avoid duplicate counting
         continue;
@@ -80,6 +80,11 @@ foreach ($medications as $med) {
         // Regular timed medications use their actual dose_time
         // Build the scheduled timestamp from today's date + dose_time
         $scheduledTimestamp = strtotime($todayDate . ' ' . $med['dose_time']);
+        if ($scheduledTimestamp === false) {
+            // Skip if dose_time is in an invalid format
+            error_log("Invalid dose_time format for medication ID {$med['id']}: {$med['dose_time']}");
+            continue;
+        }
     }
     
     // Use simple strtotime/time comparison (matching medication_item.php line 48)

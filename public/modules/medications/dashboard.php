@@ -107,6 +107,15 @@ foreach ($todaysMeds as $med) {
         foreach ($doseTimes as $doseTime) {
             $scheduledDateTime = $todayDate . ' ' . date('H:i:s', strtotime($doseTime['dose_time']));
             
+            // Don't show doses that were due BEFORE the medication was added
+            if (!empty($med['created_at'])) {
+                $createdAt = strtotime($med['created_at']);
+                $scheduledAt = strtotime($scheduledDateTime);
+                if ($scheduledAt < $createdAt) {
+                    continue; // Skip this dose - medication didn't exist yet
+                }
+            }
+            
             // Keep past doses visible - they should show as overdue with Take/Skip buttons
             $logKey = $med['id'] . '_' . $scheduledDateTime;
             

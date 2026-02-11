@@ -53,9 +53,16 @@ class AjaxNavigation {
         if (link.hasAttribute('data-no-ajax')) return false;
         
         // Only intercept internal links to AJAX-enabled pages
-        const url = new URL(link.href, window.location.origin);
-        return url.origin === window.location.origin && 
-               this.ajaxPages.some(page => url.pathname.includes(page));
+        try {
+            const url = new URL(link.href, window.location.origin);
+            if (url.origin !== window.location.origin) return false;
+            
+            // Use exact path matching to avoid false positives
+            return this.ajaxPages.some(page => url.pathname === page || url.pathname.endsWith(page));
+        } catch (e) {
+            // Invalid URL, don't intercept
+            return false;
+        }
     }
 
     async loadPage(url, updateHistory = true) {
@@ -84,9 +91,17 @@ class AjaxNavigation {
             // Fade out current content
             await this.fadeOut();
 
-            // Replace content
+            // Replace content safely
             const container = document.querySelector(this.contentSelector);
-            container.innerHTML = newContent.innerHTML;
+            // Clear existing content first
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            // Clone and append new content nodes
+            Array.from(newContent.childNodes).forEach(node => {
+                container.appendChild(node.cloneNode(true));
+            });
+            
             document.title = newTitle;
 
             // Update URL
@@ -132,11 +147,28 @@ class AjaxNavigation {
     }
 
     reinitializeScripts() {
-        // Re-run any page-specific JavaScript
-        // Forms, modals, tooltips, etc.
+        // Re-run any page-specific JavaScript initialization function
         if (typeof initPageScripts === 'function') {
             initPageScripts();
         }
+        
+        // Execute inline scripts from the new content
+        // Note: Scripts with src attributes won't re-execute automatically
+        const container = document.querySelector(this.contentSelector);
+        const scripts = container.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            // Copy attributes
+            Array.from(oldScript.attributes).forEach(attr => {
+                newScript.setAttribute(attr.name, attr.value);
+            });
+            // Copy inline script content
+            if (!oldScript.src) {
+                newScript.textContent = oldScript.textContent;
+            }
+            // Replace old script with new one to trigger execution
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
     }
 }
 

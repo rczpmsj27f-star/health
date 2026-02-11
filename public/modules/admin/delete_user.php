@@ -44,7 +44,12 @@ if (!$user) {
 // NOTE: This assumes the database has proper CASCADE DELETE constraints configured
 // for related records (user_role_map, password_resets, etc.). If CASCADE constraints
 // are not set up, this will fail or leave orphaned records. Verify schema before use.
-$pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
+try {
+    $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
+    $_SESSION['success_msg'] = "User " . htmlspecialchars($user['username']) . " has been deleted successfully.";
+} catch (Exception $e) {
+    $_SESSION['error_msg'] = "Failed to delete user: " . $e->getMessage();
+}
 
 // Redirect back to users list
 header("Location: /modules/admin/users.php");

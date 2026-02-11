@@ -2,6 +2,7 @@
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/core/TimeFormatter.php";
+require_once "../../../app/helpers/security.php";
 Auth::requireAdmin();
 
 // Initialize TimeFormatter - admins see their own time preferences
@@ -57,6 +58,7 @@ $users = $stmt->fetchAll();
     <title>Admin – Users</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>" defer></script>
     <style>
         .page-content {
             max-width: 1200px;
@@ -277,6 +279,20 @@ $users = $stmt->fetchAll();
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="page-content">
+        <?php if (isset($_SESSION['success_msg'])): ?>
+            <div class="alert alert-success" style="max-width: 1200px; margin: 0 auto 12px;">
+                <?= htmlspecialchars($_SESSION['success_msg']) ?>
+            </div>
+            <?php unset($_SESSION['success_msg']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_msg'])): ?>
+            <div class="alert alert-error" style="max-width: 1200px; margin: 0 auto 12px;">
+                <?= htmlspecialchars($_SESSION['error_msg']) ?>
+            </div>
+            <?php unset($_SESSION['error_msg']); ?>
+        <?php endif; ?>
+        
         <div class="page-title">
             <h2>User Management</h2>
             <p>Search and manage system users</p>
@@ -315,7 +331,7 @@ $users = $stmt->fetchAll();
                             </div>
                             <div class="action-buttons">
                                 <a class="btn btn-info" href="/modules/admin/view_user.php?id=<?= $u['id'] ?>" aria-label="View details for <?= htmlspecialchars($u['username']) ?>">View</a>
-                                <a class="btn btn-orange btn-reset-password" href="/modules/admin/force_reset.php?id=<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Reset password for <?= htmlspecialchars($u['username']) ?>">Reset PW</a>
+                                <button class="btn btn-orange btn-reset-password" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Reset password for <?= htmlspecialchars($u['username']) ?>">Reset PW</button>
                                 <button class="btn btn-deny btn-delete-user" data-user-id="<?= $u['id'] ?>" data-username="<?= htmlspecialchars($u['username']) ?>" aria-label="Delete user <?= htmlspecialchars($u['username']) ?>">Delete</button>
                             </div>
                         </div>
@@ -344,24 +360,55 @@ $users = $stmt->fetchAll();
         <?php endif; ?>
 
         <div class="page-footer">
-            <p><a class="btn btn-info" href="/dashboard.php" style="max-width: 300px; display: inline-block;">Back to Dashboard</a></p>
+            <p><a class="btn btn-primary" href="/dashboard.php" style="max-width: 300px; display: inline-block;">Back to Dashboard</a></p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Reset password confirmation
+            // Reset password confirmation and POST request
             document.querySelectorAll('.btn-reset-password').forEach(btn => {
                 btn.addEventListener('click', async function(e) {
                     e.preventDefault();
+                    const userId = this.dataset.userId;
                     const username = this.dataset.username;
-                    const confirmed = await confirmAction(
-                        'Force password reset for ' + username + '?',
-                        'Reset Password'
-                    );
-                    if (confirmed) {
-                        window.location.href = this.href;
+                    
+                    const confirmed = await ConfirmModal.show({
+                        title: 'Force Password Reset',
+                        message: 'Send password reset email to ' + username + '?',
+                        confirmText: 'Send Reset Email',
+                        cancelText: 'Cancel',
+                        danger: false
+                    });
+                    
+                    if (!confirmed) {
+                        return;
                     }
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/modules/admin/force_reset.php';
+
+                    const idInput = document.createElement('input');
+                    idInput.type = 'hidden';
+                    idInput.name = 'id';
+                    idInput.value = userId;
+
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = '<?= generate_csrf_token() ?>';
+
+                    const redirectInput = document.createElement('input');
+                    redirectInput.type = 'hidden';
+                    redirectInput.name = 'redirect';
+                    redirectInput.value = 'users';
+
+                    form.appendChild(idInput);
+                    form.appendChild(csrfInput);
+                    form.appendChild(redirectInput);
+                    document.body.appendChild(form);
+                    form.submit();
                 });
             });
 
@@ -387,12 +434,18 @@ $users = $stmt->fetchAll();
                     form.method = 'POST';
                     form.action = '/modules/admin/delete_user.php';
 
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'id';
-                    input.value = userId;
+                    const idInput = document.createElement('input');
+                    idInput.type = 'hidden';
+                    idInput.name = 'id';
+                    idInput.value = userId;
 
-                    form.appendChild(input);
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = '<?= generate_csrf_token() ?>';
+
+                    form.appendChild(idInput);
+                    form.appendChild(csrfInput);
                     document.body.appendChild(form);
                     form.submit();
                 });

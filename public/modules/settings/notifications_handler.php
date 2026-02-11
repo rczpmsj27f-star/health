@@ -35,6 +35,35 @@ foreach ($_POST as $key => $value) {
 }
 
 $notificationHelper->savePreferences($_SESSION['user_id'], $preferences);
+
+// Save reminder frequency settings
+$reminderSettings = [
+    'notify_at_time' => isset($_POST['notify_at_time']) ? 1 : 0,
+    'notify_after_10min' => isset($_POST['notify_after_10min']) ? 1 : 0,
+    'notify_after_20min' => isset($_POST['notify_after_20min']) ? 1 : 0,
+    'notify_after_30min' => isset($_POST['notify_after_30min']) ? 1 : 0,
+    'notify_after_60min' => isset($_POST['notify_after_60min']) ? 1 : 0
+];
+
+// Update user_notification_settings table with reminder preferences
+$stmt = $pdo->prepare("
+    UPDATE user_notification_settings 
+    SET notify_at_time = ?, 
+        notify_after_10min = ?, 
+        notify_after_20min = ?, 
+        notify_after_30min = ?, 
+        notify_after_60min = ?
+    WHERE user_id = ?
+");
+$stmt->execute([
+    $reminderSettings['notify_at_time'],
+    $reminderSettings['notify_after_10min'],
+    $reminderSettings['notify_after_20min'],
+    $reminderSettings['notify_after_30min'],
+    $reminderSettings['notify_after_60min'],
+    $_SESSION['user_id']
+]);
+
 $_SESSION['success_msg'] = "Notification preferences saved successfully!";
 
 header("Location: /modules/settings/notifications.php");

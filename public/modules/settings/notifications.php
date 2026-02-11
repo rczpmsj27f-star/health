@@ -12,12 +12,21 @@ if (empty($_SESSION['user_id'])) {
 $notificationHelper = new NotificationHelper($pdo);
 $preferences = $notificationHelper->getPreferences($_SESSION['user_id']);
 
-// Fetch OneSignal Player ID from database to check if notifications are already enabled
-$stmt = $pdo->prepare("SELECT onesignal_player_id FROM user_notification_settings WHERE user_id = ?");
+// Fetch OneSignal Player ID and reminder settings from database
+$stmt = $pdo->prepare("SELECT onesignal_player_id, notify_at_time, notify_after_10min, notify_after_20min, notify_after_30min, notify_after_60min FROM user_notification_settings WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
-// Use empty array as fallback when no row exists - both cases (no row, null value) result in null $storedPlayerId
-$playerIdRow = $stmt->fetch() ?: [];
-$storedPlayerId = $playerIdRow['onesignal_player_id'] ?? null;
+// Use empty array as fallback when no row exists
+$settingsRow = $stmt->fetch() ?: [];
+$storedPlayerId = $settingsRow['onesignal_player_id'] ?? null;
+
+// Reminder settings with defaults
+$reminderSettings = [
+    'notify_at_time' => $settingsRow['notify_at_time'] ?? 1,
+    'notify_after_10min' => $settingsRow['notify_after_10min'] ?? 1,
+    'notify_after_20min' => $settingsRow['notify_after_20min'] ?? 1,
+    'notify_after_30min' => $settingsRow['notify_after_30min'] ?? 1,
+    'notify_after_60min' => $settingsRow['notify_after_60min'] ?? 0
+];
 
 // Default notification types
 $notificationTypes = [
@@ -76,38 +85,100 @@ unset($_SESSION['success_msg']);
         </div>
         
         <form method="POST" action="/modules/settings/notifications_handler.php">
-            <div style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid var(--color-bg-light);">
-                            <th style="text-align: left; padding: 12px;">Notification Type</th>
-                            <th style="text-align: center; padding: 12px; width: 100px;">In-App</th>
-                            <th style="text-align: center; padding: 12px; width: 100px;">Push</th>
-                            <th style="text-align: center; padding: 12px; width: 100px;">Email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($notificationTypes as $type => $label): 
-                            $pref = $preferences[$type] ?? ['in_app' => 1, 'push' => 1, 'email' => 0];
-                        ?>
-                        <tr style="border-bottom: 1px solid var(--color-bg-light);">
-                            <td style="padding: 12px;"><?= htmlspecialchars($label) ?></td>
-                            <td style="text-align: center; padding: 12px;">
-                                <input type="checkbox" name="<?= $type ?>[in_app]" value="1" 
-                                       <?= $pref['in_app'] ? 'checked' : '' ?>>
-                            </td>
-                            <td style="text-align: center; padding: 12px;">
-                                <input type="checkbox" name="<?= $type ?>[push]" value="1" 
-                                       <?= $pref['push'] ? 'checked' : '' ?>>
-                            </td>
-                            <td style="text-align: center; padding: 12px;">
-                                <input type="checkbox" name="<?= $type ?>[email]" value="1" 
-                                       <?= $pref['email'] ? 'checked' : '' ?>>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <!-- Notification Types Section (Expandable) -->
+            <div class="expandable-section expanded" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
+                <div class="section-header-toggle" onclick="toggleSection(this)" style="cursor: pointer; user-select: none; margin: -8px -8px 16px -8px; padding: 12px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-light);">
+                    <h3 style="margin: 0; color: var(--color-primary); font-size: 18px;">📬 Notification Types</h3>
+                    <span class="toggle-icon" style="font-size: 20px;">▼</span>
+                </div>
+                <div class="section-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--color-bg-light);">
+                                <th style="text-align: left; padding: 12px;">Notification Type</th>
+                                <th style="text-align: center; padding: 12px; width: 100px;">In-App</th>
+                                <th style="text-align: center; padding: 12px; width: 100px;">Push</th>
+                                <th style="text-align: center; padding: 12px; width: 100px;">Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($notificationTypes as $type => $label): 
+                                $pref = $preferences[$type] ?? ['in_app' => 1, 'push' => 1, 'email' => 0];
+                            ?>
+                            <tr style="border-bottom: 1px solid var(--color-bg-light);">
+                                <td style="padding: 12px;"><?= htmlspecialchars($label) ?></td>
+                                <td style="text-align: center; padding: 12px;">
+                                    <input type="checkbox" name="<?= $type ?>[in_app]" value="1" 
+                                           <?= $pref['in_app'] ? 'checked' : '' ?>>
+                                </td>
+                                <td style="text-align: center; padding: 12px;">
+                                    <input type="checkbox" name="<?= $type ?>[push]" value="1" 
+                                           <?= $pref['push'] ? 'checked' : '' ?>>
+                                </td>
+                                <td style="text-align: center; padding: 12px;">
+                                    <input type="checkbox" name="<?= $type ?>[email]" value="1" 
+                                           <?= $pref['email'] ? 'checked' : '' ?>>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Medicine Reminder Frequency Section (Expandable) -->
+            <div class="expandable-section expanded" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
+                <div class="section-header-toggle" onclick="toggleSection(this)" style="cursor: pointer; user-select: none; margin: -8px -8px 16px -8px; padding: 12px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-light);">
+                    <h3 style="margin: 0; color: var(--color-primary); font-size: 18px;">⏰ Medicine Reminder Frequency</h3>
+                    <span class="toggle-icon" style="font-size: 20px;">▼</span>
+                </div>
+                <div class="section-content">
+                    <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px;">
+                        Choose when you want to receive medication reminders. You can enable multiple reminder times to ensure you don't miss a dose.
+                    </p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--color-bg-light); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                            <input type="checkbox" name="notify_at_time" value="1" <?= $reminderSettings['notify_at_time'] ? 'checked' : '' ?> style="margin-top: 2px;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 4px;">At scheduled time</strong>
+                                <span style="font-size: 14px; color: var(--color-text-secondary);">Send reminder at the exact scheduled medication time</span>
+                            </div>
+                        </label>
+                        
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--color-bg-light); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                            <input type="checkbox" name="notify_after_10min" value="1" <?= $reminderSettings['notify_after_10min'] ? 'checked' : '' ?> style="margin-top: 2px;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 4px;">10 minutes after (if not taken)</strong>
+                                <span style="font-size: 14px; color: var(--color-text-secondary);">Send reminder 10 minutes after scheduled time if medication not taken</span>
+                            </div>
+                        </label>
+                        
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--color-bg-light); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                            <input type="checkbox" name="notify_after_20min" value="1" <?= $reminderSettings['notify_after_20min'] ? 'checked' : '' ?> style="margin-top: 2px;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 4px;">20 minutes after (if not taken)</strong>
+                                <span style="font-size: 14px; color: var(--color-text-secondary);">Send reminder 20 minutes after scheduled time if medication not taken</span>
+                            </div>
+                        </label>
+                        
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--color-bg-light); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                            <input type="checkbox" name="notify_after_30min" value="1" <?= $reminderSettings['notify_after_30min'] ? 'checked' : '' ?> style="margin-top: 2px;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 4px;">30 minutes after (if not taken)</strong>
+                                <span style="font-size: 14px; color: var(--color-text-secondary);">Send reminder 30 minutes after scheduled time if medication not taken</span>
+                            </div>
+                        </label>
+                        
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--color-bg-light); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                            <input type="checkbox" name="notify_after_60min" value="1" <?= $reminderSettings['notify_after_60min'] ? 'checked' : '' ?> style="margin-top: 2px;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 4px;">60 minutes after (if not taken)</strong>
+                                <span style="font-size: 14px; color: var(--color-text-secondary);">Send reminder 60 minutes after scheduled time if medication not taken</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary" style="margin-top: 20px; width: 100%; padding: 16px;">
@@ -380,7 +451,48 @@ unset($_SESSION['success_msg']);
     } else {
         initializePushSection(0);
     }
+    
+    // Toggle expandable sections
+    function toggleSection(header) {
+        const section = header.closest('.expandable-section');
+        const content = section.querySelector('.section-content');
+        const icon = header.querySelector('.toggle-icon');
+        
+        section.classList.toggle('expanded');
+        
+        if (section.classList.contains('expanded')) {
+            icon.textContent = '▼';
+        } else {
+            icon.textContent = '▶';
+        }
+    }
     </script>
+    
+    <style>
+    /* Expandable section styles */
+    .expandable-section .section-content {
+        max-height: 2000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .expandable-section:not(.expanded) .section-content {
+        max-height: 0;
+    }
+    
+    .section-header-toggle:hover {
+        background: #e5e7eb !important;
+    }
+    
+    .toggle-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    /* Hover effect for reminder labels */
+    label:has(input[type="checkbox"]):hover {
+        background: #e5e7eb !important;
+    }
+    </style>
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

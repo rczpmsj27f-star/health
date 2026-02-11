@@ -36,6 +36,7 @@ $doseTimes = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($medication['name']) ?> - Details</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/confirm-modal.js?v=<?= time() ?>"></script>
 </head>

@@ -250,6 +250,9 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         </div>
     </div>
     
+    <!-- Capacitor Splash Screen Handler -->
+    <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
+    
     <!-- OneSignal Native Plugin Only - Web SDK completely removed -->
     <!-- This app uses ONLY the native Capacitor plugin (onesignal-cordova-plugin) -->
     <!-- No conditional loading needed - native plugin works in both web and native contexts -->

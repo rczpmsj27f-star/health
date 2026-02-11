@@ -287,6 +287,7 @@ foreach ($prnMedications as $med) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medication Dashboard</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/medication-icons.js?v=<?= time() ?>"></script>

@@ -56,11 +56,8 @@ if (!isset($user) || !isset($displayName)) {
     color: white;
     z-index: 10001;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    /* iOS Safari fixes for fixed positioning */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    /* Modern GPU compositing without breaking position:fixed in iOS WebView */
+    will-change: transform;
     /* Extend background into safe area (iOS notch/status bar) */
     padding-top: env(safe-area-inset-top);
 }

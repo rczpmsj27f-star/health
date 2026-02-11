@@ -20,17 +20,16 @@ if ($username === '' || $firstName === '' || $surname === '') {
     exit;
 }
 
-// Validate username (3-50 characters, alphanumeric start/end, allows underscores/hyphens in middle)
-// Pattern allows: 3 chars (e.g., "abc"), up to 50 chars with special chars in middle
-if (!preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9_-]{0,48}[a-zA-Z0-9]|[a-zA-Z0-9]?)$/', $username)) {
-    $_SESSION['error'] = "Username must be 3-50 characters, start and end with a letter or number, and contain only letters, numbers, underscores, or hyphens.";
+// Validate username length first (3-50 characters)
+if (mb_strlen($username) < 3 || mb_strlen($username) > 50) {
+    $_SESSION['error'] = "Username must be between 3 and 50 characters.";
     header("Location: /modules/profile/edit.php");
     exit;
 }
 
-// Additional length check (for edge case validation)
-if (mb_strlen($username) < 3 || mb_strlen($username) > 50) {
-    $_SESSION['error'] = "Username must be between 3 and 50 characters.";
+// Validate username format (alphanumeric start/end, allows underscores/hyphens in middle)
+if (!preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9_-]*[a-zA-Z0-9]|[a-zA-Z0-9])?$/', $username)) {
+    $_SESSION['error'] = "Username must start and end with a letter or number, and contain only letters, numbers, underscores, or hyphens.";
     header("Location: /modules/profile/edit.php");
     exit;
 }

@@ -30,6 +30,7 @@ unset($_SESSION['2fa_error']);
     <meta name="theme-color" content="#4F46E5">
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
     <style>
         body {
             display: flex;

@@ -21,6 +21,7 @@ unset($_SESSION['error'], $_SESSION['success']);
     <meta name="theme-color" content="#4F46E5">
     
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
     <script src="/assets/js/biometric-auth.js?v=<?= time() ?>"></script>
     <style>
         /* Force Light Mode */

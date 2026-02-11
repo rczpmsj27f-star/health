@@ -50,6 +50,7 @@ unset($_SESSION['success_msg']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notification Preferences</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
+    <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/capacitor-push.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>

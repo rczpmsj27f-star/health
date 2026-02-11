@@ -11,6 +11,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
+        // Set solid white background to prevent black flash during transitions
+        window?.backgroundColor = UIColor.white
+        
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         

@@ -280,7 +280,7 @@ $archivedMeds = $stmt->fetchAll();
         <?php endif; ?>
         
         <div class="action-buttons" style="margin-top: 32px;">
-            <a class="btn btn-primary" href="/modules/medications/add.php">➕ Add Medication</a>
+            <a class="btn btn-primary" href="/modules/medications/add_unified.php">➕ Add Medication</a>
         </div>
     </div>
     

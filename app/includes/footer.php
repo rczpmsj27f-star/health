@@ -28,6 +28,15 @@ if (strpos($currentPath, '/modules/medications/') !== false &&
         'icon' => '💊'
     ];
 }
+// Check if we're in symptoms sub-pages (but not the symptom dashboard itself)
+elseif (strpos($currentPath, '/modules/symptoms/') !== false && 
+        basename($_SERVER['PHP_SELF']) !== 'index.php') {
+    $contextShortcut = [
+        'label' => 'Symptom Dashboard',
+        'url' => '/modules/symptoms/index.php',
+        'icon' => '🩺'
+    ];
+}
 // Check if we're in admin sub-pages (but not the admin dashboard itself)
 elseif (strpos($currentPath, '/modules/admin/') !== false && 
         basename($_SERVER['PHP_SELF']) !== 'dashboard.php') {
@@ -47,78 +56,46 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 }
 ?>
 
-<!-- Dynamic context button - appears above footer when in sub-area -->
-<?php if ($contextShortcut): ?>
-<div class="context-button-container">
-    <a href="<?= htmlspecialchars($contextShortcut['url']) ?>" class="context-button">
-        <span><?= $contextShortcut['icon'] ?></span>
-        <span><?= htmlspecialchars($contextShortcut['label']) ?></span>
-    </a>
-</div>
-<?php endif; ?>
-
-<!-- Footer with 4 base icons -->
+<!-- Footer with 4 base icons and optional context pill -->
 <div class="app-footer">
-    <div class="footer-content">
-        <a href="/dashboard.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'dashboard.php' && !isset($_GET['view'])) ? 'active' : '' ?>">
-            <div class="footer-icon">🏠</div>
-            <div class="footer-label">Home</div>
-        </a>
+    <div class="footer-content <?= $contextShortcut ? 'has-context-pill' : '' ?>">
+        <div class="footer-nav-items">
+            <a href="/dashboard.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'dashboard.php' && !isset($_GET['view'])) ? 'active' : '' ?>">
+                <div class="footer-icon">🏠</div>
+                <div class="footer-label">Home</div>
+            </a>
+            
+            <a href="/modules/settings/dashboard.php" class="footer-item <?= (strpos($_SERVER['REQUEST_URI'], '/modules/settings/') !== false && basename($_SERVER['PHP_SELF']) !== 'notifications.php') ? 'active' : '' ?>">
+                <div class="footer-icon">⚙️</div>
+                <div class="footer-label">Settings</div>
+            </a>
+            
+            <a href="/modules/settings/notifications.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'notifications.php') ? 'active' : '' ?>">
+                <div class="footer-icon" style="position: relative;">
+                    🔔
+                    <?php if ($unreadCount > 0): ?>
+                        <span class="footer-badge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="footer-label">Notifications</div>
+            </a>
+            
+            <a href="/modules/profile/view.php" class="footer-item <?= (strpos($_SERVER['REQUEST_URI'], '/modules/profile/') !== false) ? 'active' : '' ?>">
+                <div class="footer-icon">👤</div>
+                <div class="footer-label">Profile</div>
+            </a>
+        </div>
         
-        <a href="/modules/settings/dashboard.php" class="footer-item <?= (strpos($_SERVER['REQUEST_URI'], '/modules/settings/') !== false && basename($_SERVER['PHP_SELF']) !== 'notifications.php') ? 'active' : '' ?>">
-            <div class="footer-icon">⚙️</div>
-            <div class="footer-label">Settings</div>
+        <?php if ($contextShortcut): ?>
+        <a href="<?= htmlspecialchars($contextShortcut['url']) ?>" class="footer-context-pill">
+            <span class="pill-icon"><?= $contextShortcut['icon'] ?></span>
+            <span class="pill-label"><?= htmlspecialchars($contextShortcut['label']) ?></span>
         </a>
-        
-        <a href="/modules/settings/notifications.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'notifications.php') ? 'active' : '' ?>">
-            <div class="footer-icon" style="position: relative;">
-                🔔
-                <?php if ($unreadCount > 0): ?>
-                    <span class="footer-badge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="footer-label">Notifications</div>
-        </a>
-        
-        <a href="/modules/profile/view.php" class="footer-item <?= (strpos($_SERVER['REQUEST_URI'], '/modules/profile/') !== false) ? 'active' : '' ?>">
-            <div class="footer-icon">👤</div>
-            <div class="footer-label">Profile</div>
-        </a>
+        <?php endif; ?>
     </div>
 </div>
 
 <style>
-/* Context button - positioned above footer, right-aligned */
-.context-button-container {
-    position: fixed;
-    bottom: 70px; /* Just above footer height */
-    right: 16px;
-    z-index: 999;
-}
-
-.context-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: white;
-    color: #667eea;
-    padding: 8px 18px;
-    border-radius: 24px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    transition: all 0.2s ease;
-    box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
-    border: 2px solid #667eea;
-}
-
-.context-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 14px rgba(102, 126, 234, 0.4);
-    background: #f8f9fa;
-}
-
 /* Footer styles */
 .app-footer {
     position: fixed;
@@ -133,11 +110,58 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 
 .footer-content {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 8px 0;
+    padding: 8px 16px;
+    gap: 16px;
+}
+
+/* When context pill is present, adjust layout */
+.footer-content.has-context-pill {
+    justify-content: flex-start;
+}
+
+.footer-nav-items {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex: 1;
+}
+
+/* Context pill - right-aligned, ~20% width */
+.footer-context-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    color: #667eea;
+    padding: 10px 16px;
+    border-radius: 24px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    transition: all 0.2s ease;
+    border: 2px solid #667eea;
+    white-space: nowrap;
+    min-height: 44px; /* Accessible touch target */
+    flex-shrink: 0;
+}
+
+.footer-context-pill:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.pill-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.pill-label {
+    font-size: 13px;
 }
 
 .footer-item {
@@ -150,6 +174,8 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     padding: 8px;
     transition: all 0.2s ease;
     position: relative;
+    min-height: 44px; /* Accessible touch target */
+    justify-content: center;
 }
 
 .footer-item:hover {
@@ -201,33 +227,42 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
         font-size: 22px;
     }
     
-    .context-button {
-        font-size: 12px;
-        padding: 6px 14px;
+    .footer-content {
+        padding: 8px 12px;
+        gap: 12px;
     }
     
-    .context-button-container {
-        right: 12px;
-        bottom: 65px;
+    .footer-context-pill {
+        font-size: 12px;
+        padding: 8px 12px;
+        gap: 4px;
+    }
+    
+    .pill-icon {
+        font-size: 16px;
+    }
+    
+    .pill-label {
+        font-size: 12px;
     }
 }
 
 @media (max-width: 400px) {
-    .context-button {
-        font-size: 11px;
-        padding: 5px 12px;
+    .footer-content {
+        padding: 8px 8px;
+        gap: 8px;
     }
     
-    .context-button span:last-child {
-        /* Keep label visible on very small screens */
-        max-width: 120px;
+    .footer-context-pill {
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+    
+    .pill-label {
+        font-size: 11px;
+        max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .context-button-container {
-        right: 8px;
     }
 }
 </style>

@@ -210,6 +210,22 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
+        /* High-specificity override for coming-soon tiles */
+        .dashboard-grid .tile.tile--coming-soon {
+            background: #e9ecef !important;
+            pointer-events: none !important;
+        }
+        
+        .dashboard-grid .tile.tile--coming-soon .tile-title,
+        .dashboard-grid .tile.tile--coming-soon .tile-desc {
+            color: #6c757d !important;
+        }
+        
+        .dashboard-grid .tile.tile--coming-soon:hover {
+            transform: none !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        
         .tile-red {
             background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
         }
@@ -261,19 +277,19 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
                 <div class="tile-desc">Manage your medications</div>
             </a>
             
-            <div class="tile tile-gray">
+            <div class="tile tile-gray tile--coming-soon">
                 <div class="tile-icon">🩺</div>
                 <div class="tile-title">Symptom Tracker</div>
                 <div class="tile-desc">Coming soon</div>
             </div>
             
-            <div class="tile tile-gray">
+            <div class="tile tile-gray tile--coming-soon">
                 <div class="tile-icon">🚽</div>
                 <div class="tile-title">Bowel and Urine Tracker</div>
                 <div class="tile-desc">Coming soon</div>
             </div>
             
-            <div class="tile tile-gray">
+            <div class="tile tile-gray tile--coming-soon">
                 <div class="tile-icon">🍽️</div>
                 <div class="tile-title">Food Diary</div>
                 <div class="tile-desc">Coming soon</div>

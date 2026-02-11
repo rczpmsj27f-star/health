@@ -1,7 +1,7 @@
 <?php
 // Simple scrolling header - no fixed positioning
 if (!isset($displayName)) {
-    if (isset($pdo) && !empty($_SESSION['user_id'])) {
+    if (isset($pdo) && !empty($_SESSION['user_id']) && is_numeric($_SESSION['user_id'])) {
         $userStmt = $pdo->prepare("SELECT first_name, surname, email FROM users WHERE id = ?");
         $userStmt->execute([$_SESSION['user_id']]);
         $user = $userStmt->fetch(PDO::FETCH_ASSOC);

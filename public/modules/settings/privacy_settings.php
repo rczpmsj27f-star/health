@@ -98,7 +98,7 @@ unset($_SESSION['success_msg']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 700px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">🔒 Privacy Settings</h2>
         <p style="color: var(--color-text-secondary); margin-bottom: 32px;">
             Control what <strong><?= htmlspecialchars($linkedUser['linked_user_name']) ?></strong> can see and do with your medications.

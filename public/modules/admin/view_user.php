@@ -43,7 +43,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
+    <div style="padding: 16px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
         <?php if (isset($_SESSION['success_msg'])): ?>
             <div class="alert alert-success" style="margin-bottom: 16px;">
                 <?= htmlspecialchars($_SESSION['success_msg']) ?>

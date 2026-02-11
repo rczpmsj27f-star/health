@@ -156,7 +156,7 @@ $allActivities = array_slice($allActivities, 0, 50);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
             📰 Activity Feed
         </h2>

@@ -88,7 +88,7 @@ foreach ($instructions as $i) {
         .unified-form-container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 80px 16px 40px 16px;
+            padding: 16px 16px 40px 16px;
         }
         
         .form-section {

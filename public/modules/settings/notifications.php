@@ -47,7 +47,7 @@ unset($_SESSION['success_msg']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 900px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 24px;">🔔 Notification Preferences</h2>
         
         <?php if ($successMsg): ?>
@@ -155,7 +155,7 @@ unset($_SESSION['success_msg']);
         // For Capacitor (native app) environments
         if (isCapacitor()) {
             console.log('Running in Capacitor - checking native push permissions');
-            section.style.display = 'block';
+            section.style.display = 'block'; // Always show in Capacitor
             
             // If we have a stored Player ID in the database, notifications are working
             if (storedPlayerId) {
@@ -164,8 +164,20 @@ unset($_SESSION['success_msg']);
                 return;
             }
             
-            // For new users without a Player ID, check if we can enable notifications
+            // For new users without a Player ID, check if native plugin is available
             try {
+                // Check if the native plugin is available
+                if (!window.OneSignalCapacitor || typeof window.OneSignalCapacitor.requestPermission !== 'function') {
+                    // Plugin not available - show helpful message
+                    statusElement.innerHTML = '⚠️ Push Notifications Setup Required';
+                    statusElement.style.background = '#fef3c7';
+                    statusElement.style.color = '#92400e';
+                    button.style.display = 'none';
+                    deniedMessage.innerHTML = '<strong>ℹ️ Native Plugin Not Available</strong><br>The push notification plugin may need to be registered in the Xcode project. See IOS_PUSH_PLUGIN_SETUP.md for setup instructions.';
+                    deniedMessage.style.display = 'block';
+                    return;
+                }
+                
                 // Wait for OneSignal to be available
                 await waitForOneSignal();
                 
@@ -193,6 +205,8 @@ unset($_SESSION['success_msg']);
                 statusElement.innerHTML = '⚠️ Unable to check permission status';
                 statusElement.style.background = '#f3f4f6';
                 statusElement.style.color = '#6b7280';
+                button.style.display = 'inline-block';
+                deniedMessage.style.display = 'none';
             }
             return;
         }

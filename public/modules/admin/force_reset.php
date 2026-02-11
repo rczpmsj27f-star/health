@@ -62,24 +62,17 @@ try {
     $mail->send();
     
     $_SESSION['success_msg'] = "Password reset email sent to " . htmlspecialchars($user['username']);
-    
-    // Determine redirect location
-    $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : 'view_user';
-    if ($redirect === 'users') {
-        header("Location: /modules/admin/users.php");
-    } else {
-        header("Location: /modules/admin/view_user.php?id=$id");
-    }
-    exit;
 } catch (Exception $e) {
-    $_SESSION['error_msg'] = "Failed to send password reset email: " . $e->getMessage();
-    
-    // Determine redirect location
-    $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : 'view_user';
-    if ($redirect === 'users') {
-        header("Location: /modules/admin/users.php");
-    } else {
-        header("Location: /modules/admin/view_user.php?id=$id");
-    }
-    exit;
+    // Log the error for debugging (in production, use proper logging)
+    error_log("Password reset failed for user ID $id: " . $e->getMessage());
+    $_SESSION['error_msg'] = "Failed to send password reset email. Please try again or contact support.";
 }
+
+// Determine redirect location
+$redirect = isset($_POST['redirect']) ? $_POST['redirect'] : 'view_user';
+if ($redirect === 'users') {
+    header("Location: /modules/admin/users.php");
+} else {
+    header("Location: /modules/admin/view_user.php?id=$id");
+}
+exit;

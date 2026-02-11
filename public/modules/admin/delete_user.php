@@ -48,7 +48,9 @@ try {
     $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
     $_SESSION['success_msg'] = "User " . htmlspecialchars($user['username']) . " has been deleted successfully.";
 } catch (Exception $e) {
-    $_SESSION['error_msg'] = "Failed to delete user: " . $e->getMessage();
+    // Log the error for debugging (in production, use proper logging)
+    error_log("User deletion failed for user ID $id: " . $e->getMessage());
+    $_SESSION['error_msg'] = "Failed to delete user. Please try again or contact support.";
 }
 
 // Redirect back to users list

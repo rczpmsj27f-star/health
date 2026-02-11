@@ -70,7 +70,7 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
                 <div class="footer-label">Settings</div>
             </a>
             
-            <a href="/modules/settings/notifications.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'notifications.php') ? 'active' : '' ?>">
+            <a href="/modules/notifications/index.php" class="footer-item <?= (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER['REQUEST_URI'], '/modules/notifications/') !== false) ? 'active' : '' ?>">
                 <div class="footer-icon" style="position: relative;">
                     🔔
                     <?php if ($unreadCount > 0): ?>

@@ -97,6 +97,10 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 
 <style>
 /* Footer styles */
+:root {
+    --footer-height: 70px;
+}
+
 .app-footer {
     position: fixed;
     bottom: 0;

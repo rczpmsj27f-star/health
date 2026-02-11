@@ -43,6 +43,13 @@ $user = $stmt->fetch();
                 <p>View and manage your account</p>
             </div>
 
+            <?php if (isset($_SESSION['success'])): ?>
+                <div class="alert alert-success">
+                    <?= htmlspecialchars($_SESSION['success']) ?>
+                </div>
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+
             <?php if ($user['profile_picture_path']): ?>
                 <img src="<?= htmlspecialchars($user['profile_picture_path']) ?>" class="profile-picture" alt="Profile Picture">
             <?php else: ?>

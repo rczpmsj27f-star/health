@@ -10,7 +10,7 @@ if (empty($_SESSION['user_id'])) {
 // Validate input - support both GET and POST
 $medId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
 if (!$medId) {
-    header("Location: /modules/medications/list.php");
+    header("Location: /modules/medications/medication_dashboard.php");
     exit;
 }
 
@@ -20,7 +20,7 @@ $stmt->execute([$medId]);
 $med = $stmt->fetch();
 
 if (!$med || $med['user_id'] != $_SESSION['user_id']) {
-    header("Location: /modules/medications/list.php");
+    header("Location: /modules/medications/medication_dashboard.php");
     exit;
 }
 
@@ -41,5 +41,5 @@ $stmt = $pdo->prepare("DELETE FROM medications WHERE id = ?");
 $stmt->execute([$medId]);
 
 $_SESSION['success'] = 'Medication deleted successfully.';
-header("Location: /modules/medications/list.php");
+header("Location: /modules/medications/medication_dashboard.php");
 exit;

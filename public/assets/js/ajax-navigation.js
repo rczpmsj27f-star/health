@@ -48,7 +48,14 @@ class AjaxNavigation {
 
     shouldIntercept(link) {
         const href = link.getAttribute('href');
-        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
+        // Block dangerous URL schemes
+        if (!href || 
+            href.startsWith('#') || 
+            href.startsWith('javascript:') ||
+            href.startsWith('data:') ||
+            href.startsWith('vbscript:')) {
+            return false;
+        }
         if (link.target === '_blank') return false;
         if (link.hasAttribute('data-no-ajax')) return false;
         

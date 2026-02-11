@@ -74,6 +74,7 @@ foreach ($medications as $med) {
         $timestamp = strtotime($med['dose_time']);
         if ($timestamp === false) {
             // Skip if dose_time is in an invalid format
+            error_log("Invalid dose_time format for medication ID {$med['id']}: {$med['dose_time']}");
             continue;
         }
         $doseTimeOnly = date('H:i:s', $timestamp);

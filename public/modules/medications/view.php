@@ -42,7 +42,7 @@ $doseTimes = $stmt->fetchAll();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success" style="margin-bottom: 20px;">

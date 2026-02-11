@@ -108,6 +108,33 @@ try {
         }
         
         if ($shouldNotify) {
+            // Mark this notification type as sent FIRST to prevent race condition
+            // This prevents duplicate notifications if the cron runs again before this completes
+            // Using switch to safely build query without SQL injection risk
+            $updateQuery = null;
+            switch ($notificationType) {
+                case 'scheduled':
+                    $updateQuery = "UPDATE medication_logs SET notification_sent_at_time = NOW() WHERE id = ?";
+                    break;
+                case 'reminder-10':
+                    $updateQuery = "UPDATE medication_logs SET notification_sent_10min = NOW() WHERE id = ?";
+                    break;
+                case 'reminder-20':
+                    $updateQuery = "UPDATE medication_logs SET notification_sent_20min = NOW() WHERE id = ?";
+                    break;
+                case 'reminder-30':
+                    $updateQuery = "UPDATE medication_logs SET notification_sent_30min = NOW() WHERE id = ?";
+                    break;
+                case 'reminder-60':
+                    $updateQuery = "UPDATE medication_logs SET notification_sent_60min = NOW() WHERE id = ?";
+                    break;
+            }
+            
+            if ($updateQuery) {
+                $updateStmt = $pdo->prepare($updateQuery);
+                $updateStmt->execute([$dose['log_id']]);
+            }
+            
             // Prepare notification message
             $medicationName = $dose['medication_name'];
             $doseInfo = '';
@@ -149,32 +176,6 @@ try {
                     $dose['medication_id'],
                     $data
                 );
-                
-                // Mark this notification type as sent in medication_logs to prevent duplicates
-                // Using switch to safely build query without SQL injection risk
-                $updateQuery = null;
-                switch ($notificationType) {
-                    case 'scheduled':
-                        $updateQuery = "UPDATE medication_logs SET notification_sent_at_time = NOW() WHERE id = ?";
-                        break;
-                    case 'reminder-10':
-                        $updateQuery = "UPDATE medication_logs SET notification_sent_10min = NOW() WHERE id = ?";
-                        break;
-                    case 'reminder-20':
-                        $updateQuery = "UPDATE medication_logs SET notification_sent_20min = NOW() WHERE id = ?";
-                        break;
-                    case 'reminder-30':
-                        $updateQuery = "UPDATE medication_logs SET notification_sent_30min = NOW() WHERE id = ?";
-                        break;
-                    case 'reminder-60':
-                        $updateQuery = "UPDATE medication_logs SET notification_sent_60min = NOW() WHERE id = ?";
-                        break;
-                }
-                
-                if ($updateQuery) {
-                    $updateStmt = $pdo->prepare($updateQuery);
-                    $updateStmt->execute([$dose['log_id']]);
-                }
                 
                 echo "[{$currentDateTime}] Sent {$notificationType} notification for {$medicationName} to user {$dose['user_id']}\n";
             } catch (Exception $e) {

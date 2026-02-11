@@ -36,7 +36,7 @@ unset($_SESSION['error'], $_SESSION['success']);
         .container {
             max-width: 600px;
             margin: 0 auto;
-            padding: 80px 20px 40px 20px;
+            padding: 16px 20px 40px 20px;
         }
         .card {
             background: #fff;

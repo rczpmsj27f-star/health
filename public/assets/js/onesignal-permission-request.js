@@ -83,15 +83,22 @@
                 // Request permission via native plugin
                 try {
                     const accepted = await window.OneSignalCapacitor.requestPermission();
-                    localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
-                    if (accepted) {
-                        console.log('✅ Notification permission granted via native plugin');
+                    
+                    // Only mark as prompted if we got a definitive answer (not null)
+                    // null means the plugin wasn't available, so we shouldn't prevent future prompts
+                    if (accepted !== null) {
+                        localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                        if (accepted) {
+                            console.log('✅ Notification permission granted via native plugin');
+                        } else {
+                            console.log('⚠️ Notification permission denied via native plugin');
+                        }
                     } else {
-                        console.log('⚠️ Notification permission denied via native plugin');
+                        console.log('❌ PushPermission plugin not available - will retry on next page load');
                     }
                 } catch (e) {
                     console.error('❌ Error requesting native permission:', e);
-                    localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
+                    // Don't mark as prompted on error - allow retry on next page load
                 }
                 return; // Don't fall through to web SDK path
             }

@@ -33,7 +33,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 24px;">👥 Linked Users</h2>
         
         <?php if ($successMsg): ?>

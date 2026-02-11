@@ -136,7 +136,7 @@ foreach ($prnMedications as $med) {
         .page-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 80px 16px 16px 16px;
+            padding: 16px;
         }
         
         .page-title {

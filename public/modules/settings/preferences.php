@@ -33,6 +33,14 @@ if (!$preferences) {
     $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// Fetch user notification reminder timing settings
+$notifStmt = $pdo->prepare("SELECT notify_at_time, notify_after_10min, notify_after_20min, notify_after_30min, notify_after_60min FROM user_notification_settings WHERE user_id = ?");
+$notifStmt->execute([$userId]);
+$reminderSettings = $notifStmt->fetch(PDO::FETCH_ASSOC);
+if (!$reminderSettings) {
+    $reminderSettings = ['notify_at_time' => 1, 'notify_after_10min' => 1, 'notify_after_20min' => 1, 'notify_after_30min' => 1, 'notify_after_60min' => 0];
+}
+
 $err = $_SESSION['error'] ?? null;
 $ok  = $_SESSION['success'] ?? null;
 unset($_SESSION['error'], $_SESSION['success']);
@@ -130,6 +138,48 @@ unset($_SESSION['error'], $_SESSION['success']);
                         <span>Notify Linked Users</span>
                     </label>
                     <p class="help-text">Send low stock notifications to users who can view your medications</p>
+                </div>
+
+                <div class="section-header">Medication Reminder Timing</div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="notify_at_time" value="1" <?= $reminderSettings['notify_at_time'] ? 'checked' : '' ?>>
+                        <span>At scheduled time</span>
+                    </label>
+                    <p class="help-text">Send reminder at the exact scheduled medication time</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="notify_after_10min" value="1" <?= $reminderSettings['notify_after_10min'] ? 'checked' : '' ?>>
+                        <span>10 minutes after (if not taken)</span>
+                    </label>
+                    <p class="help-text">Send reminder 10 minutes after scheduled time if medication not taken</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="notify_after_20min" value="1" <?= $reminderSettings['notify_after_20min'] ? 'checked' : '' ?>>
+                        <span>20 minutes after (if not taken)</span>
+                    </label>
+                    <p class="help-text">Send reminder 20 minutes after scheduled time if medication not taken</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="notify_after_30min" value="1" <?= $reminderSettings['notify_after_30min'] ? 'checked' : '' ?>>
+                        <span>30 minutes after (if not taken)</span>
+                    </label>
+                    <p class="help-text">Send reminder 30 minutes after scheduled time if medication not taken</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="notify_after_60min" value="1" <?= $reminderSettings['notify_after_60min'] ? 'checked' : '' ?>>
+                        <span>60 minutes after (if not taken)</span>
+                    </label>
+                    <p class="help-text">Send reminder 60 minutes after scheduled time if medication not taken</p>
                 </div>
 
                 <div class="form-actions">

@@ -273,11 +273,14 @@ unset($_SESSION['success_msg']);
                 }
             } catch (error) {
                 console.error('Error checking push permission status:', error);
-                statusElement.innerHTML = '⚠️ Unable to check permission status';
-                statusElement.style.background = '#f3f4f6';
-                statusElement.style.color = '#6b7280';
-                button.style.display = 'inline-block';
-                deniedMessage.style.display = 'none';
+                // Show helpful error message for Capacitor environment
+                section.style.display = 'block';
+                statusElement.innerHTML = '⚠️ Push Plugin Not Available';
+                statusElement.style.background = '#fef3c7';
+                statusElement.style.color = '#92400e';
+                button.style.display = 'none';
+                deniedMessage.innerHTML = '<strong>⚠️ Setup Required</strong><br>The native push notification plugin is not configured. Please see the IOS_PUSH_PLUGIN_SETUP.md documentation.';
+                deniedMessage.style.display = 'block';
             }
             return;
         }

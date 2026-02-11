@@ -57,8 +57,8 @@ class AjaxNavigation {
             const url = new URL(link.href, window.location.origin);
             if (url.origin !== window.location.origin) return false;
             
-            // Use exact path matching to avoid false positives
-            return this.ajaxPages.some(page => url.pathname === page || url.pathname.endsWith(page));
+            // Use exact path matching to prevent false positives
+            return this.ajaxPages.includes(url.pathname);
         } catch (e) {
             // Invalid URL, don't intercept
             return false;

@@ -89,7 +89,7 @@ unset($_SESSION['success_msg']);
             <div class="expandable-section expanded" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
                 <div class="section-header-toggle" onclick="toggleSection(this)" style="cursor: pointer; user-select: none; margin: -8px -8px 16px -8px; padding: 12px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-light);">
                     <h3 style="margin: 0; color: var(--color-primary); font-size: 18px;">📬 Notification Types</h3>
-                    <span class="toggle-icon" style="font-size: 20px;">▼</span>
+                    <span class="toggle-icon" style="font-size: 20px;">▶</span>
                 </div>
                 <div class="section-content">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -130,7 +130,7 @@ unset($_SESSION['success_msg']);
             <div class="expandable-section expanded" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;">
                 <div class="section-header-toggle" onclick="toggleSection(this)" style="cursor: pointer; user-select: none; margin: -8px -8px 16px -8px; padding: 12px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-light);">
                     <h3 style="margin: 0; color: var(--color-primary); font-size: 18px;">⏰ Medicine Reminder Frequency</h3>
-                    <span class="toggle-icon" style="font-size: 20px;">▼</span>
+                    <span class="toggle-icon" style="font-size: 20px;">▶</span>
                 </div>
                 <div class="section-content">
                     <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px;">
@@ -462,12 +462,6 @@ unset($_SESSION['success_msg']);
         const icon = header.querySelector('.toggle-icon');
         
         section.classList.toggle('expanded');
-        
-        if (section.classList.contains('expanded')) {
-            icon.textContent = '▼';
-        } else {
-            icon.textContent = '▶';
-        }
     }
     </script>
     

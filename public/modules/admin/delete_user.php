@@ -1,12 +1,19 @@
 <?php
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/security.php";
 Auth::requireAdmin();
 
 // Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     die("Method not allowed");
+}
+
+// Validate CSRF token
+if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+    http_response_code(403);
+    die("Invalid security token");
 }
 
 // Validate ID parameter

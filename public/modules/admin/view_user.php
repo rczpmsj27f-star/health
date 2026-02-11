@@ -1,6 +1,7 @@
 <?php
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/security.php";
 Auth::requireAdmin();
 
 // Validate ID parameter
@@ -101,9 +102,14 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
                 Force Password Reset
             </a>
             
-            <a class="btn btn-danger delete-user-btn" href="/modules/admin/delete_user.php?id=<?= $id ?>" style="background: #dc2626; margin-top: 12px;">
-                🗑️ Delete User
-            </a>
+            <!-- Delete user form with CSRF protection -->
+            <form id="deleteUserForm" method="POST" action="/modules/admin/delete_user.php" style="margin-top: 12px;">
+                <input type="hidden" name="id" value="<?= $id ?>">
+                <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
+                <button type="submit" class="btn btn-danger delete-user-btn" style="width: 100%; background: #dc2626; cursor: pointer;">
+                    🗑️ Delete User
+                </button>
+            </form>
         </div>
 
         <div class="page-footer">
@@ -124,7 +130,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
             danger: true
         });
         if (confirmed) {
-            window.location.href = this.href;
+            document.getElementById('deleteUserForm').submit();
         }
     });
     </script>

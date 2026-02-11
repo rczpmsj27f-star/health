@@ -1,6 +1,7 @@
 <?php
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/helpers/security.php";
 Auth::requireAdmin();
 
 // Validate ID parameter
@@ -14,6 +15,11 @@ $id = (int)$_GET['id'];
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$id]);
 $user = $stmt->fetch();
+
+if (!$user) {
+    http_response_code(404);
+    die("User not found");
+}
 
 $roles = $pdo->prepare("
     SELECT r.role_name
@@ -32,6 +38,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
     <title>Admin – View User</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
@@ -39,25 +46,25 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
     <div style="padding: 80px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
         <div class="page-card">
         <div class="page-header">
-            <h2><?= htmlspecialchars($user['username']) ?></h2>
+            <h2><?= htmlspecialchars($user['username'] ?? 'Unknown User') ?></h2>
             <p>User Details & Actions</p>
         </div>
 
         <div class="info-item">
             <div class="info-label">Email</div>
-            <div class="info-value"><?= htmlspecialchars($user['email']) ?></div>
+            <div class="info-value"><?= htmlspecialchars($user['email'] ?? '') ?></div>
         </div>
 
         <div class="info-item">
             <div class="info-label">Name</div>
-            <div class="info-value"><?= htmlspecialchars($user['first_name'] . " " . $user['surname']) ?></div>
+            <div class="info-value"><?= htmlspecialchars(trim(($user['first_name'] ?? '') . " " . ($user['surname'] ?? ''))) ?: 'Not set' ?></div>
         </div>
 
         <div class="info-item">
             <div class="info-label">Email Verified</div>
             <div class="info-value">
-                <span style="color: <?= $user['is_email_verified'] ? '#28a745' : '#dc3545' ?>">
-                    <?= $user['is_email_verified'] ? "✓ Yes" : "✗ No" ?>
+                <span style="color: <?= ($user['is_email_verified'] ?? 0) ? '#28a745' : '#dc3545' ?>">
+                    <?= ($user['is_email_verified'] ?? 0) ? "✓ Yes" : "✗ No" ?>
                 </span>
             </div>
         </div>
@@ -65,8 +72,8 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         <div class="info-item">
             <div class="info-label">Active</div>
             <div class="info-value">
-                <span style="color: <?= $user['is_active'] ? '#28a745' : '#dc3545' ?>">
-                    <?= $user['is_active'] ? "✓ Yes" : "✗ No" ?>
+                <span style="color: <?= ($user['is_active'] ?? 1) ? '#28a745' : '#dc3545' ?>">
+                    <?= ($user['is_active'] ?? 1) ? "✓ Yes" : "✗ No" ?>
                 </span>
             </div>
         </div>
@@ -80,11 +87,11 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
             <h3 style="margin-bottom: 16px; color: #333;">Admin Actions</h3>
 
             <a class="btn btn-info" href="/modules/admin/toggle_verify.php?id=<?= $id ?>">
-                <?= $user['is_email_verified'] ? "Unverify Email" : "Verify Email" ?>
+                <?= ($user['is_email_verified'] ?? 0) ? "Unverify Email" : "Verify Email" ?>
             </a>
 
             <a class="btn btn-info" href="/modules/admin/toggle_active.php?id=<?= $id ?>">
-                <?= $user['is_active'] ? "Deactivate Account" : "Activate Account" ?>
+                <?= ($user['is_active'] ?? 1) ? "Deactivate Account" : "Activate Account" ?>
             </a>
 
             <a class="btn btn-info" href="/modules/admin/toggle_admin.php?id=<?= $id ?>">
@@ -94,6 +101,15 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
             <a class="btn btn-deny" href="/modules/admin/force_reset.php?id=<?= $id ?>">
                 Force Password Reset
             </a>
+            
+            <!-- Delete user form with CSRF protection -->
+            <form id="deleteUserForm" method="POST" action="/modules/admin/delete_user.php" style="margin-top: 12px;">
+                <input type="hidden" name="id" value="<?= $id ?>">
+                <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
+                <button type="submit" class="btn btn-danger delete-user-btn" style="width: 100%; cursor: pointer;">
+                    🗑️ Delete User
+                </button>
+            </form>
         </div>
 
         <div class="page-footer">
@@ -101,6 +117,23 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         </div>
     </div>
     </div>
+    
+    <script>
+    // Handle delete user confirmation
+    document.querySelector('.delete-user-btn')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const confirmed = await ConfirmModal.show({
+            title: 'Delete User',
+            message: 'Are you sure you want to DELETE this user? This action cannot be undone and will remove all user data.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            danger: true
+        });
+        if (confirmed) {
+            document.getElementById('deleteUserForm').submit();
+        }
+    });
+    </script>
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

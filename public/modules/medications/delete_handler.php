@@ -1,16 +1,32 @@
 <?php
 session_start();
 require_once "../../../app/config/database.php";
+require_once "../../../app/helpers/security.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
 }
 
-// Validate input - support both GET and POST
-$medId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
+// Require POST method for delete operation
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $_SESSION['error_msg'] = 'Invalid request method';
+    header("Location: /modules/medications/dashboard.php");
+    exit;
+}
+
+// Validate CSRF token
+if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+    $_SESSION['error_msg'] = 'Invalid security token. Please try again.';
+    header("Location: /modules/medications/dashboard.php");
+    exit;
+}
+
+// Validate medication ID
+$medId = filter_input(INPUT_POST, 'med_id', FILTER_VALIDATE_INT);
 if (!$medId) {
-    header("Location: /modules/medications/medication_dashboard.php");
+    $_SESSION['error_msg'] = 'Invalid medication ID';
+    header("Location: /modules/medications/dashboard.php");
     exit;
 }
 
@@ -20,7 +36,8 @@ $stmt->execute([$medId]);
 $med = $stmt->fetch();
 
 if (!$med || $med['user_id'] != $_SESSION['user_id']) {
-    header("Location: /modules/medications/medication_dashboard.php");
+    $_SESSION['error_msg'] = 'Medication not found or access denied';
+    header("Location: /modules/medications/dashboard.php");
     exit;
 }
 
@@ -41,5 +58,5 @@ $stmt = $pdo->prepare("DELETE FROM medications WHERE id = ?");
 $stmt->execute([$medId]);
 
 $_SESSION['success'] = 'Medication deleted successfully.';
-header("Location: /modules/medications/medication_dashboard.php");
+header("Location: /modules/medications/dashboard.php");
 exit;

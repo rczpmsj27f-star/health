@@ -3,6 +3,7 @@ session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/core/TimeFormatter.php";
+require_once "../../../app/helpers/security.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -42,6 +43,21 @@ $doseTimes = $stmt->fetchAll();
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div style="max-width: 800px; margin: 0 auto; padding: 80px 16px 40px 16px;">
+        <!-- Success/Error Messages -->
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success" style="margin-bottom: 20px;">
+                <?= htmlspecialchars($_SESSION['success']) ?>
+            </div>
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_msg'])): ?>
+            <div class="alert alert-error" style="margin-bottom: 20px;">
+                <?= htmlspecialchars($_SESSION['error_msg']) ?>
+            </div>
+            <?php unset($_SESSION['error_msg']); ?>
+        <?php endif; ?>
+        
         <!-- Header -->
         <div style="margin-bottom: 24px;">
             <h2 style="color: var(--color-primary); font-size: 28px; margin: 0 0 8px 0;">
@@ -188,11 +204,15 @@ $doseTimes = $stmt->fetchAll();
                     <?= $isArchived ? '📤 Unarchive' : '📦 Archive' ?>
                 </a>
                 <?php endif; ?>
-                <a href="/modules/medications/delete_handler.php?id=<?= $medication['id'] ?>" 
-                   class="btn btn-danger delete-link" 
-                   style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box; background: #dc2626;">
-                    🗑️ Delete
-                </a>
+                <!-- Delete form with CSRF protection -->
+                <form id="deleteForm" method="POST" action="/modules/medications/delete_handler.php" style="flex: 0 1 calc(33.333% - 8px); min-width: 100px;">
+                    <input type="hidden" name="med_id" value="<?= $medication['id'] ?>">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
+                    <button type="submit" class="btn btn-danger delete-btn" 
+                       style="width: 100%; padding: 12px 16px; font-size: 14px; text-align: center; box-sizing: border-box; background: #dc2626; cursor: pointer;">
+                        🗑️ Delete
+                    </button>
+                </form>
                 <a href="/modules/medications/dashboard.php" 
                    class="btn btn-secondary" 
                    style="flex: 0 1 calc(33.333% - 8px); min-width: 100px; padding: 12px 16px; font-size: 14px; text-decoration: none; text-align: center; box-sizing: border-box;">
@@ -217,7 +237,7 @@ $doseTimes = $stmt->fetchAll();
     });
     
     // Handle delete confirmation
-    document.querySelector('.delete-link')?.addEventListener('click', async function(e) {
+    document.querySelector('.delete-btn')?.addEventListener('click', async function(e) {
         e.preventDefault();
         const confirmed = await ConfirmModal.show({
             title: 'Delete Medication',
@@ -227,7 +247,7 @@ $doseTimes = $stmt->fetchAll();
             danger: true
         });
         if (confirmed) {
-            window.location.href = this.href;
+            document.getElementById('deleteForm').submit();
         }
     });
     </script>

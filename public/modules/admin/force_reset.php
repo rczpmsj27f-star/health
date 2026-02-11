@@ -68,8 +68,8 @@ try {
     $_SESSION['error_msg'] = "Failed to send password reset email. Please try again or contact support.";
 }
 
-// Determine redirect location
-$redirect = isset($_POST['redirect']) ? $_POST['redirect'] : 'view_user';
+// Determine redirect location (validate against whitelist)
+$redirect = isset($_POST['redirect']) && $_POST['redirect'] === 'users' ? 'users' : 'view_user';
 if ($redirect === 'users') {
     header("Location: /modules/admin/users.php");
 } else {

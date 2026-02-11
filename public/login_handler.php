@@ -40,6 +40,13 @@ if (!empty($user['two_factor_enabled'])) {
 // Normal login if 2FA not enabled
 $_SESSION['user_id'] = $user['id'];
 
+// Cache header display info in session (one-time lookup)
+$_SESSION['header_display_name'] = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
+if (empty($_SESSION['header_display_name'])) {
+    $_SESSION['header_display_name'] = explode('@', $user['email'] ?? 'User')[0];
+}
+$_SESSION['header_avatar_url'] = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
+
 // Update last login time
 $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
 

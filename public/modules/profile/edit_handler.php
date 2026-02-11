@@ -64,6 +64,11 @@ $stmt->execute([
     $_SESSION['user_id']
 ]);
 
+// Refresh session header info after name change
+$_SESSION['header_display_name'] = trim($firstName . ' ' . $surname);
+// Note: firstName and surname are guaranteed to be non-empty by validation above,
+// so no need for email fallback here
+
 $_SESSION['success'] = "Profile updated successfully.";
 header("Location: /modules/profile/view.php");
 exit;

@@ -22,20 +22,6 @@ if (!$isAdmin) {
     header("Location: /dashboard.php");
     exit;
 }
-
-// Fetch user details for header
-$userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
-$userStmt->execute([$_SESSION['user_id']]);
-$user = $userStmt->fetch(PDO::FETCH_ASSOC);
-
-$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-if (empty($displayName)) {
-    // Fallback to email if no name is set
-    $displayName = explode('@', $user['email'] ?? 'User')[0];
-}
-
-// Default avatar if none set
-$avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
 ?>
 <!DOCTYPE html>
 <html>

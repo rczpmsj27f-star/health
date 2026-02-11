@@ -1,19 +1,9 @@
 <?php
 // Simple scrolling header with profile picture
+// Read from session (instant, no DB query)
 if (!isset($displayName)) {
-    if (isset($pdo) && !empty($_SESSION['user_id']) && is_numeric($_SESSION['user_id'])) {
-        $userStmt = $pdo->prepare("SELECT first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
-        $userStmt->execute([$_SESSION['user_id']]);
-        $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-        $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-        if (empty($displayName)) {
-            $displayName = explode('@', $user['email'] ?? 'User')[0];
-        }
-        $avatarUrl = isset($user['profile_picture_path']) && !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
-    } else {
-        $displayName = 'User';
-        $avatarUrl = '/assets/images/default-avatar.svg';
-    }
+    $displayName = $_SESSION['header_display_name'] ?? 'User';
+    $avatarUrl = $_SESSION['header_avatar_url'] ?? '/assets/images/default-avatar.svg';
 }
 ?>
 

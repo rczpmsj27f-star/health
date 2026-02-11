@@ -21,8 +21,8 @@ if (!preg_match('/^[0-9]{6}$/', $code) && !preg_match('/^[0-9]{8}$/', $code)) {
 
 $userId = $_SESSION['pending_2fa_user_id'];
 
-// Get user's secret
-$stmt = $pdo->prepare("SELECT two_factor_secret, two_factor_backup_codes FROM users WHERE id = ?");
+// Get user's secret and profile info
+$stmt = $pdo->prepare("SELECT two_factor_secret, two_factor_backup_codes, first_name, surname, email, profile_picture_path FROM users WHERE id = ?");
 $stmt->execute([$userId]);
 $user = $stmt->fetch();
 
@@ -59,6 +59,13 @@ if (!$valid) {
 // Success - complete login
 unset($_SESSION['pending_2fa_user_id']);
 $_SESSION['user_id'] = $userId;
+
+// Cache header display info in session (user data already fetched above)
+$_SESSION['header_display_name'] = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
+if (empty($_SESSION['header_display_name'])) {
+    $_SESSION['header_display_name'] = explode('@', $user['email'] ?? 'User')[0];
+}
+$_SESSION['header_avatar_url'] = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
 
 // Update last login
 $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$userId]);

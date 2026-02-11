@@ -32,29 +32,33 @@ $stmt = $pdo->prepare("
     FROM medications m
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
     LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
-    WHERE m.user_id = ?
+    WHERE m.user_id = :user_id
     AND (m.archived = 0 OR m.archived IS NULL)
     AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
     AND (
         ms.frequency_type = 'per_day' 
-        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE ?)
+        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE :day_of_week)
     )
     AND mdt.dose_time IS NOT NULL
     AND NOT EXISTS (
         SELECT 1 FROM medication_logs ml2 
         WHERE ml2.medication_id = m.id 
-        AND DATE(ml2.scheduled_date_time) = ?
+        AND DATE(ml2.scheduled_date_time) = :today_date
         AND TIME(ml2.scheduled_date_time) = mdt.dose_time
         AND ml2.status IN ('taken', 'skipped')
     )
     AND (
-        (ms.special_timing = 'on_waking' AND CONCAT(?, ' 09:00:00') < NOW())
-        OR (ms.special_timing = 'before_bed' AND CONCAT(?, ' 22:00:00') < NOW())
-        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(?, ' ', mdt.dose_time) < NOW())
+        (ms.special_timing = 'on_waking' AND CONCAT(:today_date, ' 09:00:00') < NOW())
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') < NOW())
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) < NOW())
     )
-    AND CONCAT(?, ' ', mdt.dose_time) >= m.created_at
+    AND CONCAT(:today_date, ' ', mdt.dose_time) >= m.created_at
 ");
-$stmt->execute([$_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate, $todayDate, $todayDate, $todayDate, $todayDate]);
+$stmt->execute([
+    'user_id' => $_SESSION['user_id'],
+    'day_of_week' => "%$todayDayOfWeek%",
+    'today_date' => $todayDate
+]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Count overdue medications - query already filtered to only overdue doses

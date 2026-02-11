@@ -1,3 +1,26 @@
+/* CRITICAL: Fix transparent WebView during page transitions */
+html,
+body {
+    background-color: #ffffff;
+    background: #ffffff;
+    color: var(--color-text);
+}
+
+/* Force all pages to have solid background */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Ensure containers are opaque */
+.container,
+[class*="page"],
+[class*="content"] {
+    background-color: #ffffff;
+}
+
 /* Force Light Mode - Override System Preferences */
 :root {
     color-scheme: light;
@@ -120,15 +143,11 @@ body {
  */
 
 body {
-    margin: 0;
-    padding: 0;
     padding-bottom: 100px; /* Account for fixed footer */
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    background: var(--color-bg-light);
-    background-color: #f5f5f5 !important; /* Force light background */
+    background-color: #ffffff !important; /* Force white background to prevent black flash */
     font-size: 16px;
     line-height: 1.6;
-    color: var(--color-text);
     color: #333 !important; /* Force dark text */
 }
 

@@ -34,7 +34,7 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
     <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
         <div class="notification-header">
             <strong>Notifications</strong>
-            <button onclick="markAllRead()" style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 12px;">
+            <button id="markAllReadBtn" onclick="markAllRead()" style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 12px; display: none;">
                 Mark all read
             </button>
         </div>
@@ -46,7 +46,7 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
         </div>
         
         <div class="notification-footer">
-            <a href="/modules/settings/notifications.php">View all notifications →</a>
+            <a href="/modules/notifications/index.php">View all notifications →</a>
         </div>
     </div>
 </div>
@@ -164,6 +164,7 @@ function escapeHtml(text) {
 
 function loadNotifications() {
     const list = document.getElementById('notificationList');
+    const markAllBtn = document.getElementById('markAllReadBtn');
     list.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="spinner"></div></div>';
     
     fetch('/api/notifications.php?action=get_recent', {
@@ -192,7 +193,17 @@ function loadNotifications() {
                         <div>No notifications yet</div>
                     </div>
                 `;
+                // Hide mark all read button when no notifications
+                if (markAllBtn) markAllBtn.style.display = 'none';
                 return;
+            }
+            
+            // Check if there are any unread notifications
+            const hasUnread = data.notifications.some(n => !n.is_read);
+            
+            // Show/hide mark all read button based on unread status
+            if (markAllBtn) {
+                markAllBtn.style.display = hasUnread ? 'inline-block' : 'none';
             }
             
             list.innerHTML = data.notifications.map(n => `
@@ -221,6 +232,8 @@ function loadNotifications() {
                     </button>
                 </div>
             `;
+            // Hide mark all read button on error
+            if (markAllBtn) markAllBtn.style.display = 'none';
         });
 }
 

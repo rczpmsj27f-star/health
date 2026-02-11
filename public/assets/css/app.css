@@ -122,6 +122,8 @@ body {
 body {
     margin: 0;
     padding: 0;
+    padding-top: 90px !important; /* Space for fixed header */
+    padding-bottom: 70px !important; /* Space for fixed footer */
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     background: var(--color-bg-light);
     background-color: #f5f5f5 !important; /* Force light background */
@@ -130,6 +132,14 @@ body {
     color: var(--color-text);
     color: #333 !important; /* Force dark text */
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Mobile responsive padding for header/footer spacing */
+@media (max-width: 576px) {
+    body {
+        padding-top: 65px !important; /* Smaller header on mobile */
+        padding-bottom: 70px !important; /* Footer stays same */
+    }
 }
 
 /* Card Layout (for all pages) */

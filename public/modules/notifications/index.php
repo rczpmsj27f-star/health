@@ -67,11 +67,14 @@ $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
                             if ($diff < 60) {
                                 echo 'Just now';
                             } elseif ($diff < 3600) {
-                                echo floor($diff / 60) . ' min ago';
+                                $mins = floor($diff / 60);
+                                echo $mins . ($mins == 1 ? ' min' : ' mins') . ' ago';
                             } elseif ($diff < 86400) {
-                                echo floor($diff / 3600) . ' hours ago';
+                                $hours = floor($diff / 3600);
+                                echo $hours . ($hours == 1 ? ' hour' : ' hours') . ' ago';
                             } elseif ($diff < 604800) {
-                                echo floor($diff / 86400) . ' days ago';
+                                $days = floor($diff / 86400);
+                                echo $days . ($days == 1 ? ' day' : ' days') . ' ago';
                             } else {
                                 echo date('M j, Y', $time);
                             }

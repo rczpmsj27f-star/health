@@ -54,13 +54,6 @@
             if (isCapacitor) {
                 console.log('📱 Using native Capacitor plugin for permission request');
                 
-                // Check if we've already prompted
-                const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
-                if (alreadyPrompted === 'true') {
-                    console.log('ℹ️ User has already been prompted for notification permissions - skipping');
-                    return;
-                }
-                
                 // Wait for OneSignalCapacitor to be available
                 if (!window.OneSignalCapacitor || typeof window.OneSignalCapacitor.requestPermission !== 'function') {
                     console.log('⚠️ OneSignalCapacitor not ready - retrying...');
@@ -75,9 +68,24 @@
                         console.log('✅ Native notification permission already granted');
                         localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
                         return;
+                    } else if (status && status.permission === false) {
+                        console.log('⚠️ Native notification permission denied - checking if already prompted');
+                        const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
+                        if (alreadyPrompted === 'true') {
+                            console.log('ℹ️ User previously denied - not prompting again');
+                            return;
+                        }
+                        // If not prompted before, fall through to request
                     }
                 } catch (e) {
                     console.log('ℹ️ Could not check permission status:', e);
+                }
+                
+                // Check if we've already prompted
+                const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
+                if (alreadyPrompted === 'true') {
+                    console.log('ℹ️ User has already been prompted for notification permissions - skipping');
+                    return;
                 }
                 
                 // Request permission via native plugin
@@ -113,14 +121,6 @@
             
             console.log('✅ OneSignal detected - checking permission status');
             
-            // Check if we've already prompted the user
-            const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
-            
-            if (alreadyPrompted === 'true') {
-                console.log('ℹ️ User has already been prompted for notification permissions - skipping');
-                return;
-            }
-            
             // Check current permission status using native Notification API when available
             if (typeof Notification !== 'undefined' && Notification.permission) {
                 const permission = Notification.permission;
@@ -131,11 +131,26 @@
                     localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
                     return;
                 } else if (permission === 'denied') {
-                    console.log('⚠️ Notification permission denied - will not prompt again');
+                    console.log('⚠️ Notification permission denied by browser');
+                    // Check if we've already prompted the user about this
+                    const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
+                    if (alreadyPrompted === 'true') {
+                        console.log('ℹ️ User previously denied - not prompting again');
+                        return;
+                    }
+                    // Mark as prompted so we don't keep trying
                     localStorage.setItem(PERMISSION_CHECK_KEY, 'true');
                     return;
                 }
                 // If permission === 'default', continue to request permission below
+            }
+            
+            // Check if we've already prompted the user
+            const alreadyPrompted = localStorage.getItem(PERMISSION_CHECK_KEY);
+            
+            if (alreadyPrompted === 'true') {
+                console.log('ℹ️ User has already been prompted for notification permissions - skipping');
+                return;
             }
             
             // Additional check for OneSignal's permission status

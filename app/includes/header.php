@@ -108,19 +108,11 @@ body {
     /* Use CSS variable + safe area inset for iOS notch */
     padding-top: calc(var(--header-height) + env(safe-area-inset-top)) !important;
     padding-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom)) !important;
-    /* Smooth page transitions */
-    opacity: 0;
-    animation: fadeIn 0.3s ease-in forwards;
 }
 
 html {
     /* Smooth scrolling for anchor links */
     scroll-behavior: smooth;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }
 
 @media (max-width: 576px) {

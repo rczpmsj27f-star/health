@@ -129,7 +129,6 @@ body {
     line-height: 1.6;
     color: var(--color-text);
     color: #333 !important; /* Force dark text */
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Card Layout (for all pages) */

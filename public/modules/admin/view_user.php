@@ -57,7 +57,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
 
         <div class="info-item">
             <div class="info-label">Name</div>
-            <div class="info-value"><?= htmlspecialchars(($user['first_name'] ?? '') . " " . ($user['surname'] ?? '')) ?></div>
+            <div class="info-value"><?= htmlspecialchars(trim(($user['first_name'] ?? '') . " " . ($user['surname'] ?? ''))) ?: 'Not set' ?></div>
         </div>
 
         <div class="info-item">
@@ -106,7 +106,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
             <form id="deleteUserForm" method="POST" action="/modules/admin/delete_user.php" style="margin-top: 12px;">
                 <input type="hidden" name="id" value="<?= $id ?>">
                 <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
-                <button type="submit" class="btn btn-danger delete-user-btn" style="width: 100%; background: #dc2626; cursor: pointer;">
+                <button type="submit" class="btn btn-danger delete-user-btn" style="width: 100%; cursor: pointer;">
                     🗑️ Delete User
                 </button>
             </form>

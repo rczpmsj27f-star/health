@@ -162,16 +162,15 @@ const ColorPickerModal = {
         const grid = document.getElementById('color-palette-grid');
         grid.innerHTML = '';
         
-        this.colorPalette.forEach((color, index) => {
+        this.colorPalette.forEach(color => {
             const colorOption = document.createElement('div');
-            const colorValue = color.value; // Explicitly capture color value
             colorOption.className = 'color-palette-option';
             colorOption.title = color.name;
-            colorOption.style.backgroundColor = colorValue;
-            colorOption.dataset.color = colorValue;
+            colorOption.style.backgroundColor = color.value;
+            colorOption.dataset.color = color.value;
             
             // Add border for light colors
-            if (colorValue === '#FFFFFF' || colorValue === '#FFFDD0' || colorValue === '#F5F5DC') {
+            if (color.value === '#FFFFFF' || color.value === '#FFFDD0' || color.value === '#F5F5DC') {
                 colorOption.style.border = '2px solid #ccc';
             }
             

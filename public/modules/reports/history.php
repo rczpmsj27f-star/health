@@ -83,6 +83,7 @@ $history = $stmt->fetchAll();
                     <div class="empty-state-text">No history yet</div>
                 </div>
             <?php else: ?>
+                <?php $currentTime = time(); // Cache current time for performance ?>
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
@@ -108,10 +109,13 @@ $history = $stmt->fetchAll();
                                         <?php endif; ?>
                                     <?php elseif ($log['status'] === 'skipped'): ?>
                                         <span style="color: #ef4444; font-weight: 600;">✗ Skipped</span>
-                                    <?php elseif (strtotime($log['scheduled_date_time']) > time()): ?>
-                                        <span style="color: #6b7280; font-weight: 600;">⊙ Pending</span>
                                     <?php else: ?>
-                                        <span style="color: #f59e0b; font-weight: 600;">⊙ Missed</span>
+                                        <?php // Status is null/pending - check if future or past ?>
+                                        <?php if (strtotime($log['scheduled_date_time']) > $currentTime): ?>
+                                            <span style="color: #6b7280; font-weight: 600;">⊙ Pending</span>
+                                        <?php else: ?>
+                                            <span style="color: #f59e0b; font-weight: 600;">⊙ Missed</span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td style="padding: 12px;">

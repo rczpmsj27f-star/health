@@ -46,22 +46,25 @@ $reminderSettings = [
 ];
 
 // Update user_notification_settings table with reminder preferences
+// Use INSERT ... ON DUPLICATE KEY UPDATE to handle both new and existing users
 $stmt = $pdo->prepare("
-    UPDATE user_notification_settings 
-    SET notify_at_time = ?, 
-        notify_after_10min = ?, 
-        notify_after_20min = ?, 
-        notify_after_30min = ?, 
-        notify_after_60min = ?
-    WHERE user_id = ?
+    INSERT INTO user_notification_settings 
+        (user_id, notify_at_time, notify_after_10min, notify_after_20min, notify_after_30min, notify_after_60min)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+        notify_at_time = VALUES(notify_at_time),
+        notify_after_10min = VALUES(notify_after_10min),
+        notify_after_20min = VALUES(notify_after_20min),
+        notify_after_30min = VALUES(notify_after_30min),
+        notify_after_60min = VALUES(notify_after_60min)
 ");
 $stmt->execute([
+    $_SESSION['user_id'],
     $reminderSettings['notify_at_time'],
     $reminderSettings['notify_after_10min'],
     $reminderSettings['notify_after_20min'],
     $reminderSettings['notify_after_30min'],
-    $reminderSettings['notify_after_60min'],
-    $_SESSION['user_id']
+    $reminderSettings['notify_after_60min']
 ]);
 
 $_SESSION['success_msg'] = "Notification preferences saved successfully!";

@@ -471,7 +471,7 @@ unset($_SESSION['success_msg']);
     <style>
     /* Expandable section styles */
     .expandable-section .section-content {
-        max-height: 2000px;
+        max-height: 5000px;
         overflow: hidden;
         transition: max-height 0.3s ease;
     }

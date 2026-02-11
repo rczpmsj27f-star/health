@@ -50,22 +50,32 @@ echo "<table border='1' cellpadding='5'>";
 echo "<tr><th>Med ID</th><th>Name</th><th>Dose Time</th><th>Special Timing</th><th>Overdue?</th></tr>";
 
 $overdueCount = 0;
-$currentTimeStamp = strtotime(date('H:i'));
+$currentRealDateTime = new DateTime();
 
 foreach ($medications as $med) {
-    $doseTime = strtotime($med['dose_time']);
-    $isOverdue = false;
+    if (empty($med['dose_time'])) {
+        continue;
+    }
     
-    if (!empty($med['special_timing']) && $med['special_timing'] === 'on_waking') {
-        $isOverdue = $currentTimeStamp > strtotime('09:00');
+    // Handle special timing overrides
+    if ($med['special_timing'] === 'on_waking') {
+        // "On waking" medications are considered overdue after 9:00 AM
+        $effectiveTime = $todayDate . ' 09:00:00';
         $logic = "on_waking (after 9am)";
-    } elseif (!empty($med['special_timing']) && $med['special_timing'] === 'before_bed') {
-        $isOverdue = $currentTimeStamp > strtotime('22:00');
+    } elseif ($med['special_timing'] === 'before_bed') {
+        // "Before bed" medications are considered overdue after 10:00 PM
+        $effectiveTime = $todayDate . ' 22:00:00';
         $logic = "before_bed (after 10pm)";
     } else {
-        $isOverdue = $currentTimeStamp > $doseTime;
-        $logic = "regular (current > dose_time)";
+        // Regular timed medications use their actual dose_time
+        $effectiveTime = $todayDate . ' ' . $med['dose_time'];
+        $logic = "regular (DateTime comparison)";
     }
+    
+    $scheduledDT = new DateTime($effectiveTime);
+    
+    // Only count as overdue if the effective scheduled datetime is in the past
+    $isOverdue = $scheduledDT < $currentRealDateTime;
     
     if ($isOverdue) {
         $overdueCount++;

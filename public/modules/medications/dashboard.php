@@ -84,12 +84,8 @@ $stmt = $pdo->prepare("
     FROM medication_logs
     WHERE user_id = ? 
     AND DATE(scheduled_date_time) = ?
-    AND (
-        scheduled_date_time >= ? 
-        OR status IN ('taken', 'skipped')
-    )
 ");
-$stmt->execute([$targetUserId, $todayDate, $currentDateTime]);
+$stmt->execute([$targetUserId, $todayDate]);
 $medLogs = [];
 while ($log = $stmt->fetch()) {
     $key = $log['medication_id'] . '_' . $log['scheduled_date_time'];
@@ -111,14 +107,8 @@ foreach ($todaysMeds as $med) {
         foreach ($doseTimes as $doseTime) {
             $scheduledDateTime = $todayDate . ' ' . date('H:i:s', strtotime($doseTime['dose_time']));
             
-            // Skip if this dose time is in the past AND has no log entry
+            // Keep past doses visible - they should show as overdue with Take/Skip buttons
             $logKey = $med['id'] . '_' . $scheduledDateTime;
-            $hasLog = isset($medLogs[$logKey]);
-            $isPastTime = strtotime($scheduledDateTime) < $currentDateTimeStamp;
-            
-            if ($isPastTime && !$hasLog) {
-                continue; // Skip past doses without logs
-            }
             
             $medWithStatus = $med;
             $medWithStatus['special_time'] = $doseTime['special_time'] ?? null;

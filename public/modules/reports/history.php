@@ -111,10 +111,14 @@ $history = $stmt->fetchAll();
                                         <span style="color: #ef4444; font-weight: 600;">✗ Skipped</span>
                                     <?php else: ?>
                                         <?php // Status is null/pending - check if future or past ?>
-                                        <?php if (strtotime($log['scheduled_date_time']) > $currentTime): ?>
+                                        <?php 
+                                        $isToday = date('Y-m-d', strtotime($log['scheduled_date_time'])) === date('Y-m-d');
+                                        if (strtotime($log['scheduled_date_time']) > $currentTime): ?>
                                             <span style="color: #6b7280; font-weight: 600;">⊙ Pending</span>
+                                        <?php elseif ($isToday): ?>
+                                            <span style="color: #f59e0b; font-weight: 600;">⏰ Overdue</span>
                                         <?php else: ?>
-                                            <span style="color: #f59e0b; font-weight: 600;">⊙ Missed</span>
+                                            <span style="color: #ef4444; font-weight: 600;">✗ Missed</span>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </td>

@@ -122,10 +122,6 @@ $archivedMeds = $stmt->fetchAll();
     </script>
 </head>
 <body>
-    <a href="/modules/medications/dashboard.php" class="back-to-dashboard" title="Back to Medication Dashboard">
-        ← Back to Dashboard
-    </a>
-    
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div class="page-content">

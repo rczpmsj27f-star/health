@@ -23,6 +23,7 @@ $todayDate = date('Y-m-d');
 $currentDateTime = date('Y-m-d H:i:s');
 
 // Query for overdue medications with special time handling
+// This query retrieves medications scheduled for today with their dose times
 $stmt = $pdo->prepare("
     SELECT 
         m.id, 
@@ -55,10 +56,10 @@ $stmt = $pdo->prepare("
 $stmt->execute([$todayDate, $_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Count overdue medications
+// Count overdue medications - only those with scheduled_date_time in the past AND still pending
 $overdueCount = 0;
 $firstOverdueMedId = null;
-$currentTimeStamp = strtotime(date('H:i'));
+$currentRealDateTime = new DateTime();
 
 foreach ($medications as $med) {
     // Note: dose_time is already validated as NOT NULL in query at line 45
@@ -67,21 +68,13 @@ foreach ($medications as $med) {
         continue;
     }
     
-    $doseTime = strtotime($med['dose_time']);
-    $isOverdue = false;
+    // Build the full scheduled datetime for today
+    $scheduledDateTime = $todayDate . ' ' . $med['dose_time'];
+    $scheduledDT = new DateTime($scheduledDateTime);
     
-    // Apply special timing rules only if special_timing is set
-    // For regular medications (no special timing), compare against actual dose time
-    if (!empty($med['special_timing']) && $med['special_timing'] === 'on_waking') {
-        // Overdue after 9am
-        $isOverdue = $currentTimeStamp > strtotime('09:00');
-    } elseif (!empty($med['special_timing']) && $med['special_timing'] === 'before_bed') {
-        // Overdue after 10pm  
-        $isOverdue = $currentTimeStamp > strtotime('22:00');
-    } else {
-        // Regular time - overdue after scheduled time
-        $isOverdue = $currentTimeStamp > $doseTime;
-    }
+    // Only count as overdue if the scheduled datetime is in the past
+    // This excludes future doses scheduled for later today
+    $isOverdue = $scheduledDT < $currentRealDateTime;
     
     // Count if overdue - status is already filtered in query (line 46: status IS NULL OR pending)
     // and taken medications are excluded via NOT EXISTS subquery (lines 47-53)

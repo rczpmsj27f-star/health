@@ -51,6 +51,7 @@ unset($_SESSION['success_msg']);
     <title>Notification Preferences</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/capacitor-push.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
@@ -64,6 +65,20 @@ unset($_SESSION['success_msg']);
                 ✓ <?= htmlspecialchars($successMsg) ?>
             </div>
         <?php endif; ?>
+        
+        <!-- iOS Native Push Notification Section (Capacitor) -->
+        <div id="ios-push-status" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px; display: none;">
+            <h3 style="margin-top: 0; color: var(--color-primary); font-size: 20px; margin-bottom: 16px;">📱 iOS Push Notifications</h3>
+            <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 12px;">
+                Enable iOS push notifications to receive medication reminders, alerts, and updates even when the app is closed.
+            </p>
+            <button type="button" id="enable-ios-push-btn" onclick="initializeNativePush()" 
+                    style="padding: 12px 24px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                🔔 Enable iOS Push Notifications
+            </button>
+            <div id="ios-push-status-message" style="margin-top: 16px; padding: 12px; background: #f3f4f6; border-radius: 6px; font-size: 14px;">
+            </div>
+        </div>
         
         <!-- Push Notification Permission Toggle -->
         <div id="push-permission-section" style="background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px; display: none;">

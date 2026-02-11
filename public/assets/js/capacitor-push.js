@@ -258,8 +258,9 @@ document.head.appendChild(style);
 function initializeWhenReady(retryCount = 0) {
     // Check if Capacitor is available
     if (typeof window.Capacitor !== 'undefined') {
-        console.log('Capacitor detected - initializing push notifications');
-        initializeNativePush();
+        console.log('Capacitor detected - showing iOS push section');
+        // Just show the section, don't auto-initialize (user must click button)
+        showIOSPushSection();
     } else if (retryCount < MAX_CAPACITOR_WAIT_RETRIES) {
         // If Capacitor is not yet available, wait a bit and try again
         // This handles the case where Capacitor runtime is still loading

@@ -33,6 +33,9 @@ tmp/
 temp/
 *.tmp
 
+# Test files
+test_header_session_cache.php
+
 # Node.js
 node_modules/
 npm-debug.log

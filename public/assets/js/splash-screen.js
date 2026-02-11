@@ -3,6 +3,9 @@
  * Prevents black flash during page navigation by hiding splash screen after page loads
  */
 
+// Configuration
+const SPLASH_HIDE_DELAY_MS = 100; // Delay to ensure page is fully rendered before hiding splash
+
 // Check if running in Capacitor environment
 if (window.Capacitor) {
     const { SplashScreen } = window.Capacitor.Plugins;
@@ -11,7 +14,7 @@ if (window.Capacitor) {
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             // Wait for page to fully render to prevent black flash
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, SPLASH_HIDE_DELAY_MS));
             
             // Hide splash screen smoothly
             if (SplashScreen && SplashScreen.hide) {

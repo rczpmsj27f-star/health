@@ -54,40 +54,45 @@ $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Count overdue medications - only those with scheduled_date_time in the past AND still pending
 $overdueCount = 0;
 $firstOverdueMedId = null;
-$currentRealDateTime = new DateTime();
+$currentTime = time(); // Current unix timestamp
+$countedDoses = []; // Track already-counted doses to prevent duplicates
 
 foreach ($medications as $med) {
     if (empty($med['dose_time'])) {
         continue;
     }
     
+    // Create deduplication key: medication_id + dose_time using hash for robustness
+    $dedupeKey = md5($med['id'] . '||' . $med['dose_time']);
+    if (isset($countedDoses[$dedupeKey])) {
+        // Already counted this dose, skip to avoid duplicate counting
+        continue;
+    }
+    
     // Handle special timing overrides
     if ($med['special_timing'] === 'on_waking') {
         // "On waking" medications are considered overdue after 9:00 AM
-        $effectiveTime = $todayDate . ' 09:00:00';
+        $scheduledTimestamp = strtotime($todayDate . ' 09:00:00');
     } elseif ($med['special_timing'] === 'before_bed') {
         // "Before bed" medications are considered overdue after 10:00 PM
-        $effectiveTime = $todayDate . ' 22:00:00';
+        $scheduledTimestamp = strtotime($todayDate . ' 22:00:00');
     } else {
         // Regular timed medications use their actual dose_time
-        // Extract only the time portion to handle both time-only and full datetime formats
-        $timestamp = strtotime($med['dose_time']);
-        if ($timestamp === false) {
+        // Build the scheduled timestamp from today's date + dose_time
+        $scheduledTimestamp = strtotime($todayDate . ' ' . $med['dose_time']);
+        if ($scheduledTimestamp === false) {
             // Skip if dose_time is in an invalid format
             error_log("Invalid dose_time format for medication ID {$med['id']}: {$med['dose_time']}");
             continue;
         }
-        $doseTimeOnly = date('H:i:s', $timestamp);
-        $effectiveTime = $todayDate . ' ' . $doseTimeOnly;
     }
     
-    $scheduledDT = new DateTime($effectiveTime);
-    
-    // Only count as overdue if the effective scheduled datetime is in the past
-    $isOverdue = $scheduledDT < $currentRealDateTime;
+    // Use simple strtotime/time comparison (matching medication_item.php line 48)
+    $isOverdue = $scheduledTimestamp < $currentTime;
     
     if ($isOverdue) {
         $overdueCount++;
+        $countedDoses[$dedupeKey] = true; // Mark as counted
         if ($firstOverdueMedId === null) {
             $firstOverdueMedId = $med['id'];
         }

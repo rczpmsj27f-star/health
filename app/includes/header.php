@@ -9,7 +9,7 @@ if (!isset($displayName)) {
         if (empty($displayName)) {
             $displayName = explode('@', $user['email'] ?? 'User')[0];
         }
-        $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
+        $avatarUrl = isset($user['profile_picture_path']) && !empty($user['profile_picture_path']) ? $user['profile_picture_path'] : '/assets/images/default-avatar.svg';
     } else {
         $displayName = 'User';
         $avatarUrl = '/assets/images/default-avatar.svg';

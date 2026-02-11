@@ -25,7 +25,7 @@ $currentDateTime = date('Y-m-d H:i:s');
 // Query for overdue medications with special time handling
 // This query retrieves medications scheduled for today with their dose times
 $stmt = $pdo->prepare("
-    SELECT DISTINCT
+    SELECT 
         m.id, 
         mdt.dose_time, 
         ms.special_timing
@@ -47,6 +47,7 @@ $stmt = $pdo->prepare("
         AND TIME(ml2.scheduled_date_time) = mdt.dose_time
         AND ml2.status IN ('taken', 'skipped')
     )
+    GROUP BY m.id, mdt.dose_time, ms.special_timing
 ");
 $stmt->execute([$_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);
 $medications = $stmt->fetchAll(PDO::FETCH_ASSOC);

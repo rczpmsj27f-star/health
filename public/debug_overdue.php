@@ -17,7 +17,7 @@ echo "<p><strong>Day of Week:</strong> $todayDayOfWeek</p>";
 echo "<hr>";
 
 $stmt = $pdo->prepare("
-    SELECT DISTINCT
+    SELECT 
         m.id as med_id,
         m.name as med_name,
         mdt.dose_time, 
@@ -40,6 +40,7 @@ $stmt = $pdo->prepare("
         AND TIME(ml2.scheduled_date_time) = mdt.dose_time
         AND ml2.status IN ('taken', 'skipped')
     )
+    GROUP BY m.id, m.name, mdt.dose_time, ms.special_timing
     ORDER BY mdt.dose_time
 ");
 $stmt->execute([$_SESSION['user_id'], "%$todayDayOfWeek%", $todayDate]);

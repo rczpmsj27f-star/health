@@ -213,7 +213,6 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
         /* High-specificity override for coming-soon tiles */
         .dashboard-grid .tile.tile--coming-soon {
             background: #e9ecef !important;
-            cursor: not-allowed !important;
             pointer-events: none !important;
         }
         

@@ -260,7 +260,7 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     
     .pill-label {
         font-size: 11px;
-        max-width: 100px;
+        max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
     }

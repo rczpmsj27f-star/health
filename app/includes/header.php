@@ -89,12 +89,6 @@ if (!isset($user) || !isset($displayName)) {
     opacity: 0.9;
 }
 
-/* Add padding to body to account for fixed header */
-body {
-    padding-top: 70px;
-    padding-bottom: 70px; /* Also account for footer */
-}
-
 @media (max-width: 576px) {
     .header-user {
         font-size: 14px;
@@ -108,10 +102,6 @@ body {
         width: 45px;
         height: 45px;
         border-width: 2px;
-    }
-    
-    body {
-        padding-top: 60px;
     }
 }
 </style>

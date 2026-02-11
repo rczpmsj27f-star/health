@@ -25,17 +25,12 @@ $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div style="max-width: 900px; margin: 0 auto; padding: 80px 16px 40px 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px 16px 100px 16px;"> <!-- Bottom padding: action bar (60px) + footer (70px) - some overlap -->
+        <div style="margin-bottom: 24px;">
             <h2 style="color: var(--color-primary); font-size: 28px; margin: 0;">🔔 Notifications</h2>
-            <?php if ($unreadCount > 0): ?>
-                <button onclick="markAllRead()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
-                    Mark All as Read
-                </button>
-            <?php endif; ?>
         </div>
         
-        <div id="notificationList" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+        <div id="notificationList" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 80px;">
             <?php if (empty($notifications)): ?>
                 <div style="padding: 60px 20px; text-align: center; color: var(--color-text-secondary);">
                     <div style="font-size: 64px; margin-bottom: 16px;">🔔</div>
@@ -84,6 +79,18 @@ $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+        
+        <!-- Fixed action bar above footer -->
+        <?php if ($unreadCount > 0): ?>
+        <div style="position: fixed; bottom: 80px; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; padding: 12px 16px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 999;">
+            <div style="max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--color-text-secondary); font-size: 14px;"><?= $unreadCount ?> unread notification<?= $unreadCount !== 1 ? 's' : '' ?></span>
+                <button onclick="markAllRead()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                    Mark All as Read
+                </button>
+            </div>
+        </div>
+        <?php endif; ?>
         
         <div style="margin-top: 24px; text-align: center;">
             <a href="/dashboard.php" style="color: var(--color-text-secondary); text-decoration: none;">← Back to Dashboard</a>

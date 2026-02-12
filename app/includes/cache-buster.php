@@ -5,11 +5,16 @@
  * Aggressive cache-busting headers to force content updates
  * Bypasses server-side caches (LiteSpeed, Cloudflare) and browser caches
  * 
- * This file MUST be included at the very top of header.php before ANY output
- * to ensure headers are sent before HTML content.
+ * This file MUST be included as the FIRST LINE of every PHP entry point page
+ * BEFORE any other code, output, or includes to ensure headers are sent properly.
  * 
- * Note: This module assumes session_start() has already been called by the including page.
+ * This module handles session_start() internally if not already started.
  */
+
+// Start session if not already started (must be before any output)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Aggressive Cache-Control headers
 // - no-store: Prevents caching entirely

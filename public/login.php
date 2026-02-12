@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../app/includes/cache-buster.php';
 $err = $_SESSION['error'] ?? null;
 $ok  = $_SESSION['success'] ?? null;
 unset($_SESSION['error'], $_SESSION['success']);

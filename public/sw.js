@@ -1,4 +1,6 @@
-const CACHE_NAME = 'health-tracker-v3'; // Version bump to force update
+// Dynamic cache name with timestamp - forces cache invalidation on every deploy
+const CACHE_VERSION = new Date().getTime(); // Unix timestamp in milliseconds
+const CACHE_NAME = `health-tracker-v${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
   '/assets/css/app.css',
@@ -16,13 +18,15 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches aggressively
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
+          // Delete ALL old caches that don't match current cache name
           if (cacheName !== CACHE_NAME) {
+            console.log('Service Worker: Clearing old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })

@@ -158,6 +158,10 @@ class AjaxNavigation {
                 history.pushState({ url }, newTitle, url);
             }
 
+            // ✅ CRITICAL FIX: Force CSS stylesheets to re-apply to new content
+            // This ensures all CSS rules are re-evaluated for the new DOM elements
+            this.forceStylesheetRefresh();
+
             // Reinitialize page scripts
             this.reinitializeScripts();
 
@@ -239,6 +243,51 @@ class AjaxNavigation {
             // Replace old script with new one to trigger execution
             oldScript.parentNode.replaceChild(newScript, oldScript);
         });
+    }
+
+    forceStylesheetRefresh() {
+        console.log('🔄 Refreshing stylesheets for new content...');
+        
+        // Why this is necessary:
+        // In iOS WebView/Capacitor, inserting new DOM via AJAX doesn't always trigger
+        // CSS re-evaluation for the new elements. This forces the browser to re-parse
+        // all CSS rules and apply them to the newly inserted content.
+        
+        // Method 1: Re-trigger stylesheets by updating href with cache-buster
+        // Convert StyleSheetList to array to avoid mutation issues during iteration
+        const stylesheets = Array.from(document.styleSheets);
+        
+        for (let i = 0; i < stylesheets.length; i++) {
+            try {
+                const ownerNode = stylesheets[i].ownerNode;
+                
+                // Only process <link> tags (external stylesheets)
+                if (ownerNode && ownerNode.tagName === 'LINK' && ownerNode.rel === 'stylesheet') {
+                    let href = ownerNode.getAttribute('href');
+                    
+                    if (href) {
+                        // Add cache-buster to force re-fetch and re-parse
+                        // Preserve existing query parameters by appending, not replacing
+                        const separator = href.includes('?') ? '&' : '?';
+                        const newHref = href + separator + 'css-refresh=' + Date.now();
+                        
+                        console.log('📝 Refreshing stylesheet:', href);
+                        ownerNode.href = newHref;
+                    }
+                }
+            } catch (e) {
+                // Some stylesheets (external CDNs, cross-origin) may not be accessible
+                console.log('⚠️ Could not refresh stylesheet (may be cross-origin):', e.message);
+            }
+        }
+        
+        // Method 2: Force browser repaint
+        // This ensures the browser recalculates styles for all new elements
+        // The void operator discards the return value - we only want the side effect (reflow)
+        // This works in conjunction with Method 1 to ensure iOS WebKit applies styles
+        void document.body.offsetHeight; // Force reflow
+        
+        console.log('✅ Stylesheet refresh complete');
     }
 }
 

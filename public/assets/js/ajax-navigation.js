@@ -67,10 +67,10 @@ class AjaxNavigation {
             
             // File operations - actual download/export handlers (not list pages)
             // Note: /modules/reports/exports.php (plural) is a list page and will use AJAX
-            // Only block the actual export handlers in the reports module
+            // Only block the actual export handlers in the reports module and download directory
             if (path === '/modules/reports/export.php' ||
                 path === '/modules/reports/export_pdf.php' ||
-                path.includes('/download/')) {            // Download directory
+                path.startsWith('/download/')) {         // Download directory and its subdirectories
                 return false;
             }
             

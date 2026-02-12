@@ -171,7 +171,8 @@ class AjaxNavigation {
             top: 0,
             behavior: 'smooth'
         });
-        // Wait for smooth scroll to complete
+        // Wait 100ms for scroll - optimized for speed per requirements
+        // Note: May overlap with scroll on slower devices, but creates snappier UX
         return new Promise(resolve => setTimeout(resolve, 100));
     }
 

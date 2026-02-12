@@ -482,7 +482,10 @@ foreach ($categories as $category) {
         
         /* iOS-specific WebKit fixes */
         @media (max-width: 768px) {
-            * {
+            .category-section,
+            .option-card,
+            .option-actions,
+            .btn-sm {
                 -webkit-transform-origin: 0 0;
                 box-sizing: border-box;
             }

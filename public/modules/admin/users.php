@@ -286,6 +286,7 @@ $users = $stmt->fetchAll();
                 font-size: 11px;
             }
 
+            /* Small buttons to fit inline on iOS - trade-off for horizontal layout */
             .action-buttons {
                 display: -webkit-box !important;
                 display: -webkit-flex !important;
@@ -313,7 +314,7 @@ $users = $stmt->fetchAll();
                 min-height: 22px !important;
                 max-height: 22px !important;
                 height: 22px !important;
-                font-size: 9px !important;
+                font-size: 9px !important; /* Small to fit 3 buttons inline on iPhone */
                 margin-top: 0 !important;
                 white-space: nowrap !important;
             }

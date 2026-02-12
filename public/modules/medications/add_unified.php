@@ -87,7 +87,6 @@ $isAdmin = Auth::isAdmin();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div id="main-content">
     <div class="unified-form-container">
         <div style="text-align: center; margin-bottom: 32px;">
             <h2 style="color: var(--color-primary); font-size: 32px; margin: 0 0 8px 0;">💊 Add New Medication</h2>
@@ -684,7 +683,6 @@ $isAdmin = Auth::isAdmin();
         updateTimeInputs();
     });
     </script>
-    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

@@ -14,8 +14,7 @@ $medId = $_GET['med'];
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
-    <div id="main-content">
-    <div class="centered-page" style="padding: 16px;">
+    <div class="centered-page">
         <div class="page-card">
         <div class="page-header">
             <h2>Medication Schedule</h2>
@@ -74,7 +73,6 @@ $medId = $_GET['med'];
         }
     }
     </script>
-    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

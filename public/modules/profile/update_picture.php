@@ -351,6 +351,7 @@ unset($_SESSION['error'], $_SESSION['success']);
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

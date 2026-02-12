@@ -23,7 +23,42 @@ body {
 
 /* AJAX Navigation - Smooth content transitions */
 #main-content {
+    background-color: #ffffff;
+    min-height: 100vh;
     transition: opacity 0.15s ease-out;
+}
+
+/* Ensure smooth transitions without layout shift */
+body, html, #main-content {
+    transition: background-color 0s ease;
+}
+
+/* Prevent scrollbar shift on content change */
+html {
+    overflow-y: scroll;
+}
+
+/* Center all page headers globally */
+.page-title {
+    text-align: center;
+}
+
+.page-title h2,
+.page-title h1 {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Ensure page content centers properly */
+.page-content {
+    width: 100%;
+}
+
+/* Center headers in medication dashboard and reports */
+.page-content > h1,
+.page-content > h2 {
+    text-align: center;
 }
 
 /* Force Light Mode - Override System Preferences */

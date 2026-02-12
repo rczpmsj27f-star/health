@@ -34,17 +34,12 @@ class AjaxNavigation {
     shouldIntercept(link) {
         const href = link.getAttribute('href');
         
-        // Block these specific URLs/patterns (exceptions)
+        // Block dangerous URL schemes and special links
         if (!href || 
             href.startsWith('#') || 
             href.startsWith('javascript:') ||
             href.startsWith('data:') ||
             href.startsWith('vbscript:') ||
-            href.startsWith('/logout') ||              // Logout should reload/redirect
-            href.startsWith('/login') ||               // Login should reload
-            href.includes('/export') ||                // PDF/export downloads should reload
-            href.includes('/download') ||              // File downloads should reload
-            href.includes('/api/') ||                  // API calls should reload
             href.startsWith('mailto:') ||              // Email links
             href.startsWith('tel:')) {                 // Phone links
             return false;
@@ -53,10 +48,37 @@ class AjaxNavigation {
         if (link.target === '_blank') return false;
         if (link.hasAttribute('data-no-ajax')) return false;
         
-        // Intercept ALL internal links (except those blocked above)
+        // Parse URL to check path and origin
         try {
             const url = new URL(link.href, window.location.origin);
-            return url.origin === window.location.origin;  // YES - use AJAX for all internal links
+            
+            // Only handle internal links
+            if (url.origin !== window.location.origin) return false;
+            
+            const path = url.pathname;
+            
+            // Block specific pages/patterns that need full page reload
+            // Authentication pages - critical security flows
+            if (path === '/logout.php' || path === '/logout' ||
+                path === '/login.php' || path === '/login') {
+                return false;
+            }
+            
+            // File operations - actual download/export handlers (not list pages)
+            // Note: /modules/reports/exports.php (with s) is a list page and will use AJAX
+            if (path.endsWith('/export.php') ||           // Export handler
+                path.endsWith('/export_pdf.php') ||       // PDF export handler
+                path.includes('/download/')) {            // Download directory
+                return false;
+            }
+            
+            // API endpoints
+            if (path.includes('/api/')) {
+                return false;
+            }
+            
+            // Intercept all other internal links for smooth AJAX navigation
+            return true;
         } catch (e) {
             return false;
         }

@@ -12,42 +12,6 @@
 class AjaxNavigation {
     constructor() {
         this.contentSelector = '#main-content';
-        this.ajaxPages = [
-            // Main
-            '/dashboard.php',
-            // Medications
-            '/modules/medications/dashboard.php',
-            '/modules/medications/list.php',
-            '/modules/medications/log_prn.php',
-            '/modules/medications/prn_calculator.php',
-            '/modules/medications/view.php',
-            '/modules/medications/stock.php',
-            '/modules/medications/edit.php',
-            // Settings
-            '/modules/settings/dashboard.php',
-            '/modules/settings/linked_users.php',
-            '/modules/settings/preferences.php',
-            '/modules/settings/two_factor.php',
-            '/modules/settings/biometric.php',
-            '/modules/settings/notifications.php',
-            '/modules/settings/security.php',
-            '/modules/settings/privacy_settings.php',
-            // Profile
-            '/modules/profile/view.php',
-            '/modules/profile/edit.php',
-            // Notifications
-            '/modules/notifications/index.php',
-            // Reports
-            '/modules/reports/activity.php',
-            '/modules/reports/compliance.php',
-            '/modules/reports/exports.php',
-            '/modules/reports/history.php',
-            // Admin
-            '/modules/admin/dashboard.php',
-            '/modules/admin/users.php',
-            '/modules/admin/view_user.php',
-            '/modules/admin/dropdown_maintenance.php'
-        ];
         this.init();
     }
 
@@ -69,26 +33,55 @@ class AjaxNavigation {
 
     shouldIntercept(link) {
         const href = link.getAttribute('href');
-        // Block dangerous URL schemes
+        
+        // Block dangerous URL schemes and special links
         if (!href || 
             href.startsWith('#') || 
             href.startsWith('javascript:') ||
             href.startsWith('data:') ||
-            href.startsWith('vbscript:')) {
+            href.startsWith('vbscript:') ||
+            href.startsWith('mailto:') ||              // Email links
+            href.startsWith('tel:')) {                 // Phone links
             return false;
         }
+        
         if (link.target === '_blank') return false;
         if (link.hasAttribute('data-no-ajax')) return false;
         
-        // Only intercept internal links to AJAX-enabled pages
+        // Parse URL to check path and origin
         try {
             const url = new URL(link.href, window.location.origin);
+            
+            // Only handle internal links
             if (url.origin !== window.location.origin) return false;
             
-            // Use exact path matching to prevent false positives
-            return this.ajaxPages.includes(url.pathname);
+            const path = url.pathname;
+            
+            // Block specific pages/patterns that need full page reload
+            // Authentication pages - critical security flows
+            // Note: App uses URL rewriting (.htaccess) so both clean URLs and .php extensions are in use
+            const authPages = ['/logout.php', '/logout', '/login.php', '/login'];
+            if (authPages.includes(path)) {
+                return false;
+            }
+            
+            // File operations - actual download/export handlers (not list pages)
+            // Note: /modules/reports/exports.php (plural) is a list page and will use AJAX
+            // Only block the actual export handlers in the reports module and download directory
+            if (path === '/modules/reports/export.php' ||
+                path === '/modules/reports/export_pdf.php' ||
+                path.startsWith('/download/')) {         // Download directory and its subdirectories
+                return false;
+            }
+            
+            // API endpoints
+            if (path.includes('/api/')) {
+                return false;
+            }
+            
+            // Intercept all other internal links for smooth AJAX navigation
+            return true;
         } catch (e) {
-            // Invalid URL, don't intercept
             return false;
         }
     }

@@ -3,31 +3,28 @@
  * Prevents black flash during page navigation by hiding splash screen after page loads
  */
 
-// Configuration
-const SPLASH_HIDE_DELAY_MS = 100; // Delay to ensure page is fully rendered before hiding splash
-
-// Check if running in Capacitor environment
-if (window.Capacitor) {
-    const { SplashScreen } = window.Capacitor.Plugins;
+// Only initialize splash screen once per app session
+if (!window.SPLASH_SCREEN_INITIALIZED) {
+    window.SPLASH_SCREEN_INITIALIZED = true;
     
-    // Hide splash screen after page is fully loaded
-    // Using DOMContentLoaded + delay is sufficient because:
-    // 1. The white background fills the window immediately (no black flash)
-    // 2. The 100ms delay ensures initial render is complete
-    // 3. Using 'load' event would delay too long and make app feel slow
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            // Wait for page to fully render to prevent black flash
-            await new Promise(resolve => setTimeout(resolve, SPLASH_HIDE_DELAY_MS));
-            
-            // Hide splash screen smoothly
-            if (SplashScreen && SplashScreen.hide) {
+    // Check if running in Capacitor environment
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+        const { SplashScreen } = window.Capacitor.Plugins;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait 500ms to ensure page is fully rendered before hiding splash
+            // This delay is specified in the requirements to balance two concerns:
+            // 1. Prevent black flash during initial render (white background stays visible)
+            // 2. Ensure all critical elements are rendered before showing content
+            // Trade-off: Slightly longer initial load feel vs. reliable visual consistency
+            await new Promise(resolve => setTimeout(resolve, 500));
+            try {
                 await SplashScreen.hide();
                 console.log('Splash screen hidden successfully');
+            } catch (e) {
+                // Error hiding splash screen - may already be hidden or plugin unavailable
+                console.log('SplashScreen hide error:', e?.message || e);
             }
-        } catch (e) {
-            // Splash screen may already be hidden or not available
-            console.log('SplashScreen hide skipped:', e.message || 'Already hidden');
-        }
-    });
+        });
+    }
 }

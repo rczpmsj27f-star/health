@@ -124,6 +124,7 @@ $isAdmin = Auth::isAdmin();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
+    <div id="main-content">
     <div class="dashboard-container">
         <div class="dashboard-title">
             <h2>Activity & Compliance</h2>
@@ -155,6 +156,7 @@ $isAdmin = Auth::isAdmin();
             </a>
         </div>
     </div>
+    </div> <!-- #main-content -->
     
     <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>

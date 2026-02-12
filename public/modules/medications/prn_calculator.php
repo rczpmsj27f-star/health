@@ -277,7 +277,7 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
             border: 1px solid #90caf9;
             border-top: none;
             border-radius: 0 0 6px 6px;
-            background: #f5f5f5;
+            background: rgb(245, 245, 245);
             transition: all 0.3s ease;
         }
         
@@ -306,7 +306,7 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
         }
         
         .btn-submit:disabled {
-            background: #ccc;
+            background: rgb(204, 204, 204);
             cursor: not-allowed;
         }
     </style>

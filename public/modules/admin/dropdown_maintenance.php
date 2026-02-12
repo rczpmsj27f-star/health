@@ -159,7 +159,7 @@ foreach ($categories as $category) {
         }
         
         .subsection-header:hover {
-            background: #e0e0e0;
+            background: rgb(224, 224, 224);
         }
         
         .subsection-title {

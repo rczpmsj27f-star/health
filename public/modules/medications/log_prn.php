@@ -210,7 +210,7 @@ foreach ($prnMedications as $med) {
         .progress-bar {
             width: 100%;
             height: 24px;
-            background: #e0e0e0;
+            background: rgb(224, 224, 224);
             border-radius: var(--radius-sm);
             overflow: hidden;
             margin-bottom: 4px;

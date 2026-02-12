@@ -107,7 +107,7 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     left: 0;
     right: 0;
     background: white;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid rgb(224, 224, 224);
     z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }

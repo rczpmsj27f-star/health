@@ -1,4 +1,6 @@
 // Dynamic cache version - uses timestamp to automatically invalidate old caches on deployment
+// Note: Date.now() is evaluated when Service Worker installs/updates, not on every page load
+// The browser caches the Service Worker file, so this only changes when sw.js is updated
 const CACHE_VERSION = 'v1-' + Date.now();
 const CACHE_NAME = `health-${CACHE_VERSION}`;
 
@@ -62,7 +64,9 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
     event.respondWith(
       fetch(event.request, { redirect: 'follow' })
-        .catch(() => {
+        .catch((error) => {
+          // Log the error for debugging
+          console.error('Service Worker: Failed to fetch CSS/JS:', url.pathname, error);
           // If network fails, return empty response to avoid breaking page
           return new Response('', { 
             status: 503, 
@@ -111,17 +115,22 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       })
-      .catch(() => {
+      .catch((error) => {
+        // Log the error for debugging
+        console.log('Service Worker: Network failed, trying cache:', url.pathname);
         // If network fails, try cache (offline support)
         return caches.match(event.request)
           .then((cachedResponse) => {
             if (cachedResponse) {
+              console.log('Service Worker: Serving from cache:', url.pathname);
               return cachedResponse;
             }
             // No cache and no network - return error
-            return new Response('Offline - Page not cached', {
+            console.error('Service Worker: No cache available for:', url.pathname, error);
+            return new Response('<!DOCTYPE html><html><head><title>Offline</title></head><body><h1>You are offline</h1><p>This page is not available offline. Please check your internet connection.</p></body></html>', {
               status: 503,
-              statusText: 'Service Unavailable'
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/html' }
             });
           });
       })

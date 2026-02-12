@@ -1,5 +1,6 @@
-// Dynamic cache name with timestamp - forces cache invalidation on every deploy
-const CACHE_VERSION = new Date().getTime(); // Unix timestamp in milliseconds
+// Cache version - increment this number when deploying to invalidate old caches
+// For automatic invalidation, the cache-buster.php headers ensure fresh PHP pages
+const CACHE_VERSION = 4; // Increment on each deployment
 const CACHE_NAME = `health-tracker-v${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
@@ -24,7 +25,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Delete ALL old caches that don't match current cache name
+          // Delete ALL old caches that don't match current cache version
           if (cacheName !== CACHE_NAME) {
             console.log('Service Worker: Clearing old cache:', cacheName);
             return caches.delete(cacheName);

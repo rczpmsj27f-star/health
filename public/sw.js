@@ -1,8 +1,8 @@
 // Dynamic cache version - uses timestamp to automatically invalidate old caches on deployment
 // Note: Date.now() is evaluated when Service Worker installs/updates, not on every page load
 // The browser caches the Service Worker file, so this only changes when sw.js is updated
-// The 'v1-' prefix allows manual cache invalidation by incrementing to 'v2-', 'v3-', etc. if needed
-const CACHE_VERSION = 'v1-' + Date.now();
+// The 'v2-' prefix reflects the new caching strategy: PHP files never cached, only images
+const CACHE_VERSION = 'v2-' + Date.now();
 const CACHE_NAME = `health-${CACHE_VERSION}`;
 
 // User-friendly offline page HTML
@@ -45,7 +45,7 @@ const OFFLINE_HTML = `<!DOCTYPE html>
 // Regex for matching image file extensions
 const IMAGE_EXTENSIONS = /\.(png|jpg|jpeg|gif|svg|webp|ico)$/i;
 
-// Only cache images and HTML - CSS/JS will ALWAYS fetch from network
+// Only cache images - CSS/JS/PHP will ALWAYS fetch from network
 const urlsToCache = [
   '/assets/images/icon-192x192.png',
   '/assets/images/icon-512x512.png'
@@ -151,7 +151,42 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For HTML pages: Cache with network fallback (for offline support)
+  // For PHP files: Network-only, with fallback to any previously cached version (from old SW)
+  // This ensures dynamic PHP content is always fresh from the server
+  // Note: PHP files are NEVER cached by this Service Worker - offline fallback only works
+  // if there's an old cached version from a previous Service Worker version
+  const isPhp = url.pathname.endsWith('.php');
+  
+  if (isPhp) {
+    event.respondWith(
+      fetch(event.request, { redirect: 'follow' })
+        .then((networkResponse) => {
+          // DO NOT cache PHP responses - they are dynamic and should always be fresh
+          return networkResponse;
+        })
+        .catch((error) => {
+          // If network fails, try cache (will only work if previously cached by old SW)
+          console.error('Service Worker: Network failed for PHP file:', url.pathname, error);
+          return caches.match(event.request)
+            .then((cachedResponse) => {
+              if (cachedResponse) {
+                console.log('Service Worker: Serving PHP from old cache (offline):', url.pathname);
+                return cachedResponse;
+              }
+              // No cache and no network - return user-friendly offline page
+              console.error('Service Worker: No cache available for:', url.pathname);
+              return new Response(OFFLINE_HTML, {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'text/html' }
+              });
+            });
+        })
+    );
+    return;
+  }
+  
+  // For static HTML pages: Network-first with cache (for offline support)
   event.respondWith(
     fetch(event.request, { redirect: 'follow' })
       .then((networkResponse) => {

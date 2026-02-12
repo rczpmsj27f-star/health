@@ -910,6 +910,7 @@ if ($medType === 'prn') {
     </a>
     
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
+    <div id="main-content">
 
     <div class="page-content">
         <div class="page-title">
@@ -2151,6 +2152,8 @@ if ($medType === 'prn') {
         }
     });
     </script>
+
+</div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

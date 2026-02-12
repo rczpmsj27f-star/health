@@ -110,6 +110,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 </head>
 <body class="centered-page">
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
+    <div id="main-content">
 
     <div style="max-width: 700px; margin: 0 auto; padding: 16px 16px 40px 16px;">
     <div class="page-card">
@@ -353,6 +354,8 @@ unset($_SESSION['error'], $_SESSION['success']);
     }
     </script>
     </div> <!-- wrapper div -->
+
+</div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

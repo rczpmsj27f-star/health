@@ -279,7 +279,7 @@ $users = $stmt->fetchAll();
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
 <div id="main-content">
-    <div class="page-content">
+    <div class="page-content" style="max-width: 1200px; margin: 0 auto; padding: 16px;">
         <?php if (isset($_SESSION['success_msg'])): ?>
             <div class="alert alert-success" style="max-width: 1200px; margin: 0 auto 12px;">
                 <?= htmlspecialchars($_SESSION['success_msg']) ?>

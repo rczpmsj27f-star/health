@@ -688,7 +688,7 @@ foreach ($prnMedications as $med) {
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div id="main-content">
-    <div class="page-content">
+    <div class="page-content" style="max-width: 1200px; margin: 0 auto; padding: 16px;">
         <div class="page-title">
             <h2>💊 Medication Dashboard</h2>
             <p>Today's schedule and medication management</p>

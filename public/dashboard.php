@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../app/includes/cache-buster.php';
 
 // Include database FIRST
 require_once __DIR__ . '/../app/config/database.php';

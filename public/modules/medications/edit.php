@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once "../../../app/includes/cache-buster.php";
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/helpers/dropdown_helper.php";

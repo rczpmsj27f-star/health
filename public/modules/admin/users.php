@@ -63,7 +63,7 @@ $users = $stmt->fetchAll();
         .page-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 16px 16px;
+            padding: 16px;
         }
         
         .page-title {
@@ -86,7 +86,7 @@ $users = $stmt->fetchAll();
         .search-form {
             max-width: 1200px;
             margin: 0 auto 12px;
-            padding: 16px 16px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 6px;

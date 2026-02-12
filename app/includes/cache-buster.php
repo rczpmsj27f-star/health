@@ -31,16 +31,6 @@ header("X-LiteSpeed-Cache-Control: no-cache");
 // Note: CF-Cache-Status is typically set by Cloudflare, but we can suggest bypass
 header("CDN-Cache-Control: no-cache");
 
-// Dynamic Last-Modified header (current time)
-// This ensures content is always considered fresh
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-
-// Dynamic ETag based on current timestamp
-// INTENTIONALLY random to prevent conditional requests (304 Not Modified)
-// This forces full responses every time, ensuring users always get latest content
-// Tradeoff: Increases bandwidth but guarantees no stale content
-header("ETag: \"" . md5(microtime(true)) . "\"");
-
 // Security headers
 // Prevent clickjacking attacks
 header("X-Frame-Options: SAMEORIGIN");

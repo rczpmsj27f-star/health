@@ -2,11 +2,11 @@
  * AJAX Navigation System for Smooth Page Transitions
  * Provides smooth fade-out/fade-in transitions between pages:
  * - Intercepts link clicks
- * - Fades out current content with opacity transition
- * - Scrolls to top smoothly
+ * - Fades out current content with opacity transition (100ms)
+ * - Scrolls to top smoothly (100ms)
  * - Fetches pages via AJAX
  * - Swaps only main content (not header/footer)
- * - Fades in new content with opacity transition
+ * - Fades in new content with opacity transition (100ms)
  * - Updates URL without page reload
  * - Blocks user interaction during transitions
  * 
@@ -157,13 +157,13 @@ class AjaxNavigation {
     fadeOut() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '0';
-        return new Promise(resolve => setTimeout(resolve, 200));
+        return new Promise(resolve => setTimeout(resolve, 100));
     }
 
     fadeIn() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '1';
-        return new Promise(resolve => setTimeout(resolve, 200));
+        return new Promise(resolve => setTimeout(resolve, 100));
     }
 
     scrollToTop() {
@@ -171,8 +171,9 @@ class AjaxNavigation {
             top: 0,
             behavior: 'smooth'
         });
-        // Wait for smooth scroll to complete
-        return new Promise(resolve => setTimeout(resolve, 300));
+        // Wait 100ms for scroll - optimized for speed per requirements
+        // Note: May overlap with scroll on slower devices, but creates snappier UX
+        return new Promise(resolve => setTimeout(resolve, 100));
     }
 
     createOverlay() {

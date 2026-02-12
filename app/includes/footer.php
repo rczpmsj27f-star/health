@@ -136,8 +136,12 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
 
 /* Context pill - right-aligned, ~20% width */
 .footer-context-pill {
-    display: flex;
-    align-items: center;
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
     gap: 6px;
     background: white;
     color: #667eea;
@@ -151,7 +155,10 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     border: 2px solid #667eea;
     white-space: nowrap;
     min-height: 44px; /* Accessible touch target */
-    flex-shrink: 0;
+    -webkit-flex-shrink: 0 !important;
+    flex-shrink: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .footer-context-pill:hover {
@@ -258,8 +265,15 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     }
     
     .footer-context-pill {
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
         font-size: 11px;
         padding: 6px 10px;
+        width: auto !important;
+        position: relative !important;
     }
     
     .pill-label {
@@ -267,6 +281,21 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
         max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+}
+
+/* iPhone-specific fix for dynamic dashboard visibility */
+@media (max-width: 480px) {
+    .footer-context-pill {
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        position: relative !important;
+        -webkit-flex-shrink: 0 !important;
+        flex-shrink: 0 !important;
     }
 }
 </style>

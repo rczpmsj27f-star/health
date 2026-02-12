@@ -81,6 +81,13 @@ foreach ($categories as $category) {
             box-shadow: var(--shadow-md);
             margin-bottom: 24px;
             overflow: hidden;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
         }
         
         .category-header {
@@ -89,9 +96,17 @@ foreach ($categories as $category) {
             padding: 20px 24px;
             cursor: pointer;
             user-select: none;
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
             align-items: center;
+            -webkit-box-orient: horizontal;
+            -webkit-box-direction: normal;
         }
         
         .category-header:hover {
@@ -152,10 +167,18 @@ foreach ($categories as $category) {
             border-radius: var(--radius-sm);
             cursor: pointer;
             margin-bottom: 12px;
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
             align-items: center;
             user-select: none;
+            -webkit-box-orient: horizontal;
+            -webkit-box-direction: normal;
         }
         
         .subsection-header:hover {
@@ -167,7 +190,11 @@ foreach ($categories as $category) {
             font-size: 16px;
             font-weight: 600;
             color: var(--color-text-primary);
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
             align-items: center;
             gap: 8px;
         }
@@ -185,7 +212,12 @@ foreach ($categories as $category) {
         
         /* Options list - full-width rows */
         .options-grid {
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
             flex-direction: column;
             gap: 12px;
             margin-bottom: 12px;
@@ -197,6 +229,7 @@ foreach ($categories as $category) {
             border-radius: var(--radius-sm);
             padding: 14px;
             transition: all 0.2s;
+            box-sizing: border-box;
         }
         
         .option-card:hover {
@@ -205,14 +238,24 @@ foreach ($categories as $category) {
         }
         
         .option-card-header {
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
             align-items: center;
             margin-bottom: 10px;
         }
         
         .option-info {
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
             align-items: center;
             gap: 8px;
         }
@@ -246,9 +289,16 @@ foreach ($categories as $category) {
         }
         
         .option-actions {
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
+            -webkit-box-orient: horizontal;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: row;
+            flex-direction: row;
+            -webkit-flex-wrap: nowrap;
+            flex-wrap: nowrap;
             gap: 6px;
-            flex-wrap: wrap;
         }
         
         .btn-sm {
@@ -388,8 +438,12 @@ foreach ($categories as $category) {
         }
         
         .modal-footer {
+            display: -webkit-box;
+            display: -webkit-flex;
             display: flex;
             gap: 8px;
+            -webkit-box-pack: end;
+            -webkit-justify-content: flex-end;
             justify-content: flex-end;
             margin-top: 20px;
             padding-top: 12px;
@@ -424,6 +478,40 @@ foreach ($categories as $category) {
         
         .btn-primary:hover {
             background: #6d28d9;
+        }
+        
+        /* iOS-specific WebKit fixes */
+        @media (max-width: 768px) {
+            .category-section,
+            .option-card,
+            .option-actions,
+            .btn-sm {
+                -webkit-transform-origin: 0 0;
+                box-sizing: border-box;
+            }
+            
+            .category-section {
+                display: -webkit-box !important;
+                display: -webkit-flex !important;
+                display: flex !important;
+                -webkit-box-orient: vertical !important;
+                -webkit-box-direction: normal !important;
+            }
+            
+            .option-actions {
+                display: -webkit-box !important;
+                display: -webkit-flex !important;
+                display: flex !important;
+                -webkit-flex-wrap: nowrap !important;
+                flex-wrap: nowrap !important;
+                gap: 4px !important;
+            }
+            
+            .btn-sm {
+                white-space: nowrap;
+                -webkit-flex-shrink: 0;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>

@@ -102,16 +102,20 @@ self.addEventListener('fetch', (event) => {
   
   // NEVER cache CSS or JS files - always fetch fresh from network
   // This ensures cache-buster query params (?v=time()) work as intended
-  if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+  const isCss = url.pathname.endsWith('.css');
+  const isJs = url.pathname.endsWith('.js');
+  
+  if (isCss || isJs) {
     event.respondWith(
       fetch(event.request, { redirect: 'follow' })
         .catch((error) => {
           // Log the error for debugging
           console.error('Service Worker: Failed to fetch CSS/JS:', url.pathname, error);
+          console.warn('Service Worker: Returning empty response - styles/functionality may be affected');
           // Return empty response to avoid parsing errors in browser
           // The browser will gracefully handle missing CSS (no styles applied) or JS (no execution)
           // This prevents cascade failures from invalid CSS/JS syntax
-          const fileType = url.pathname.endsWith('.css') ? 'text/css' : 'application/javascript';
+          const fileType = isCss ? 'text/css' : 'application/javascript';
           return new Response('', { 
             status: 503, 
             statusText: 'Service Unavailable',
@@ -133,8 +137,8 @@ self.addEventListener('fetch', (event) => {
           
           return fetch(event.request, { redirect: 'follow' })
             .then((networkResponse) => {
-              // Cache the image for future use
-              if (networkResponse && networkResponse.status === 200) {
+              // Cache successful responses (2xx status codes)
+              if (networkResponse && networkResponse.ok) {
                 const responseToCache = networkResponse.clone();
                 caches.open(CACHE_NAME).then((cache) => {
                   cache.put(event.request, responseToCache);
@@ -151,8 +155,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request, { redirect: 'follow' })
       .then((networkResponse) => {
-        // Cache successful HTML responses
-        if (networkResponse && networkResponse.status === 200) {
+        // Cache successful HTML responses (2xx status codes)
+        if (networkResponse && networkResponse.ok) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);

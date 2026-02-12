@@ -42,6 +42,9 @@ const OFFLINE_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// Regex for matching image file extensions
+const IMAGE_EXTENSIONS = /\.(png|jpg|jpeg|gif|svg|webp|ico)$/i;
+
 // Only cache images and HTML - CSS/JS will ALWAYS fetch from network
 const urlsToCache = [
   '/assets/images/icon-192x192.png',
@@ -105,25 +108,21 @@ self.addEventListener('fetch', (event) => {
         .catch((error) => {
           // Log the error for debugging
           console.error('Service Worker: Failed to fetch CSS/JS:', url.pathname, error);
-          // Return a response with comment explaining the failure for easier debugging
+          // Return empty response to avoid parsing errors
+          // The browser will handle missing CSS/JS gracefully
           const fileType = url.pathname.endsWith('.css') ? 'text/css' : 'application/javascript';
-          const commentStyle = url.pathname.endsWith('.css') ? '/*' : '//';
-          const closeComment = url.pathname.endsWith('.css') ? '*/' : '';
-          return new Response(
-            `${commentStyle} Failed to load: ${url.pathname} - Network unavailable ${closeComment}`, 
-            { 
-              status: 503, 
-              statusText: 'Service Unavailable',
-              headers: { 'Content-Type': fileType }
-            }
-          );
+          return new Response('', { 
+            status: 503, 
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': fileType }
+          });
         })
     );
     return;
   }
   
   // For images: Cache first, then network (faster loads)
-  if (url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i)) {
+  if (url.pathname.match(IMAGE_EXTENSIONS)) {
     event.respondWith(
       caches.match(event.request)
         .then((cachedResponse) => {
@@ -162,7 +161,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch((error) => {
         // Log the error for debugging
-        console.log('Service Worker: Network failed, trying cache:', url.pathname);
+        console.error('Service Worker: Network failed, trying cache:', url.pathname, error);
         // If network fails, try cache (offline support)
         return caches.match(event.request)
           .then((cachedResponse) => {

@@ -25,12 +25,12 @@ body {
 #main-content {
     background-color: #ffffff;
     min-height: 100vh;
-    transition: opacity 0.2s ease-out, background-color 0s;
+    transition: opacity 0.2s ease-out;
 }
 
 /* Ensure no background color transitions to prevent flash */
-body, html {
-    transition: background-color 0s;
+body, html, #main-content {
+    transition: background-color none;
 }
 
 /* Prevent scrollbar shift on content change */
@@ -45,7 +45,6 @@ html {
 
 .page-title h2,
 .page-title h1 {
-    text-align: center;
     margin-left: auto;
     margin-right: auto;
 }

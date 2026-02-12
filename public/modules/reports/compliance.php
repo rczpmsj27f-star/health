@@ -128,12 +128,14 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
 
     <div id="main-content">
     <div style="max-width: 1000px; margin: 0 auto; padding: 16px 16px 40px 16px;">
-        <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
-            📊 Activity & Compliance
-        </h2>
-        <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
-            Track medication adherence, view activity, and analyze patterns
-        </p>
+        <div class="page-title">
+            <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
+                📊 Activity & Compliance
+            </h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
+                Track medication adherence, view activity, and analyze patterns
+            </p>
+        </div>
         
         <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <!-- Quick Navigation -->

@@ -147,15 +147,15 @@ class AjaxNavigation {
 
     fadeOut() {
         const content = document.querySelector(this.contentSelector);
-        content.style.transition = 'opacity 0.15s ease-out';
+        content.style.transition = 'opacity 0.2s ease-out';
         content.style.opacity = '0';
-        return new Promise(resolve => setTimeout(resolve, 150));
+        return new Promise(resolve => setTimeout(resolve, 200));
     }
 
     fadeIn() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '1';
-        return new Promise(resolve => setTimeout(resolve, 150));
+        return new Promise(resolve => setTimeout(resolve, 200));
     }
 
     showLoading() {

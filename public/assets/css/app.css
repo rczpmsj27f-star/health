@@ -23,7 +23,36 @@ body {
 
 /* AJAX Navigation - Smooth content transitions */
 #main-content {
-    transition: opacity 0.15s ease-out;
+    background-color: #ffffff;
+    min-height: 100vh;
+    transition: opacity 0.2s ease-out;
+}
+
+/* Prevent scrollbar shift on content change */
+html {
+    overflow-y: scroll;
+}
+
+/* Center all page headers globally */
+.page-title {
+    text-align: center;
+}
+
+.page-title h2,
+.page-title h1 {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Ensure page content centers properly */
+.page-content {
+    width: 100%;
+}
+
+/* Center direct h1/h2 children in page content (applies to all pages) */
+.page-content > h1,
+.page-content > h2 {
+    text-align: center;
 }
 
 /* Force Light Mode - Override System Preferences */

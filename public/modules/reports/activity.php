@@ -158,12 +158,14 @@ $allActivities = array_slice($allActivities, 0, 50);
 
     <div id="main-content">
     <div style="max-width: 800px; margin: 0 auto; padding: 16px 16px 40px 16px;">
-        <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
-            📰 Activity Feed
-        </h2>
-        <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
-            <?= $viewingLinkedUser ? "Feed for " . htmlspecialchars($targetUserName) . "'s medications" : "Feed for your medications" ?>
-        </p>
+        <div class="page-title">
+            <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 8px;">
+                📰 Activity Feed
+            </h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
+                <?= $viewingLinkedUser ? "Feed for " . htmlspecialchars($targetUserName) . "'s medications" : "Feed for your medications" ?>
+            </p>
+        </div>
         
         <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
         <!-- Filters -->

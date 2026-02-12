@@ -314,6 +314,7 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
+    <div id="main-content">
     <div class="calculator-container">
         <div class="calculator-card">
             <div class="med-header">
@@ -451,6 +452,7 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
             icon.textContent = content.classList.contains('hidden') ? '▼' : '▲';
         }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

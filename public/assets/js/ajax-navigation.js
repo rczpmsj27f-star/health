@@ -249,7 +249,8 @@ class AjaxNavigation {
         console.log('🔄 Refreshing stylesheets for new content...');
         
         // Method 1: Re-trigger stylesheets by updating href with cache-buster
-        const stylesheets = document.styleSheets;
+        // Convert StyleSheetList to array to avoid mutation issues during iteration
+        const stylesheets = Array.from(document.styleSheets);
         
         for (let i = 0; i < stylesheets.length; i++) {
             try {
@@ -261,8 +262,9 @@ class AjaxNavigation {
                     
                     if (href) {
                         // Add cache-buster to force re-fetch and re-parse
+                        // Preserve existing query parameters by appending, not replacing
                         const separator = href.includes('?') ? '&' : '?';
-                        const newHref = href.split('?')[0] + separator + 'css-refresh=' + Date.now();
+                        const newHref = href + separator + 'css-refresh=' + Date.now();
                         
                         console.log('📝 Refreshing stylesheet:', href);
                         ownerNode.href = newHref;
@@ -276,6 +278,7 @@ class AjaxNavigation {
         
         // Method 2: Force browser repaint
         // This ensures the browser recalculates styles for all new elements
+        // The void operator discards the return value - we only want the side effect (reflow)
         void document.body.offsetHeight; // Force reflow
         
         console.log('✅ Stylesheet refresh complete');

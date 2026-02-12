@@ -1,5 +1,5 @@
 <?php 
-session_start();
+require_once "../../../app/includes/cache-buster.php";
 require_once "../../../app/core/auth.php";
 $isAdmin = Auth::isAdmin();
 $err = $_SESSION['error'] ?? null;

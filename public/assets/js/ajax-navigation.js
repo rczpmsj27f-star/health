@@ -1,18 +1,24 @@
 /**
  * AJAX Navigation System for Smooth Page Transitions
- * Prevents screen flicker in iOS Capacitor app by:
- * - Intercepting link clicks
- * - Fetching pages via AJAX
- * - Swapping only main content (not header/footer)
- * - Updating URL without page reload
+ * Provides smooth fade-out/fade-in transitions between pages:
+ * - Intercepts link clicks
+ * - Fades out current content with opacity transition
+ * - Scrolls to top smoothly
+ * - Fetches pages via AJAX
+ * - Swaps only main content (not header/footer)
+ * - Fades in new content with opacity transition
+ * - Updates URL without page reload
+ * - Blocks user interaction during transitions
  * 
- * Only activates when running in Capacitor environment
+ * Activates on ALL environments (web browser and Capacitor)
  */
 
 class AjaxNavigation {
     constructor() {
         this.contentSelector = '#main-content';
+        this.overlay = null;
         this.init();
+        this.createOverlay();
     }
 
     init() {
@@ -88,8 +94,14 @@ class AjaxNavigation {
 
     async loadPage(url, updateHistory = true) {
         try {
-            // Show loading state
+            // Show loading state and block interaction
             this.showLoading();
+
+            // Fade out current content
+            await this.fadeOut();
+
+            // Scroll to top smoothly
+            await this.scrollToTop();
 
             // Fetch new page
             const response = await fetch(url);
@@ -108,9 +120,6 @@ class AjaxNavigation {
                 window.location.href = url;
                 return;
             }
-
-            // Fade out current content
-            await this.fadeOut();
 
             // Replace content safely
             const container = document.querySelector(this.contentSelector);
@@ -147,7 +156,6 @@ class AjaxNavigation {
 
     fadeOut() {
         const content = document.querySelector(this.contentSelector);
-        content.style.transition = 'opacity 0.2s ease-out';
         content.style.opacity = '0';
         return new Promise(resolve => setTimeout(resolve, 200));
     }
@@ -158,13 +166,34 @@ class AjaxNavigation {
         return new Promise(resolve => setTimeout(resolve, 200));
     }
 
+    scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+        // Wait for smooth scroll to complete
+        return new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    createOverlay() {
+        // Create overlay element for blocking interaction during transitions
+        this.overlay = document.createElement('div');
+        this.overlay.className = 'ajax-transition-overlay';
+        document.body.appendChild(this.overlay);
+    }
+
     showLoading() {
-        // Optional: show loading spinner
-        // Could add a small loading indicator here if desired
+        // Block page interaction during transition
+        if (this.overlay) {
+            this.overlay.classList.add('active');
+        }
     }
 
     hideLoading() {
-        // Optional: hide loading spinner
+        // Re-enable page interaction after transition
+        if (this.overlay) {
+            this.overlay.classList.remove('active');
+        }
     }
 
     reinitializeScripts() {
@@ -194,12 +223,12 @@ class AjaxNavigation {
 }
 
 // Initialize on page load
-// Only activate when running in Capacitor environment
-if (window.Capacitor) {
-    document.addEventListener('DOMContentLoaded', () => {
+// Activate on ALL environments for smooth page transitions
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.Capacitor) {
         console.log('📱 AJAX Navigation: Initializing for Capacitor');
-        new AjaxNavigation();
-    });
-} else {
-    console.log('🌐 AJAX Navigation: Disabled (not running in Capacitor)');
-}
+    } else {
+        console.log('🌐 AJAX Navigation: Initializing for web browser');
+    }
+    new AjaxNavigation();
+});

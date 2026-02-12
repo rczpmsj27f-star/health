@@ -108,8 +108,9 @@ self.addEventListener('fetch', (event) => {
         .catch((error) => {
           // Log the error for debugging
           console.error('Service Worker: Failed to fetch CSS/JS:', url.pathname, error);
-          // Return empty response to avoid parsing errors
-          // The browser will handle missing CSS/JS gracefully
+          // Return empty response to avoid parsing errors in browser
+          // The browser will gracefully handle missing CSS (no styles applied) or JS (no execution)
+          // This prevents cascade failures from invalid CSS/JS syntax
           const fileType = url.pathname.endsWith('.css') ? 'text/css' : 'application/javascript';
           return new Response('', { 
             status: 503, 
@@ -160,9 +161,8 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch((error) => {
-        // Log the error for debugging
-        console.error('Service Worker: Network failed, trying cache:', url.pathname, error);
         // If network fails, try cache (offline support)
+        console.error('Service Worker: Network failed for:', url.pathname, error);
         return caches.match(event.request)
           .then((cachedResponse) => {
             if (cachedResponse) {
@@ -170,7 +170,7 @@ self.addEventListener('fetch', (event) => {
               return cachedResponse;
             }
             // No cache and no network - return user-friendly offline page
-            console.error('Service Worker: No cache available for:', url.pathname, error);
+            console.error('Service Worker: No cache available for:', url.pathname);
             return new Response(OFFLINE_HTML, {
               status: 503,
               statusText: 'Service Unavailable',

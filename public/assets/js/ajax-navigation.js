@@ -2,11 +2,11 @@
  * AJAX Navigation System for Smooth Page Transitions
  * Provides smooth fade-out/fade-in transitions between pages:
  * - Intercepts link clicks
- * - Fades out current content with opacity transition
- * - Scrolls to top smoothly
+ * - Fades out current content with opacity transition (100ms)
+ * - Scrolls to top smoothly (100ms)
  * - Fetches pages via AJAX
  * - Swaps only main content (not header/footer)
- * - Fades in new content with opacity transition
+ * - Fades in new content with opacity transition (100ms)
  * - Updates URL without page reload
  * - Blocks user interaction during transitions
  * 

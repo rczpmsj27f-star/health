@@ -20,8 +20,8 @@ if (!window.SPLASH_SCREEN_INITIALIZED) {
                 await SplashScreen.hide();
                 console.log('Splash screen hidden successfully');
             } catch (e) {
-                // Splash screen may already be hidden or error occurred
-                console.log('SplashScreen hide skipped:', e?.message || 'Already hidden or unavailable');
+                // Error hiding splash screen - may already be hidden or plugin unavailable
+                console.log('SplashScreen hide error:', e?.message || e);
             }
         });
     }

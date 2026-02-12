@@ -60,8 +60,8 @@ class AjaxNavigation {
             // Block specific pages/patterns that need full page reload
             // Authentication pages - critical security flows
             // Note: App uses URL rewriting (.htaccess) so both clean URLs and .php extensions are in use
-            if (path === '/logout.php' || path === '/logout' ||
-                path === '/login.php' || path === '/login') {
+            const authPages = ['/logout.php', '/logout', '/login.php', '/login'];
+            if (authPages.includes(path)) {
                 return false;
             }
             

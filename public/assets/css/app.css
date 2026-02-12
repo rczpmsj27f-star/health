@@ -25,12 +25,12 @@ body {
 #main-content {
     background-color: #ffffff;
     min-height: 100vh;
-    transition: opacity 0.15s ease-out;
+    transition: opacity 0.2s ease-out;
 }
 
-/* Ensure smooth transitions without layout shift */
+/* Ensure no background color transitions to prevent flash */
 body, html, #main-content {
-    transition: background-color 0s ease;
+    transition: background-color 0s;
 }
 
 /* Prevent scrollbar shift on content change */

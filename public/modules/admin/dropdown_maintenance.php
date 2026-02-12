@@ -123,20 +123,25 @@ foreach ($categories as $category) {
         
         .toggle-icon {
             font-size: 18px;
-            transition: transform 0.2s;
+            transition: transform 0.3s ease;
             display: inline-block;
-        }
-        
-        .toggle-icon.collapsed {
             transform: rotate(-90deg);
         }
         
-        .category-content {
-            padding: 20px 24px;
+        .toggle-icon.expanded {
+            transform: rotate(0deg);
         }
         
-        .category-content.collapsed {
-            display: none;
+        .category-content {
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .category-content.expanded {
+            padding: 20px 24px;
+            max-height: 5000px;
         }
         
         /* Subsection headers (Active/Inactive) */
@@ -168,16 +173,19 @@ foreach ($categories as $category) {
         
         .subsection-content {
             margin-bottom: 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
         }
         
-        .subsection-content.collapsed {
-            display: none;
+        .subsection-content.expanded {
+            max-height: 3000px;
         }
         
-        /* Options grid */
+        /* Options list - full-width rows */
         .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 12px;
             margin-bottom: 12px;
         }
@@ -441,19 +449,19 @@ foreach ($categories as $category) {
                                 data-category-id="<?= $category['id'] ?>"
                                 data-category-name="<?= htmlspecialchars($category['category_name'], ENT_QUOTES) ?>"
                                 onclick="showAddModal(this.dataset.categoryId, this.dataset.categoryName); event.stopPropagation();">+ Add</button>
-                        <span class="toggle-icon collapsed" id="cat-toggle-<?= $category['id'] ?>">▼</span>
+                        <span class="toggle-icon" id="cat-toggle-<?= $category['id'] ?>">▼</span>
                     </div>
                 </div>
                 
-                <div class="category-content collapsed" id="cat-content-<?= $category['id'] ?>">
+                <div class="category-content" id="cat-content-<?= $category['id'] ?>">
                     <!-- Active Options Subsection -->
                     <div class="subsection-header" onclick="toggleSubsection('active-<?= $category['id'] ?>')">
                         <h4 class="subsection-title">
-                            <span class="toggle-icon collapsed" id="subsec-toggle-active-<?= $category['id'] ?>">▼</span>
+                            <span class="toggle-icon" id="subsec-toggle-active-<?= $category['id'] ?>">▼</span>
                             Active Options (<?= count($all_options[$category['id']]['active']) ?>)
                         </h4>
                     </div>
-                    <div class="subsection-content collapsed" id="subsec-content-active-<?= $category['id'] ?>">
+                    <div class="subsection-content" id="subsec-content-active-<?= $category['id'] ?>">
                         <?php if (empty($all_options[$category['id']]['active'])): ?>
                             <div class="empty-state">No active options</div>
                         <?php else: ?>
@@ -494,11 +502,11 @@ foreach ($categories as $category) {
                     <!-- Inactive Options Subsection -->
                     <div class="subsection-header" onclick="toggleSubsection('inactive-<?= $category['id'] ?>')">
                         <h4 class="subsection-title">
-                            <span class="toggle-icon collapsed" id="subsec-toggle-inactive-<?= $category['id'] ?>">▼</span>
+                            <span class="toggle-icon" id="subsec-toggle-inactive-<?= $category['id'] ?>">▼</span>
                             Inactive Options (<?= count($all_options[$category['id']]['inactive']) ?>)
                         </h4>
                     </div>
-                    <div class="subsection-content collapsed" id="subsec-content-inactive-<?= $category['id'] ?>">
+                    <div class="subsection-content" id="subsec-content-inactive-<?= $category['id'] ?>">
                         <?php if (empty($all_options[$category['id']]['inactive'])): ?>
                             <div class="empty-state">No inactive options</div>
                         <?php else: ?>
@@ -583,12 +591,12 @@ foreach ($categories as $category) {
             const content = document.getElementById('cat-content-' + catId);
             const toggle = document.getElementById('cat-toggle-' + catId);
             
-            if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                toggle.classList.remove('collapsed');
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
             } else {
-                content.classList.add('collapsed');
-                toggle.classList.add('collapsed');
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
             }
         }
         
@@ -597,12 +605,12 @@ foreach ($categories as $category) {
             const content = document.getElementById('subsec-content-' + subsecId);
             const toggle = document.getElementById('subsec-toggle-' + subsecId);
             
-            if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                toggle.classList.remove('collapsed');
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
             } else {
-                content.classList.add('collapsed');
-                toggle.classList.add('collapsed');
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
             }
         }
         

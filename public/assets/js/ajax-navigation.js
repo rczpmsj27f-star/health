@@ -103,17 +103,34 @@ class AjaxNavigation {
             // Scroll to top smoothly
             await this.scrollToTop();
 
-            // Add cache-buster: Force fresh PHP rendering on every request
+            // ✅ ADD CACHE-BUSTER: Unique timestamp every request
             // Using URL constructor properly handles existing query params and hash fragments
             const urlObj = new URL(url, window.location.origin);
             urlObj.searchParams.set('t', Date.now().toString());
             const freshUrl = urlObj.href;
 
-            // Fetch new page with cache-buster
-            const response = await fetch(freshUrl);
+            // ✅ FORCE NO-CACHE in fetch API
+            const response = await fetch(freshUrl, {
+                method: 'GET',
+                cache: 'no-store',  // ✅ CRITICAL: Bypass browser memory cache
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                },
+                credentials: 'same-origin'
+            });
+
             if (!response.ok) throw new Error('Page load failed');
             
             const html = await response.text();
+            
+            // ✅ CLEAR old content before inserting new
+            const mainContent = document.querySelector(this.contentSelector);
+            if (mainContent) {
+                mainContent.innerHTML = '';
+            }
+            
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
@@ -129,10 +146,6 @@ class AjaxNavigation {
 
             // Replace content safely
             const container = document.querySelector(this.contentSelector);
-            // Clear existing content first
-            while (container.firstChild) {
-                container.removeChild(container.firstChild);
-            }
             // Clone and append new content nodes
             Array.from(newContent.childNodes).forEach(node => {
                 container.appendChild(node.cloneNode(true));

@@ -13,7 +13,8 @@ if (!window.SPLASH_SCREEN_INITIALIZED) {
         
         document.addEventListener('DOMContentLoaded', async () => {
             // Wait 500ms to ensure page is fully rendered before hiding splash
-            // Increased from 100ms to be more reliable across different devices and page complexities
+            // This delay is specified in the requirements to ensure reliability across all devices
+            // The white background prevents black flash during this delay
             await new Promise(resolve => setTimeout(resolve, 500));
             try {
                 await SplashScreen.hide();

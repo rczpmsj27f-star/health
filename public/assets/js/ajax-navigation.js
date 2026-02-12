@@ -59,15 +59,17 @@ class AjaxNavigation {
             
             // Block specific pages/patterns that need full page reload
             // Authentication pages - critical security flows
+            // Note: App uses URL rewriting (.htaccess) so both clean URLs and .php extensions are in use
             if (path === '/logout.php' || path === '/logout' ||
                 path === '/login.php' || path === '/login') {
                 return false;
             }
             
             // File operations - actual download/export handlers (not list pages)
-            // Note: /modules/reports/exports.php (with s) is a list page and will use AJAX
-            if (path.endsWith('/export.php') ||           // Export handler
-                path.endsWith('/export_pdf.php') ||       // PDF export handler
+            // Note: /modules/reports/exports.php (plural) is a list page and will use AJAX
+            // Only block the actual export handlers in the reports module
+            if (path === '/modules/reports/export.php' ||
+                path === '/modules/reports/export_pdf.php' ||
                 path.includes('/download/')) {            // Download directory
                 return false;
             }

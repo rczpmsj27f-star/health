@@ -63,7 +63,7 @@ $users = $stmt->fetchAll();
         .page-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 64px 12px 12px 12px;
+            padding: 16px 16px;
         }
         
         .page-title {
@@ -84,8 +84,9 @@ $users = $stmt->fetchAll();
         }
         
         .search-form {
-            max-width: 600px;
+            max-width: 1200px;
             margin: 0 auto 12px;
+            padding: 16px 16px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -97,12 +98,12 @@ $users = $stmt->fetchAll();
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 13px;
+            transition: border-color 0.15s;
         }
         
         .search-form input:focus {
             outline: none;
             border-color: #28a745;
-            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
         }
         
         .search-form button {
@@ -279,7 +280,7 @@ $users = $stmt->fetchAll();
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
 <div id="main-content">
-    <div class="page-content" style="max-width: 1200px; margin: 0 auto; padding: 16px;">
+    <div class="page-content">
         <?php if (isset($_SESSION['success_msg'])): ?>
             <div class="alert alert-success" style="max-width: 1200px; margin: 0 auto 12px;">
                 <?= htmlspecialchars($_SESSION['success_msg']) ?>

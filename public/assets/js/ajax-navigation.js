@@ -158,6 +158,10 @@ class AjaxNavigation {
                 history.pushState({ url }, newTitle, url);
             }
 
+            // ✅ CRITICAL FIX: Force CSS stylesheets to re-apply to new content
+            // This ensures all CSS rules are re-evaluated for the new DOM elements
+            this.forceStylesheetRefresh();
+
             // Reinitialize page scripts
             this.reinitializeScripts();
 
@@ -239,6 +243,42 @@ class AjaxNavigation {
             // Replace old script with new one to trigger execution
             oldScript.parentNode.replaceChild(newScript, oldScript);
         });
+    }
+
+    forceStylesheetRefresh() {
+        console.log('🔄 Refreshing stylesheets for new content...');
+        
+        // Method 1: Re-trigger stylesheets by updating href with cache-buster
+        const stylesheets = document.styleSheets;
+        
+        for (let i = 0; i < stylesheets.length; i++) {
+            try {
+                const ownerNode = stylesheets[i].ownerNode;
+                
+                // Only process <link> tags (external stylesheets)
+                if (ownerNode && ownerNode.tagName === 'LINK' && ownerNode.rel === 'stylesheet') {
+                    let href = ownerNode.getAttribute('href');
+                    
+                    if (href) {
+                        // Add cache-buster to force re-fetch and re-parse
+                        const separator = href.includes('?') ? '&' : '?';
+                        const newHref = href.split('?')[0] + separator + 'css-refresh=' + Date.now();
+                        
+                        console.log('📝 Refreshing stylesheet:', href);
+                        ownerNode.href = newHref;
+                    }
+                }
+            } catch (e) {
+                // Some stylesheets (external CDNs, cross-origin) may not be accessible
+                console.log('⚠️ Could not refresh stylesheet (may be cross-origin):', e.message);
+            }
+        }
+        
+        // Method 2: Force browser repaint
+        // This ensures the browser recalculates styles for all new elements
+        void document.body.offsetHeight; // Force reflow
+        
+        console.log('✅ Stylesheet refresh complete');
     }
 }
 

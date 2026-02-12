@@ -151,8 +151,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For PHP files: Network-first, NEVER cache successful responses (only use cache as offline fallback)
+  // For PHP files: Network-only, with fallback to any previously cached version (from old SW)
   // This ensures dynamic PHP content is always fresh from the server
+  // Note: PHP files are NEVER cached by this Service Worker - offline fallback only works
+  // if there's an old cached version from a previous Service Worker version
   const isPhp = url.pathname.endsWith('.php');
   
   if (isPhp) {
@@ -163,12 +165,12 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch((error) => {
-          // If network fails, try cache (offline support only)
+          // If network fails, try cache (will only work if previously cached by old SW)
           console.error('Service Worker: Network failed for PHP file:', url.pathname, error);
           return caches.match(event.request)
             .then((cachedResponse) => {
               if (cachedResponse) {
-                console.log('Service Worker: Serving PHP from cache (offline):', url.pathname);
+                console.log('Service Worker: Serving PHP from old cache (offline):', url.pathname);
                 return cachedResponse;
               }
               // No cache and no network - return user-friendly offline page

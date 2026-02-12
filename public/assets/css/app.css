@@ -27,7 +27,7 @@ body {
 #main-content {
     background-color: #ffffff;
     min-height: 100vh;
-    transition: opacity 0.4s ease-out;
+    transition: opacity 0.2s ease-out;
 }
 
 /* Smooth scroll behavior */
@@ -45,13 +45,10 @@ html {
     background-color: transparent;
     z-index: 9998;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-out;
 }
 
 .ajax-transition-overlay.active {
     pointer-events: all;
-    opacity: 1;
 }
 
 /* Prevent scrollbar shift on content change */

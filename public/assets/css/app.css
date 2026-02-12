@@ -14,10 +14,12 @@ body {
     overflow-x: hidden;
 }
 
-/* Ensure containers are opaque */
-.container,
-[class*="page"],
-[class*="content"] {
+/* Ensure containers are opaque - specific selectors only */
+.container {
+    background-color: #ffffff;
+}
+
+.page-content {
     background-color: #ffffff;
 }
 
@@ -407,21 +409,21 @@ body {
 
 /* Buttons - Mobile Optimized - Solidified Styles */
 .btn {
-    padding: 14px 20px !important;
-    border-radius: 6px !important;
-    border: none !important;
-    font-size: 16px !important;
-    color: #ffffff !important;
-    width: 100% !important;
-    display: block !important;
-    text-align: center !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
-    margin-top: 10px !important;
-    text-decoration: none !important;
-    font-weight: 500 !important;
-    min-height: 48px !important;
-    line-height: 1.2 !important;
+    padding: 14px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+    color: #ffffff;
+    width: 100%;
+    display: block;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    text-decoration: none;
+    font-weight: 500;
+    min-height: 48px;
+    line-height: 1.2;
 }
 
 .btn:hover {
@@ -434,51 +436,51 @@ body {
 }
 
 .btn-accept { 
-    background: #28a745 !important; 
-    color: #ffffff !important;
+    background: #28a745; 
+    color: #ffffff;
 }
 .btn-accept:hover { 
-    background: #218838 !important; 
+    background: #218838; 
 }
 
 .btn-deny { 
-    background: #dc3545 !important; 
-    color: #ffffff !important;
+    background: #dc3545; 
+    color: #ffffff;
 }
 .btn-deny:hover { 
-    background: #c82333 !important; 
+    background: #c82333; 
 }
 
 .btn-info { 
-    background: #007bff !important; 
-    color: #ffffff !important;
+    background: #007bff; 
+    color: #ffffff;
 }
 .btn-info:hover { 
-    background: #0056b3 !important; 
+    background: #0056b3; 
 }
 
 .btn-primary { 
-    background: #2563eb !important; 
-    color: #ffffff !important;
+    background: #2563eb; 
+    color: #ffffff;
 }
 .btn-primary:hover { 
-    background: #1d4ed8 !important; 
+    background: #1d4ed8; 
 }
 
 .btn-secondary { 
-    background: #6c757d !important; 
-    color: #ffffff !important;
+    background: #6c757d; 
+    color: #ffffff;
 }
 .btn-secondary:hover { 
-    background: #545b62 !important; 
+    background: #545b62; 
 }
 
 .btn-danger { 
-    background: #dc3545 !important; 
-    color: #ffffff !important;
+    background: #dc3545; 
+    color: #ffffff;
 }
 .btn-danger:hover { 
-    background: #c82333 !important; 
+    background: #c82333; 
 }
 
 /* Dashboard grid - Mobile First (2 columns on mobile, 3 on desktop) */
@@ -505,18 +507,18 @@ body {
 
 /* Colorful Tile Cards - Solidified */
 .tile {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    padding: 24px !important;
-    border-radius: 10px !important;
-    text-align: center !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
-    text-decoration: none !important;
-    color: #ffffff !important;
-    min-height: 120px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 24px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: #ffffff;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     position: relative;
     overflow: hidden;
 }
@@ -541,47 +543,47 @@ body {
 }
 
 .tile .tile-icon {
-    font-size: 40px !important;
-    margin-bottom: 12px !important;
-    display: block !important;
-    color: #ffffff !important;
+    font-size: 40px;
+    margin-bottom: 12px;
+    display: block;
+    color: #ffffff;
 }
 
 .tile .tile-title {
-    font-size: 18px !important;
-    font-weight: 600 !important;
-    margin-bottom: 6px !important;
-    color: #ffffff !important;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #ffffff;
     position: relative;
     z-index: 1;
 }
 
 .tile .tile-desc {
-    font-size: 13px !important;
-    opacity: 0.9 !important;
-    color: #ffffff !important;
+    font-size: 13px;
+    opacity: 0.9;
+    color: #ffffff;
     position: relative;
     z-index: 1;
 }
 
 /* Tile color variations */
 .tile-purple { 
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
 }
 .tile-blue { 
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; 
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
 }
 .tile-green { 
-    background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%) !important; 
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); 
 }
 .tile-orange { 
-    background: linear-gradient(135deg, #f77062 0%, #fe5196 100%) !important; 
+    background: linear-gradient(135deg, #f77062 0%, #fe5196 100%); 
 }
 .tile-teal { 
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; 
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
 }
 .tile-red { 
-    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%) !important; 
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); 
 }
 
 /* Hamburger menu - Improved for mobile */

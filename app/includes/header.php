@@ -1,4 +1,7 @@
 <?php
+// Include cache-buster FIRST (before ANY output)
+require_once __DIR__ . '/cache-buster.php';
+
 // Simple scrolling header with profile picture
 // Read from session (instant, no DB query)
 if (!isset($displayName)) {

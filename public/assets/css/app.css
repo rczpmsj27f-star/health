@@ -27,7 +27,7 @@ body {
 #main-content {
     background-color: #ffffff;
     min-height: 100vh;
-    transition: opacity 0.2s ease-out;
+    transition: opacity 0.1s ease-out;
 }
 
 /* Smooth scroll behavior */

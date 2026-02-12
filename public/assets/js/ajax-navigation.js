@@ -157,13 +157,13 @@ class AjaxNavigation {
     fadeOut() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '0';
-        return new Promise(resolve => setTimeout(resolve, 200));
+        return new Promise(resolve => setTimeout(resolve, 100));
     }
 
     fadeIn() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '1';
-        return new Promise(resolve => setTimeout(resolve, 200));
+        return new Promise(resolve => setTimeout(resolve, 100));
     }
 
     scrollToTop() {
@@ -172,7 +172,7 @@ class AjaxNavigation {
             behavior: 'smooth'
         });
         // Wait for smooth scroll to complete
-        return new Promise(resolve => setTimeout(resolve, 300));
+        return new Promise(resolve => setTimeout(resolve, 100));
     }
 
     createOverlay() {

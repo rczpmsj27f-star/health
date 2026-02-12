@@ -169,11 +169,24 @@ $users = $stmt->fetchAll();
         }
 
         .action-buttons {
+            display: -webkit-box !important;
+            display: -webkit-flex !important;
             display: flex !important;
+            -webkit-box-orient: horizontal !important;
+            -webkit-box-direction: normal !important;
+            -webkit-flex-direction: row !important;
+            flex-direction: row !important;
+            -webkit-flex-wrap: nowrap !important;
+            flex-wrap: nowrap !important;
+            -webkit-box-pack: end !important;
+            -webkit-justify-content: flex-end !important;
+            justify-content: flex-end !important;
             grid-template-columns: none !important;
             gap: 4px !important;
+            -webkit-box-align: center !important;
+            -webkit-align-items: center !important;
+            align-items: center !important;
             flex-shrink: 0;
-            flex-wrap: nowrap !important;
             margin-bottom: 0 !important;
         }
 
@@ -181,17 +194,25 @@ $users = $stmt->fetchAll();
             font-size: 10px !important;
             padding: 4px 8px !important;
             border-radius: 4px !important;
-            white-space: nowrap;
+            white-space: nowrap !important;
             min-height: 24px !important;
             max-height: 24px !important;
             height: 24px !important;
+            display: -webkit-inline-box !important;
+            display: -webkit-inline-flex !important;
             display: inline-flex !important;
+            -webkit-box-align: center !important;
+            -webkit-align-items: center !important;
+            align-items: center !important;
+            -webkit-box-pack: center !important;
+            -webkit-justify-content: center !important;
+            justify-content: center !important;
             width: auto !important;
             margin-top: 0 !important;
             margin-bottom: 0 !important;
-            align-items: center;
-            justify-content: center;
             line-height: 1 !important;
+            -webkit-flex-shrink: 0 !important;
+            flex-shrink: 0 !important;
             box-sizing: border-box;
         }
 
@@ -200,12 +221,20 @@ $users = $stmt->fetchAll();
         }
 
         .btn-orange {
-            background: #FF9800 !important;
+            background: #ff9800 !important;
+            background-color: #ff9800 !important;
             color: #ffffff !important;
         }
 
         .btn-orange:hover {
             background: #e68900 !important;
+            background-color: #e68900 !important;
+        }
+        
+        .btn-reset-pw {
+            background: #ff9800 !important;
+            background-color: #ff9800 !important;
+            color: white !important;
         }
 
         .user-count {
@@ -238,8 +267,13 @@ $users = $stmt->fetchAll();
 
         @media (max-width: 768px) {
             .user-info {
-                flex-direction: row;
-                align-items: center;
+                -webkit-box-orient: horizontal !important;
+                -webkit-box-direction: normal !important;
+                -webkit-flex-direction: row !important;
+                flex-direction: row !important;
+                -webkit-box-align: center !important;
+                -webkit-align-items: center !important;
+                align-items: center !important;
                 gap: 8px;
             }
 
@@ -253,25 +287,45 @@ $users = $stmt->fetchAll();
             }
 
             .action-buttons {
+                display: -webkit-box !important;
+                display: -webkit-flex !important;
                 display: flex !important;
+                -webkit-box-orient: horizontal !important;
+                -webkit-box-direction: normal !important;
+                -webkit-flex-direction: row !important;
+                flex-direction: row !important;
+                -webkit-flex-wrap: nowrap !important;
                 flex-wrap: nowrap !important;
+                -webkit-box-pack: end !important;
+                -webkit-justify-content: flex-end !important;
+                justify-content: flex-end !important;
                 width: auto !important;
+                gap: 2px !important;
             }
 
             .action-buttons .btn {
+                -webkit-box-flex: 0 !important;
+                -webkit-flex: none !important;
                 flex: none !important;
                 width: auto !important;
                 padding: 3px 6px !important;
+                min-width: 40px !important;
                 min-height: 22px !important;
                 max-height: 22px !important;
                 height: 22px !important;
-                font-size: 10px !important;
+                font-size: 9px !important;
                 margin-top: 0 !important;
+                white-space: nowrap !important;
             }
 
             .user-row-header {
-                flex-direction: row;
-                align-items: center;
+                -webkit-box-orient: horizontal !important;
+                -webkit-box-direction: normal !important;
+                -webkit-flex-direction: row !important;
+                flex-direction: row !important;
+                -webkit-box-align: center !important;
+                -webkit-align-items: center !important;
+                align-items: center !important;
                 padding: 2px 6px;
             }
         }

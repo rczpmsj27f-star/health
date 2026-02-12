@@ -28,11 +28,6 @@ body {
     transition: opacity 0.2s ease-out;
 }
 
-/* Ensure no background color transitions to prevent flash */
-body, html, #main-content {
-    transition: background-color none;
-}
-
 /* Prevent scrollbar shift on content change */
 html {
     overflow-y: scroll;

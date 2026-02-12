@@ -103,8 +103,14 @@ class AjaxNavigation {
             // Scroll to top smoothly
             await this.scrollToTop();
 
-            // Fetch new page
-            const response = await fetch(url);
+            // Add cache-buster: Force fresh PHP rendering on every request
+            // Using URL constructor properly handles existing query params and hash fragments
+            const urlObj = new URL(url, window.location.origin);
+            urlObj.searchParams.set('t', Date.now().toString());
+            const freshUrl = urlObj.href;
+
+            // Fetch new page with cache-buster
+            const response = await fetch(freshUrl);
             if (!response.ok) throw new Error('Page load failed');
             
             const html = await response.text();

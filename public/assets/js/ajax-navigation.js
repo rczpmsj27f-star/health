@@ -248,6 +248,11 @@ class AjaxNavigation {
     forceStylesheetRefresh() {
         console.log('🔄 Refreshing stylesheets for new content...');
         
+        // Why this is necessary:
+        // In iOS WebView/Capacitor, inserting new DOM via AJAX doesn't always trigger
+        // CSS re-evaluation for the new elements. This forces the browser to re-parse
+        // all CSS rules and apply them to the newly inserted content.
+        
         // Method 1: Re-trigger stylesheets by updating href with cache-buster
         // Convert StyleSheetList to array to avoid mutation issues during iteration
         const stylesheets = Array.from(document.styleSheets);
@@ -279,6 +284,7 @@ class AjaxNavigation {
         // Method 2: Force browser repaint
         // This ensures the browser recalculates styles for all new elements
         // The void operator discards the return value - we only want the side effect (reflow)
+        // This works in conjunction with Method 1 to ensure iOS WebKit applies styles
         void document.body.offsetHeight; // Force reflow
         
         console.log('✅ Stylesheet refresh complete');

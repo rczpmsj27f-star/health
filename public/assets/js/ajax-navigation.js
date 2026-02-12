@@ -160,7 +160,7 @@ class AjaxNavigation {
 
             // ✅ CRITICAL FIX: Force CSS stylesheets to re-apply to new content
             // This ensures all CSS rules are re-evaluated for the new DOM elements
-            this.forceStylesheetRefresh();
+            await this.forceStylesheetRefresh();
 
             // Reinitialize page scripts
             this.reinitializeScripts();
@@ -245,47 +245,79 @@ class AjaxNavigation {
         });
     }
 
-    forceStylesheetRefresh() {
+    async forceStylesheetRefresh() {
         console.log('🔄 Refreshing stylesheets for new content...');
         
         // Why this is necessary:
-        // In iOS WebView/Capacitor, inserting new DOM via AJAX doesn't always trigger
-        // CSS re-evaluation for the new elements. This forces the browser to re-parse
-        // all CSS rules and apply them to the newly inserted content.
+        // In iOS WebView/Capacitor, especially with Service Workers, inserting new DOM 
+        // via AJAX doesn't reliably trigger CSS re-application for new elements.
+        // The browser may keep using the old stylesheet object, leaving new elements 
+        // unstyled until a full document navigation. We must aggressively clone and 
+        // replace each <link> node to force CSSOM rebuild.
         
-        // Method 1: Re-trigger stylesheets by updating href with cache-buster
-        // Convert StyleSheetList to array to avoid mutation issues during iteration
-        const stylesheets = Array.from(document.styleSheets);
+        // Query all stylesheet link elements
+        const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
         
-        for (let i = 0; i < stylesheets.length; i++) {
-            try {
-                const ownerNode = stylesheets[i].ownerNode;
-                
-                // Only process <link> tags (external stylesheets)
-                if (ownerNode && ownerNode.tagName === 'LINK' && ownerNode.rel === 'stylesheet') {
-                    let href = ownerNode.getAttribute('href');
-                    
-                    if (href) {
-                        // Add cache-buster to force re-fetch and re-parse
-                        // Preserve existing query parameters by appending, not replacing
-                        const separator = href.includes('?') ? '&' : '?';
-                        const newHref = href + separator + 'css-refresh=' + Date.now();
-                        
-                        console.log('📝 Refreshing stylesheet:', href);
-                        ownerNode.href = newHref;
-                    }
+        // Helper function to wait for load event or timeout
+        const waitFor = (el, evt, ms = 2000) => new Promise(res => {
+            let done = false;
+            const t = setTimeout(() => { 
+                if (!done) { 
+                    done = true; 
+                    res(); 
                 }
+            }, ms);
+            el.addEventListener(evt, () => { 
+                if (!done) { 
+                    done = true; 
+                    clearTimeout(t); 
+                    res(); 
+                }
+            }, { once: true });
+        });
+        
+        // Replace each stylesheet link with a fresh clone
+        await Promise.all(links.map(async (oldLink) => {
+            try {
+                // Construct clean URL with single cache-busting param
+                const url = new URL(oldLink.href, window.location.origin);
+                
+                // Remove any existing cache-busting params to avoid query growth
+                url.searchParams.delete('css-refresh');
+                url.searchParams.delete('v');
+                
+                // Add fresh timestamp cache-buster
+                url.searchParams.set('v', Date.now().toString());
+                
+                // Clone the node and update href
+                const newLink = oldLink.cloneNode(true);
+                newLink.href = url.toString();
+                
+                console.log('📝 Replacing stylesheet:', oldLink.href.split('?')[0]);
+                
+                // Replace in DOM - preserves order
+                oldLink.parentNode.replaceChild(newLink, oldLink);
+                
+                // Wait for load (best-effort) to minimize FOUC
+                await waitFor(newLink, 'load');
             } catch (e) {
-                // Some stylesheets (external CDNs, cross-origin) may not be accessible
+                // Ignore cross-origin or access errors
                 console.log('⚠️ Could not refresh stylesheet (may be cross-origin):', e.message);
             }
-        }
+        }));
         
-        // Method 2: Force browser repaint
-        // This ensures the browser recalculates styles for all new elements
-        // The void operator discards the return value - we only want the side effect (reflow)
-        // This works in conjunction with Method 1 to ensure iOS WebKit applies styles
-        void document.body.offsetHeight; // Force reflow
+        // CSSOM nudge (best-effort) - poke each accessible stylesheet
+        Array.from(document.styleSheets).forEach(sheet => {
+            try {
+                sheet.insertRule('/*refresh*/', 0);
+                sheet.deleteRule(0);
+            } catch (e) {
+                // Ignore CORS errors from external stylesheets
+            }
+        });
+        
+        // Force reflow to ensure styles are recalculated
+        void document.documentElement.offsetHeight;
         
         console.log('✅ Stylesheet refresh complete');
     }

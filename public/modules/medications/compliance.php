@@ -408,13 +408,13 @@ if ($medType === 'prn') {
         }
         
         .compliance-circle.pending {
-            background: #e0e0e0;
-            color: #999;
+            background: rgb(224, 224, 224);
+            color: rgb(153, 153, 153);
         }
         
         .compliance-circle.future {
-            background: #f5f5f5;
-            border: 2px dashed #ccc;
+            background: rgb(245, 245, 245);
+            border: 2px dashed rgb(204, 204, 204);
         }
         
         .no-meds {
@@ -622,7 +622,7 @@ if ($medType === 'prn') {
         }
         
         .compliance-dot.gray {
-            background: #ccc;
+            background: rgb(204, 204, 204);
         }
         
         /* Annual View */
@@ -842,7 +842,7 @@ if ($medType === 'prn') {
         }
         
         .expandable-med-header:hover {
-            background: #e8e8e8;
+            background: rgb(232, 232, 232);
         }
         
         .expandable-med-title {

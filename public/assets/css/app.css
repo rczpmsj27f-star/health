@@ -23,6 +23,7 @@ body {
 
 /* AJAX Navigation - Smooth content transitions */
 #main-content {
+    padding: 0 16px;
     background-color: #ffffff;
     min-height: 100vh;
     transition: opacity 0.2s ease-out;

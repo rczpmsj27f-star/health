@@ -230,6 +230,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 <body>
     <?php include __DIR__ . '/../app/includes/header.php'; ?>
     
+    <div id="main-content">
     <!-- Push Notification Permission Banner -->
     <div id="push-notification-banner" style="display: none; background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <div style="display: flex; align-items: start; gap: 12px;">
@@ -416,6 +417,7 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
             <?php endif; ?>
         </div>
     </div>
+    </div> <!-- #main-content -->
     
     <?php include __DIR__ . '/../app/includes/footer.php'; ?>
     

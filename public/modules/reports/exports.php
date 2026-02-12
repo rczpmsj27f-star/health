@@ -165,6 +165,7 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
+    <div id="main-content">
     <div class="page-content">
         <div class="page-title">
             <h2>📊 Medication Exports & Reports</h2>
@@ -310,6 +311,7 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
             </form>
         </div>
     </div>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

@@ -34,6 +34,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div style="max-width: 800px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <h2 style="color: var(--color-primary); font-size: 28px; margin-bottom: 24px;">👥 Linked Users</h2>
         
@@ -203,6 +204,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
         }
     }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

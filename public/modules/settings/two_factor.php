@@ -204,6 +204,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
+    <div id="main-content">
     <div class="container">
         <h1>Two-Factor Authentication</h1>
         
@@ -292,6 +293,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['backup_codes']);
             <a href="/modules/settings/preferences.php" class="btn">← Back to Settings</a>
         </div>
     </div>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

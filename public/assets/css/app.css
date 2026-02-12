@@ -21,6 +21,11 @@ body {
     background-color: #ffffff;
 }
 
+/* AJAX Navigation - Smooth content transitions */
+#main-content {
+    transition: opacity 0.15s ease-out;
+}
+
 /* Force Light Mode - Override System Preferences */
 :root {
     color-scheme: light;

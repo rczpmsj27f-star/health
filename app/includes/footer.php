@@ -270,3 +270,6 @@ elseif (strpos($currentPath, '/modules/reports/') !== false) {
     }
 }
 </style>
+
+<!-- AJAX Navigation for smooth page transitions (Capacitor only) -->
+<script src="/assets/js/ajax-navigation.js?v=<?= time() ?>" defer></script>

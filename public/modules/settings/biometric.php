@@ -193,6 +193,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div class="container">
         <a href="/modules/settings/preferences.php" class="back-link">← Back to Settings</a>
 
@@ -356,5 +357,6 @@ unset($_SESSION['error'], $_SESSION['success']);
             });
         });
     </script>
+    </div> <!-- #main-content -->
 </body>
 </html>

@@ -125,6 +125,7 @@ $archivedMeds = $stmt->fetchAll();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div class="page-content">
         <div class="page-title">
             <h2>💊 Medication Management</h2>
@@ -288,6 +289,7 @@ $archivedMeds = $stmt->fetchAll();
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

@@ -43,6 +43,7 @@ try {
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div style="max-width: 900px; margin: 0 auto; padding: 16px 16px calc(var(--footer-height, 70px) + 10px) 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <h2 style="color: var(--color-primary); font-size: 28px; margin: 0;">🔔 Notifications</h2>
@@ -122,6 +123,7 @@ try {
             <a href="/dashboard.php" style="color: var(--color-text-secondary); text-decoration: none;">← Back to Dashboard</a>
         </div>
     </div>
+    </div> <!-- #main-content -->
 
     <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
     

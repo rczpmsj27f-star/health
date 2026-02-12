@@ -111,6 +111,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 <body class="centered-page">
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div class="page-card">
         <div class="page-header">
             <h2>Update Profile Picture</h2>
@@ -351,6 +352,7 @@ unset($_SESSION['error'], $_SESSION['success']);
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

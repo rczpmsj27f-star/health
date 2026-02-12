@@ -7,12 +7,9 @@
  * 
  * This file MUST be included at the very top of header.php before ANY output
  * to ensure headers are sent before HTML content.
+ * 
+ * Note: This module assumes session_start() has already been called by the including page.
  */
-
-// Prevent direct access
-if (!isset($_SESSION)) {
-    session_start();
-}
 
 // Aggressive Cache-Control headers
 // - no-store: Prevents caching entirely
@@ -39,7 +36,9 @@ header("CDN-Cache-Control: no-cache");
 header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
 
 // Dynamic ETag based on current timestamp
-// This prevents serving stale content based on old ETags
+// INTENTIONALLY random to prevent conditional requests (304 Not Modified)
+// This forces full responses every time, ensuring users always get latest content
+// Tradeoff: Increases bandwidth but guarantees no stale content
 header("ETag: \"" . md5(microtime(true)) . "\"");
 
 // Security headers
@@ -48,9 +47,6 @@ header("X-Frame-Options: SAMEORIGIN");
 
 // Prevent MIME type sniffing
 header("X-Content-Type-Options: nosniff");
-
-// Enable XSS protection in older browsers
-header("X-XSS-Protection: 1; mode=block");
 
 // Note: We don't set CF-Cache-Status directly as it's a Cloudflare response header
 // Instead, we use Cache-Control which Cloudflare respects

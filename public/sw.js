@@ -6,7 +6,7 @@
  * - Provides offline support for cached content
  */
 
-const CACHE_VERSION = 'v1-' + new Date().toISOString().split('T')[0];
+const CACHE_VERSION = 'v1-' + Date.now();
 const CACHE_NAME = `health-${CACHE_VERSION}`;
 
 // Activate: Clean up old cache versions
@@ -23,6 +23,8 @@ self.addEventListener('activate', event => {
             );
         })
     );
+    // Take control of all pages immediately
+    self.clients.claim();
 });
 
 // Fetch: Smart caching with header respect

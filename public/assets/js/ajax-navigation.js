@@ -104,9 +104,10 @@ class AjaxNavigation {
             await this.scrollToTop();
 
             // ✅ ADD CACHE-BUSTER: Unique timestamp every request
-            const freshUrl = url.includes('?') 
-                ? url + '&t=' + Date.now()
-                : url + '?t=' + Date.now();
+            // Using URL constructor properly handles existing query params and hash fragments
+            const urlObj = new URL(url, window.location.origin);
+            urlObj.searchParams.set('t', Date.now().toString());
+            const freshUrl = urlObj.href;
 
             // ✅ FORCE NO-CACHE in fetch API
             const response = await fetch(freshUrl, {

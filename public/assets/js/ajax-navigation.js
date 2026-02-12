@@ -13,19 +13,40 @@ class AjaxNavigation {
     constructor() {
         this.contentSelector = '#main-content';
         this.ajaxPages = [
+            // Main
             '/dashboard.php',
+            // Medications
             '/modules/medications/dashboard.php',
             '/modules/medications/list.php',
+            '/modules/medications/log_prn.php',
+            '/modules/medications/prn_calculator.php',
+            '/modules/medications/view.php',
+            '/modules/medications/stock.php',
+            '/modules/medications/edit.php',
+            // Settings
             '/modules/settings/dashboard.php',
             '/modules/settings/linked_users.php',
             '/modules/settings/preferences.php',
             '/modules/settings/two_factor.php',
             '/modules/settings/biometric.php',
+            '/modules/settings/notifications.php',
+            '/modules/settings/security.php',
+            '/modules/settings/privacy_settings.php',
+            // Profile
             '/modules/profile/view.php',
+            '/modules/profile/edit.php',
+            // Notifications
             '/modules/notifications/index.php',
+            // Reports
             '/modules/reports/activity.php',
             '/modules/reports/compliance.php',
-            '/modules/reports/exports.php'
+            '/modules/reports/exports.php',
+            '/modules/reports/history.php',
+            // Admin
+            '/modules/admin/dashboard.php',
+            '/modules/admin/users.php',
+            '/modules/admin/view_user.php',
+            '/modules/admin/dropdown_maintenance.php'
         ];
         this.init();
     }

@@ -420,7 +420,8 @@ foreach ($categories as $category) {
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
-    
+
+<div id="main-content">
     <div class="page-content">
         <div class="page-title">
             <h2>🛠️ Dropdown Maintenance</h2>
@@ -766,6 +767,7 @@ foreach ($categories as $category) {
             }
         }
     </script>
+</div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

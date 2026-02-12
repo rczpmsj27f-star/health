@@ -170,6 +170,9 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
         <div class="page-title">
             <h2>📊 Medication Exports & Reports</h2>
             <p>Generate PDF reports and printable medication charts</p>
+            <p style="color: var(--color-info); font-size: 13px; margin-top: 8px;">
+                📌 PDF reports open in a new window so you can stay in the app
+            </p>
         </div>
 
         <?php include __DIR__ . '/../../../app/includes/user_switcher.php'; ?>
@@ -185,7 +188,7 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
             </p>
             <div class="export-options">
                 <a href="export_pdf.php?type=current_medications<?= $viewingLinkedUser ? '&view=linked' : '' ?>" 
-                   class="btn-export">
+                   class="btn-export" target="_blank">
                     📄 Download PDF
                 </a>
             </div>
@@ -202,11 +205,11 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
             </p>
             <div class="export-options">
                 <a href="export_pdf.php?type=schedule&format=weekly<?= $viewingLinkedUser ? '&view=linked' : '' ?>" 
-                   class="btn-export">
+                   class="btn-export" target="_blank">
                     📄 Weekly Schedule PDF
                 </a>
                 <a href="export_pdf.php?type=schedule&format=monthly<?= $viewingLinkedUser ? '&view=linked' : '' ?>" 
-                   class="btn-export">
+                   class="btn-export" target="_blank">
                     📄 Monthly Schedule PDF
                 </a>
             </div>
@@ -222,7 +225,7 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                 Create a printable chart with tick boxes for manually tracking medication doses. Perfect for care settings or keeping paper records.
             </p>
             
-            <form action="export_pdf.php" method="get" style="margin-top: 20px;">
+            <form action="export_pdf.php" method="get" target="_blank" style="margin-top: 20px;">
                 <input type="hidden" name="type" value="manual_chart">
                 <?php if ($viewingLinkedUser): ?>
                 <input type="hidden" name="view" value="linked">
@@ -285,7 +288,7 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                 Export a detailed report of PRN (as needed) medication usage over a specified time period.
             </p>
             
-            <form action="export_pdf.php" method="get" style="margin-top: 20px;">
+            <form action="export_pdf.php" method="get" target="_blank" style="margin-top: 20px;">
                 <input type="hidden" name="type" value="prn_usage">
                 <?php if ($viewingLinkedUser): ?>
                 <input type="hidden" name="view" value="linked">

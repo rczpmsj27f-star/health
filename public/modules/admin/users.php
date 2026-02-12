@@ -278,6 +278,7 @@ $users = $stmt->fetchAll();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+<div id="main-content">
     <div class="page-content">
         <?php if (isset($_SESSION['success_msg'])): ?>
             <div class="alert alert-success" style="max-width: 1200px; margin: 0 auto 12px;">
@@ -452,6 +453,7 @@ $users = $stmt->fetchAll();
             });
         });
     </script>
+</div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

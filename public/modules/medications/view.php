@@ -43,6 +43,7 @@ $doseTimes = $stmt->fetchAll();
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div style="max-width: 800px; margin: 0 auto; padding: 16px 16px 40px 16px;">
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success'])): ?>
@@ -252,6 +253,7 @@ $doseTimes = $stmt->fetchAll();
         }
     });
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

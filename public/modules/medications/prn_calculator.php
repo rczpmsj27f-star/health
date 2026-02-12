@@ -309,26 +309,13 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
             background: #ccc;
             cursor: not-allowed;
         }
-        
-        .btn-back {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: var(--color-primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .btn-back:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
+    <div id="main-content">
     <div class="calculator-container">
-        <a href="/modules/medications/dashboard.php" class="btn-back">← Back to Dashboard</a>
-        
         <div class="calculator-card">
             <div class="med-header">
                 <div class="med-icon-display">
@@ -465,6 +452,7 @@ $remainingDoses = max(0, $maxDoses - $doseCount);
             icon.textContent = content.classList.contains('hidden') ? '▼' : '▲';
         }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

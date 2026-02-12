@@ -317,12 +317,9 @@ foreach ($prnMedications as $med) {
     </style>
 </head>
 <body>
-    <a href="/modules/medications/dashboard.php" class="back-to-dashboard" title="Back to Medication Dashboard">
-        ← Back to Dashboard
-    </a>
-    
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+    <div id="main-content">
     <div class="page-content">
         <div class="page-title">
             <h2>💊 Log PRN Medication</h2>
@@ -406,7 +403,7 @@ foreach ($prnMedications as $med) {
                             <?php if (!empty($data['next_available_time_for_max_dose'])): ?>
                                 Next dose available at <?= htmlspecialchars($data['next_available_time_for_max_dose']) ?>.
                             <?php else: ?>
-                                Do not take more until 24 hours have passed since your first dose today.
+                                Do not take more until 24 hours have passed since your first dose within the last 24 hours.
                             <?php endif; ?>
                         </div>
                     <?php elseif (!$canTake && $nextTime): ?>
@@ -415,7 +412,7 @@ foreach ($prnMedications as $med) {
                         </div>
                     <?php else: ?>
                         <div class="status-message success">
-                            ✓ You can take <?= $remainingDoses ?> more dose<?= $remainingDoses !== 1 ? 's' : '' ?> today
+                            ✓ You can take <?= $remainingDoses ?> more dose<?= $remainingDoses !== 1 ? 's' : '' ?> within the next 24 hours
                         </div>
                     <?php endif; ?>
                     
@@ -599,6 +596,7 @@ foreach ($prnMedications as $med) {
         updateCountdowns();
     }
     </script>
+    </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

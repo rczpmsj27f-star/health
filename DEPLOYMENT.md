@@ -535,3 +535,37 @@ health/
 - The `.htaccess` files ensure that files outside the `public/` directory (like database config, helper files) are never directly accessible via web browser
 - All user uploads should be in the `uploads/` directory, which is outside the public directory for security
 - Database credentials in `app/config/database.php` are protected and cannot be accessed directly
+
+## Critical: Composer Dependencies
+
+**BEFORE deploying, ALWAYS run:**
+
+```bash
+composer install --no-dev --optimize-autoloader
+```
+
+**Why this is critical:**
+- The `verify-2fa.php` page requires the Google2FA library
+- Without vendor dependencies, login will hang after password verification
+- Users won't be able to complete 2FA authentication
+- The application will show a blank page or PHP fatal error
+
+**Required packages:**
+- phpmailer/phpmailer (v6.12+) - Email functionality
+- pragmarx/google2fa (v8.0+) - Two-factor authentication  
+- bacon/bacon-qr-code (v2.0+) - QR codes for 2FA setup
+- tecnickcom/tcpdf (v6.10+) - PDF report generation
+
+**Verification:**
+After deployment, verify vendor directory exists and contains:
+```bash
+ls -la vendor/pragmarx/google2fa
+ls -la vendor/phpmailer/phpmailer
+```
+
+**If login hangs at 2FA:**
+1. Check if vendor/ directory exists on server
+2. Run `composer install` on the server
+3. Verify file permissions on vendor/ directory
+4. Check PHP error logs for "Class not found" errors
+

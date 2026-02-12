@@ -25,11 +25,11 @@ body {
 #main-content {
     background-color: #ffffff;
     min-height: 100vh;
-    transition: opacity 0.2s ease-out;
+    transition: opacity 0.2s ease-out, background-color 0s;
 }
 
 /* Ensure no background color transitions to prevent flash */
-body, html, #main-content {
+body, html {
     transition: background-color 0s;
 }
 
@@ -55,7 +55,7 @@ html {
     width: 100%;
 }
 
-/* Center headers in medication dashboard and reports */
+/* Center direct h1/h2 children in page content (applies to all pages) */
 .page-content > h1,
 .page-content > h2 {
     text-align: center;

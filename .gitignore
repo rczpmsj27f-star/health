@@ -77,3 +77,4 @@ ios/App/App/public/
 *.dSYM.zip
 DerivedData/
 
+test_cache_buster.php

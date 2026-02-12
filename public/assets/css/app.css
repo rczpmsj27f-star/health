@@ -452,11 +452,11 @@ body {
     background: #c82333 !important; 
 }
 
-/* Dashboard grid - Mobile First */
+/* Dashboard grid - Mobile First (2 columns on mobile, 3 on desktop) */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
     padding: 16px;
 }
 

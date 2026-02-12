@@ -912,7 +912,7 @@ if ($medType === 'prn') {
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
     <div id="main-content">
-    <div class="page-content">
+    <div class="page-content" style="max-width: 1200px; margin: 0 auto; padding: 16px;">
         <div class="page-title">
             <h2>📊 Medication Compliance</h2>
             <p>Track your medication adherence</p>

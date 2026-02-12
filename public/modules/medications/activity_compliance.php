@@ -125,7 +125,7 @@ $isAdmin = Auth::isAdmin();
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
     
     <div id="main-content">
-    <div class="dashboard-container">
+    <div class="dashboard-container" style="max-width: 800px; margin: 0 auto; padding: 20px 16px;">
         <div class="dashboard-title">
             <h2>Activity & Compliance</h2>
         </div>

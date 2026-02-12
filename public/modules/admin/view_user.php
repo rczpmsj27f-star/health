@@ -43,6 +43,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
 <body>
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+<div id="main-content">
     <div style="padding: 16px 16px 40px 16px; max-width: 800px; margin: 0 auto;">
         <?php if (isset($_SESSION['success_msg'])): ?>
             <div class="alert alert-success" style="margin-bottom: 16px;">
@@ -168,6 +169,7 @@ $roleList = $roles->fetchAll(PDO::FETCH_COLUMN);
         }
     });
     </script>
+</div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

@@ -357,6 +357,7 @@ $medications = $stmt->fetchAll();
     
     <?php include __DIR__ . '/../../../app/includes/header.php'; ?>
 
+<div id="main-content">
     <div class="page-content">
         <div class="page-title">
             <h2>📦 Medication Stock</h2>
@@ -642,6 +643,7 @@ $medications = $stmt->fetchAll();
             .catch(err => console.error('Service Worker registration failed:', err));
     }
     </script>
+</div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

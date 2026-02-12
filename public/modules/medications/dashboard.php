@@ -947,7 +947,7 @@ foreach ($prnMedications as $med) {
         <?php if (!empty($prnMedications)): ?>
         <div class="schedule-section">
             <h3>Take PRN Medication</h3>
-            <p style="color: var(--color-text-secondary); margin: 0 0 20px 0;">As-needed medications available to take</p>
+            <p style="color: var(--color-text-secondary); margin: 4px 0 16px 0;">As-needed medications available to take</p>
             
             <?php foreach ($prnData as $idx => $data): ?>
                 <?php 

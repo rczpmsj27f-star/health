@@ -12,11 +12,15 @@ if (!window.SPLASH_SCREEN_INITIALIZED) {
         const { SplashScreen } = window.Capacitor.Plugins;
         
         document.addEventListener('DOMContentLoaded', async () => {
+            // Wait 500ms to ensure page is fully rendered before hiding splash
+            // Increased from 100ms to be more reliable across different devices and page complexities
             await new Promise(resolve => setTimeout(resolve, 500));
             try {
                 await SplashScreen.hide();
+                console.log('Splash screen hidden successfully');
             } catch (e) {
-                console.log('SplashScreen already hidden or error:', e.message);
+                // Splash screen may already be hidden or error occurred
+                console.log('SplashScreen hide skipped:', e?.message || 'Already hidden or unavailable');
             }
         });
     }

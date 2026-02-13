@@ -150,6 +150,9 @@ class AjaxNavigation {
                 history.pushState({ url }, newTitle, url);
             }
 
+            // ✅ Synchronize page-specific head assets (inline styles, meta tags, scripts)
+            this.synchronizeHeadAssets(doc);
+
             // ✅ Robust stylesheet refresh
             await this.refreshStylesheets();
 
@@ -277,6 +280,91 @@ class AjaxNavigation {
             }
         } catch (_) {}
         void document.body.offsetHeight;
+    }
+
+    /**
+     * Synchronize page-specific head assets from the fetched document.
+     * This includes:
+     * - Inline <style> blocks
+     * - Page-specific <link> stylesheets (e.g., external libraries like cropperjs)
+     * - Page-specific <meta> tags (e.g., viewport-fit=cover)
+     * - Page-specific <script> tags in the head (e.g., page-specific libraries)
+     * 
+     * @param {Document} newDoc - The parsed document from the AJAX response
+     */
+    synchronizeHeadAssets(newDoc) {
+        const currentHead = document.head;
+        const newHead = newDoc.head;
+
+        // Remove existing page-specific inline styles (marked with data-page-specific)
+        // This ensures we don't accumulate styles from multiple pages
+        const existingPageStyles = currentHead.querySelectorAll('style[data-page-specific]');
+        existingPageStyles.forEach(style => style.remove());
+
+        // Remove existing page-specific link stylesheets (not app.css)
+        const existingPageLinks = currentHead.querySelectorAll('link[rel="stylesheet"][data-page-specific]');
+        existingPageLinks.forEach(link => link.remove());
+
+        // Remove existing page-specific scripts (marked with data-page-specific)
+        const existingPageScripts = currentHead.querySelectorAll('script[data-page-specific]');
+        existingPageScripts.forEach(script => script.remove());
+
+        // Add new page-specific inline styles
+        const newStyles = newHead.querySelectorAll('style');
+        newStyles.forEach(style => {
+            const clonedStyle = style.cloneNode(true);
+            clonedStyle.setAttribute('data-page-specific', 'true');
+            currentHead.appendChild(clonedStyle);
+        });
+
+        // Add new page-specific link stylesheets (exclude global app.css)
+        const newLinks = newHead.querySelectorAll('link[rel="stylesheet"]');
+        newLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            // Only add non-global stylesheets (i.e., not app.css)
+            if (href && !href.includes('/assets/css/app.css')) {
+                const clonedLink = link.cloneNode(true);
+                clonedLink.setAttribute('data-page-specific', 'true');
+                currentHead.appendChild(clonedLink);
+            }
+        });
+
+        // Synchronize page-specific meta tags (e.g., viewport-fit=cover)
+        // Only update if the new page has a different viewport meta tag
+        const newViewport = newHead.querySelector('meta[name="viewport"]');
+        const currentViewport = currentHead.querySelector('meta[name="viewport"]');
+        if (newViewport && currentViewport) {
+            const newContent = newViewport.getAttribute('content');
+            const currentContent = currentViewport.getAttribute('content');
+            if (newContent !== currentContent) {
+                currentViewport.setAttribute('content', newContent);
+            }
+        }
+
+        // Add new page-specific scripts from head (exclude global scripts like menu.js)
+        // This handles page-specific libraries like cropperjs
+        const newScripts = newHead.querySelectorAll('script[src]');
+        newScripts.forEach(script => {
+            const src = script.getAttribute('src');
+            // Only add scripts that are not already loaded globally
+            // Skip menu.js and other global scripts
+            if (src && !src.includes('/assets/js/menu.js') && !src.includes('/assets/js/ajax-navigation.js')) {
+                // Check if this script is already loaded
+                const existingScript = currentHead.querySelector(`script[src="${src}"]`);
+                if (!existingScript) {
+                    const clonedScript = document.createElement('script');
+                    clonedScript.src = src;
+                    clonedScript.setAttribute('data-page-specific', 'true');
+                    // Copy other attributes
+                    Array.from(script.attributes).forEach(attr => {
+                        if (attr.name !== 'src') {
+                            clonedScript.setAttribute(attr.name, attr.value);
+                        }
+                    });
+                    currentHead.appendChild(clonedScript);
+                }
+            }
+        });
     }
 }
 

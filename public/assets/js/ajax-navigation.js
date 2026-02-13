@@ -296,20 +296,26 @@ class AjaxNavigation {
         const currentHead = document.head;
         const newHead = newDoc.head;
 
+        // Define global assets that should not be synchronized (to avoid duplication)
+        const globalStylesheets = ['/assets/css/app.css'];
+        const globalScripts = ['/assets/js/menu.js', '/assets/js/ajax-navigation.js'];
+
         // Remove existing page-specific inline styles (marked with data-page-specific)
         // This ensures we don't accumulate styles from multiple pages
         const existingPageStyles = currentHead.querySelectorAll('style[data-page-specific]');
         existingPageStyles.forEach(style => style.remove());
 
-        // Remove existing page-specific link stylesheets (not app.css)
+        // Remove existing page-specific link stylesheets
         const existingPageLinks = currentHead.querySelectorAll('link[rel="stylesheet"][data-page-specific]');
         existingPageLinks.forEach(link => link.remove());
 
-        // Remove existing page-specific scripts (marked with data-page-specific)
+        // Remove existing page-specific scripts
         const existingPageScripts = currentHead.querySelectorAll('script[data-page-specific]');
         existingPageScripts.forEach(script => script.remove());
 
         // Add new page-specific inline styles
+        // Note: In this codebase, inline styles in <head> are page-specific by convention
+        // Each page defines its own layout styles, so we swap them during navigation
         const newStyles = newHead.querySelectorAll('style');
         newStyles.forEach(style => {
             const clonedStyle = style.cloneNode(true);
@@ -317,12 +323,19 @@ class AjaxNavigation {
             currentHead.appendChild(clonedStyle);
         });
 
-        // Add new page-specific link stylesheets (exclude global app.css)
+        // Add new page-specific link stylesheets (exclude global stylesheets)
         const newLinks = newHead.querySelectorAll('link[rel="stylesheet"]');
         newLinks.forEach(link => {
             const href = link.getAttribute('href');
-            // Only add non-global stylesheets (i.e., not app.css)
-            if (href && !href.includes('/assets/css/app.css')) {
+            if (!href) return;
+
+            // Check if this is a global stylesheet
+            const isGlobal = globalStylesheets.some(globalPath => {
+                // Handle both absolute paths and URLs with query params
+                return href.includes(globalPath);
+            });
+
+            if (!isGlobal) {
                 const clonedLink = link.cloneNode(true);
                 clonedLink.setAttribute('data-page-specific', 'true');
                 currentHead.appendChild(clonedLink);
@@ -341,16 +354,24 @@ class AjaxNavigation {
             }
         }
 
-        // Add new page-specific scripts from head (exclude global scripts like menu.js)
+        // Add new page-specific scripts from head (exclude global scripts)
         // This handles page-specific libraries like cropperjs
         const newScripts = newHead.querySelectorAll('script[src]');
         newScripts.forEach(script => {
             const src = script.getAttribute('src');
-            // Only add scripts that are not already loaded globally
-            // Skip menu.js and other global scripts
-            if (src && !src.includes('/assets/js/menu.js') && !src.includes('/assets/js/ajax-navigation.js')) {
-                // Check if this script is already loaded
-                const existingScript = currentHead.querySelector(`script[src="${src}"]`);
+            if (!src) return;
+
+            // Check if this is a global script
+            const isGlobal = globalScripts.some(globalPath => {
+                return src.includes(globalPath);
+            });
+
+            if (!isGlobal) {
+                // Check if this script is already loaded (compare src values programmatically)
+                const existingScript = Array.from(currentHead.querySelectorAll('script[src]')).find(
+                    s => s.getAttribute('src') === src
+                );
+
                 if (!existingScript) {
                     const clonedScript = document.createElement('script');
                     clonedScript.src = src;

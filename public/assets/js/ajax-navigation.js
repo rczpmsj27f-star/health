@@ -116,25 +116,19 @@ class AjaxNavigation {
                 headers: {
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
                     'Pragma': 'no-cache',
-                    'Expires': '0'
+                    'Expires': '0',
+                    'Accept': 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 credentials: 'same-origin'
             });
 
-            if (!response.ok) throw new Error('Page load failed');
+            if (!response.ok) throw new Error(`Page load failed: ${response.status}`);
             
             const html = await response.text();
-            
-            // ✅ CLEAR old content before inserting new
-            const mainContent = document.querySelector(this.contentSelector);
-            if (mainContent) {
-                mainContent.innerHTML = '';
-            }
-            
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
-            // Extract content
             const newContent = doc.querySelector(this.contentSelector);
             const newTitle = doc.querySelector('title')?.textContent || document.title;
 
@@ -144,12 +138,10 @@ class AjaxNavigation {
                 return;
             }
 
-            // Replace content safely
             const container = document.querySelector(this.contentSelector);
-            // Clone and append new content nodes
-            Array.from(newContent.childNodes).forEach(node => {
-                container.appendChild(node.cloneNode(true));
-            });
+
+            // ✅ Replace content in one step
+            container.innerHTML = newContent.innerHTML;
             
             document.title = newTitle;
 
@@ -158,9 +150,8 @@ class AjaxNavigation {
                 history.pushState({ url }, newTitle, url);
             }
 
-            // ✅ CRITICAL FIX: Force CSS stylesheets to re-apply to new content
-            // This ensures all CSS rules are re-evaluated for the new DOM elements
-            await this.forceStylesheetRefresh();
+            // ✅ Robust stylesheet refresh
+            await this.refreshStylesheets();
 
             // Reinitialize page scripts
             this.reinitializeScripts();
@@ -245,81 +236,47 @@ class AjaxNavigation {
         });
     }
 
-    async forceStylesheetRefresh() {
-        console.log('🔄 Refreshing stylesheets for new content...');
-        
-        // Why this is necessary:
-        // In iOS WebView/Capacitor, especially with Service Workers, inserting new DOM 
-        // via AJAX doesn't reliably trigger CSS re-application for new elements.
-        // The browser may keep using the old stylesheet object, leaving new elements 
-        // unstyled until a full document navigation. We must aggressively clone and 
-        // replace each <link> node to force CSSOM rebuild.
-        
-        // Query all stylesheet link elements
+    // Replaces each stylesheet <link> with a cloned node using a cache-busting v=timestamp,
+    // awaits load to ensure CSSOM is rebuilt, then forces a reflow.
+    async refreshStylesheets(timeoutMs = 4000) {
         const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-        
-        // Helper function to wait for load event or timeout
-        const waitFor = (el, evt, ms = 2000) => new Promise(res => {
-            let done = false;
-            const t = setTimeout(() => { 
-                if (!done) { 
-                    done = true; 
-                    res(); 
-                }
-            }, ms);
-            el.addEventListener(evt, () => { 
-                if (!done) { 
-                    done = true; 
-                    clearTimeout(t); 
-                    res(); 
-                }
-            }, { once: true });
-        });
-        
-        // Replace each stylesheet link with a fresh clone
-        await Promise.all(links.map(async (oldLink) => {
+        const waitForLoad = (link) =>
+            new Promise((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('Stylesheet load timeout')), timeoutMs);
+                link.addEventListener('load', () => { clearTimeout(timer); resolve(); });
+                link.addEventListener('error', () => { clearTimeout(timer); reject(new Error(`Stylesheet load error: ${link.href}`)); });
+            });
+
+        const tasks = links.map(async (oldLink) => {
             try {
-                // Construct clean URL with single cache-busting param
-                const url = new URL(oldLink.href, window.location.origin);
-                
-                // Remove any existing cache-busting params to avoid query growth
-                url.searchParams.delete('css-refresh');
-                url.searchParams.delete('v');
-                
-                // Add fresh timestamp cache-buster
+                const href = oldLink.getAttribute('href');
+                if (!href) return;
+
+                const url = new URL(href, window.location.origin);
                 url.searchParams.set('v', Date.now().toString());
-                
-                // Clone the node and update href
+
                 const newLink = oldLink.cloneNode(true);
                 newLink.href = url.toString();
-                
-                console.log('📝 Replacing stylesheet:', oldLink.href.split('?')[0]);
-                
-                // Replace in DOM - preserves order
-                oldLink.parentNode.replaceChild(newLink, oldLink);
-                
-                // Wait for load (best-effort) to minimize FOUC
-                await waitFor(newLink, 'load');
+
+                oldLink.parentNode.insertBefore(newLink, oldLink.nextSibling);
+                await waitForLoad(newLink);
+                oldLink.remove();
             } catch (e) {
-                // Ignore cross-origin or access errors
-                console.log('⚠️ Could not refresh stylesheet (may be cross-origin):', e.message);
-            }
-        }));
-        
-        // CSSOM nudge (best-effort) - poke each accessible stylesheet
-        Array.from(document.styleSheets).forEach(sheet => {
-            try {
-                sheet.insertRule('/*refresh*/', 0);
-                sheet.deleteRule(0);
-            } catch (e) {
-                // Ignore CORS errors from external stylesheets
+                console.warn('Stylesheet refresh warning:', e.message || e);
             }
         });
-        
-        // Force reflow to ensure styles are recalculated
-        void document.documentElement.offsetHeight;
-        
-        console.log('✅ Stylesheet refresh complete');
+
+        await Promise.allSettled(tasks);
+
+        // Nudge CSSOM and force reflow
+        try {
+            const sheet = document.styleSheets[0];
+            if (sheet?.insertRule) {
+                sheet.insertRule(':root { --css-refresh: 1 }', sheet.cssRules.length);
+                sheet.deleteRule(sheet.cssRules.length - 1);
+            }
+        } catch (_) {}
+        void document.body.offsetHeight;
     }
 }
 

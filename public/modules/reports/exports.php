@@ -376,7 +376,12 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
         }
     
         // Function to handle PDF sharing
-        async function sharePdf(type, extraParams = {}) {
+        async function sharePdf(type, extraParams = {}, buttonElement = null) {
+            // If buttonElement is not provided, try to get it from event
+            if (!buttonElement && typeof event !== 'undefined' && event.target) {
+                buttonElement = event.target;
+            }
+            
             try {
                 // Build URL with share parameter
                 const params = new URLSearchParams({
@@ -390,10 +395,12 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                 <?php endif; ?>
                 
                 // Show loading indicator
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '⏳ Preparing...';
-                button.disabled = true;
+                let originalText = '📤 Share';
+                if (buttonElement) {
+                    originalText = buttonElement.textContent;
+                    buttonElement.textContent = '⏳ Preparing...';
+                    buttonElement.disabled = true;
+                }
                 
                 // Fetch PDF as base64
                 const response = await fetch(`export_pdf.php?${params.toString()}`);
@@ -407,17 +414,19 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                 await PdfShare.sharePdf(data.filename, data.base64, 'Health Tracker Report');
                 
                 // Reset button
-                button.textContent = originalText;
-                button.disabled = false;
+                if (buttonElement) {
+                    buttonElement.textContent = originalText;
+                    buttonElement.disabled = false;
+                }
                 
             } catch (error) {
                 console.error('Error sharing PDF:', error);
                 alert('Unable to share PDF: ' + error.message);
                 
                 // Reset button
-                if (event && event.target) {
-                    event.target.textContent = event.target.getAttribute('data-original-text') || '📤 Share';
-                    event.target.disabled = false;
+                if (buttonElement) {
+                    buttonElement.textContent = buttonElement.getAttribute('data-original-text') || '📤 Share';
+                    buttonElement.disabled = false;
                 }
             }
         }

@@ -29,12 +29,11 @@ const PdfShare = {
             }
 
             const Filesystem = window.Capacitor.Plugins.Filesystem;
-            const Directory = { Cache: 'CACHE' };
 
             const result = await Filesystem.writeFile({
                 path: filename,
                 data: base64Data,
-                directory: Directory.Cache,
+                directory: 'CACHE', // Use string value for Capacitor 5
                 recursive: true
             });
 

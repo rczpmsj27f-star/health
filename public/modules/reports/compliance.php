@@ -48,11 +48,10 @@ $stmt = $pdo->prepare("
         COUNT(*) as total_doses,
         ROUND(SUM(CASE WHEN ml.status = 'taken' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as compliance_rate
     FROM medications m
-    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+    INNER JOIN medication_schedules ms ON m.id = ms.medication_id AND ms.is_prn = 0
     LEFT JOIN medication_logs ml ON m.id = ml.medication_id 
         AND ml.scheduled_date_time BETWEEN ? AND ?
     WHERE m.user_id = ?
-        AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
     GROUP BY m.id, m.name
     ORDER BY compliance_rate DESC
 ");

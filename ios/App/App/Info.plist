@@ -51,6 +51,8 @@
 	</array>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Health Tracker needs permission to send you medication reminders and notifications.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID is used to quickly and securely unlock your Health Tracker session.</string>
 	<key>UIUserInterfaceStyle</key>
 	<string>Light</string>
 </dict>

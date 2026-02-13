@@ -37,7 +37,7 @@ if ($viewingLinkedUser) {
 $endDate = $_GET['end_date'] ?? date('Y-m-d');
 $startDate = $_GET['start_date'] ?? date('Y-m-d', strtotime('-30 days'));
 
-// Get compliance data
+// Get compliance data (exclude PRN medications from compliance calculations)
 $stmt = $pdo->prepare("
     SELECT 
         m.id,
@@ -48,9 +48,11 @@ $stmt = $pdo->prepare("
         COUNT(*) as total_doses,
         ROUND(SUM(CASE WHEN ml.status = 'taken' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as compliance_rate
     FROM medications m
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
     LEFT JOIN medication_logs ml ON m.id = ml.medication_id 
         AND ml.scheduled_date_time BETWEEN ? AND ?
     WHERE m.user_id = ?
+        AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
     GROUP BY m.id, m.name
     ORDER BY compliance_rate DESC
 ");
@@ -183,27 +185,30 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="stat-card">
                 <div class="stat-number"><?= $overallCompliance ?>%</div>
-                <div class="stat-label">Overall Compliance</div>
+                <div class="stat-label">Scheduled Compliance</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" style="color: #10b981;"><?= $overallTaken ?></div>
-                <div class="stat-label">Doses Taken</div>
+                <div class="stat-label">Scheduled Doses Taken</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" style="color: #ef4444;">
                     <?= array_sum(array_column($complianceData, 'skipped_count')) ?>
                 </div>
-                <div class="stat-label">Doses Skipped</div>
+                <div class="stat-label">Scheduled Doses Skipped</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" style="color: #6366f1;"><?= $overallTotal ?></div>
-                <div class="stat-label">Total Doses</div>
+                <div class="stat-label">Total Scheduled Doses</div>
             </div>
         </div>
         
         <!-- Per-Medication Compliance -->
         <div style="background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="margin-top: 0; color: var(--color-primary);">Compliance by Medication</h3>
+            <h3 style="margin-top: 0; color: var(--color-primary);">Scheduled Compliance by Medication</h3>
+            <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px;">
+                PRN (as needed) medications are not included in compliance calculations
+            </p>
             
             <?php if (empty($complianceData)): ?>
                 <div class="empty-state">

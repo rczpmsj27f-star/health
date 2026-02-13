@@ -90,7 +90,25 @@ switch ($type) {
 
 // Close and output PDF document
 $filename = 'medication_report_' . date('Y-m-d') . '.pdf';
-$pdf->Output($filename, 'D');
+
+// Check if share mode is requested (for mobile apps and web share API)
+$shareMode = isset($_GET['share']) && $_GET['share'] === '1';
+
+if ($shareMode) {
+    // Output as base64 JSON for sharing
+    header('Content-Type: application/json');
+    $pdfData = $pdf->Output('', 'S'); // Get PDF as string
+    $base64Data = base64_encode($pdfData);
+    echo json_encode([
+        'success' => true,
+        'filename' => $filename,
+        'base64' => $base64Data,
+        'size' => strlen($pdfData)
+    ]);
+} else {
+    // Standard download
+    $pdf->Output($filename, 'D');
+}
 exit;
 
 // ============================================================================

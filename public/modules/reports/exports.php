@@ -191,6 +191,9 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                    class="btn-export" target="_blank">
                     📄 Download PDF
                 </a>
+                <button onclick="sharePdf('current_medications')" class="btn-export" style="border: none; cursor: pointer;">
+                    📤 Share PDF
+                </button>
             </div>
         </div>
         
@@ -208,10 +211,16 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                    class="btn-export" target="_blank">
                     📄 Weekly Schedule PDF
                 </a>
+                <button onclick="sharePdf('schedule', {format: 'weekly'})" class="btn-export" style="border: none; cursor: pointer;">
+                    📤 Share Weekly
+                </button>
                 <a href="export_pdf.php?type=schedule&format=monthly<?= $viewingLinkedUser ? '&view=linked' : '' ?>" 
                    class="btn-export" target="_blank">
                     📄 Monthly Schedule PDF
                 </a>
+                <button onclick="sharePdf('schedule', {format: 'monthly'})" class="btn-export" style="border: none; cursor: pointer;">
+                    📤 Share Monthly
+                </button>
             </div>
         </div>
         
@@ -275,6 +284,10 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                 <button type="submit" class="btn-export" style="border: none; cursor: pointer;">
                     📄 Generate Chart PDF
                 </button>
+                <button type="button" onclick="shareFormPdf(event, 'manual_chart', ['start_date', 'end_date', 'medications[]'])" 
+                        class="btn-export" style="border: none; cursor: pointer;">
+                    📤 Share Chart
+                </button>
             </form>
         </div>
         
@@ -311,10 +324,121 @@ if ($viewingLinkedUser && !$canExportLinkedUser) {
                 <button type="submit" class="btn-export" style="border: none; cursor: pointer;">
                     📄 Download PRN Report PDF
                 </button>
+                <button type="button" onclick="shareFormPdf(event, 'prn_usage', ['start_date', 'end_date'])" 
+                        class="btn-export" style="border: none; cursor: pointer;">
+                    📤 Share PRN Report
+                </button>
             </form>
         </div>
     </div>
     </div> <!-- #main-content -->
+    
+    <!-- PDF Share Script -->
+    <script src="/assets/js/pdf-share.js?v=<?= time() ?>"></script>
+    <script>
+        // Function to handle PDF sharing from forms
+        async function shareFormPdf(event, type, fieldNames) {
+            try {
+                event.preventDefault();
+                
+                // Get the form
+                const button = event.target;
+                const form = button.closest('form');
+                
+                // Collect form data
+                const extraParams = {};
+                fieldNames.forEach(fieldName => {
+                    if (fieldName.endsWith('[]')) {
+                        // Handle multi-select
+                        const baseName = fieldName.slice(0, -2);
+                        const select = form.querySelector(`[name="${fieldName}"]`);
+                        if (select) {
+                            const selectedOptions = Array.from(select.selectedOptions).map(opt => opt.value);
+                            selectedOptions.forEach((value, index) => {
+                                extraParams[`medications[${index}]`] = value;
+                            });
+                        }
+                    } else {
+                        const input = form.querySelector(`[name="${fieldName}"]`);
+                        if (input) {
+                            extraParams[fieldName] = input.value;
+                        }
+                    }
+                });
+                
+                // Call sharePdf with the collected data
+                await sharePdf(type, extraParams);
+                
+            } catch (error) {
+                console.error('Error sharing form PDF:', error);
+                alert('Unable to share PDF: ' + error.message);
+            }
+        }
+    
+        // Function to handle PDF sharing
+        async function sharePdf(type, extraParams = {}, buttonElement = null) {
+            // If buttonElement is not provided, try to get it from event
+            if (!buttonElement && typeof event !== 'undefined' && event.target) {
+                buttonElement = event.target;
+            }
+            
+            try {
+                // Build URL with share parameter
+                const params = new URLSearchParams({
+                    type: type,
+                    share: '1',
+                    ...extraParams
+                });
+                
+                <?php if ($viewingLinkedUser): ?>
+                params.set('view', 'linked');
+                <?php endif; ?>
+                
+                // Show loading indicator
+                let originalText = '📤 Share';
+                if (buttonElement) {
+                    originalText = buttonElement.textContent;
+                    buttonElement.textContent = '⏳ Preparing...';
+                    buttonElement.disabled = true;
+                }
+                
+                // Fetch PDF as base64
+                const response = await fetch(`export_pdf.php?${params.toString()}`);
+                const data = await response.json();
+                
+                if (!data.success || !data.base64) {
+                    throw new Error('Failed to generate PDF');
+                }
+                
+                // Share the PDF
+                await PdfShare.sharePdf(data.filename, data.base64, 'Health Tracker Report');
+                
+                // Reset button
+                if (buttonElement) {
+                    buttonElement.textContent = originalText;
+                    buttonElement.disabled = false;
+                }
+                
+            } catch (error) {
+                console.error('Error sharing PDF:', error);
+                alert('Unable to share PDF: ' + error.message);
+                
+                // Reset button
+                if (buttonElement) {
+                    buttonElement.textContent = buttonElement.getAttribute('data-original-text') || '📤 Share';
+                    buttonElement.disabled = false;
+                }
+            }
+        }
+        
+        // Store original button text
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[onclick*="sharePdf"]').forEach(btn => {
+                btn.setAttribute('data-original-text', btn.textContent);
+            });
+        });
+    </script>
+    
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
 </body>
 </html>

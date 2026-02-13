@@ -1,9 +1,25 @@
 /**
  * Biometric Authentication Module
- * Handles Face ID/Touch ID authentication using WebAuthn API
+ * Handles Face ID/Touch ID authentication using Capacitor Native Biometric (for native apps) or WebAuthn API (for web)
  */
 
 const BiometricAuth = {
+    /**
+     * Check if Capacitor Native Biometric is available (for iOS/Android apps)
+     */
+    isNativeBiometricAvailable: async function() {
+        try {
+            // Check if running in Capacitor app
+            if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
+                const result = await window.Capacitor.Plugins.NativeBiometric.isAvailable();
+                return { available: !!result.isAvailable, biometryType: result.biometryType || null, isNative: true };
+            }
+        } catch (e) {
+            console.error('Error checking native biometric:', e);
+        }
+        return { available: false, isNative: false };
+    },
+
     /**
      * Check if WebAuthn is supported in the current browser
      */
@@ -15,14 +31,46 @@ const BiometricAuth = {
      * Check if platform authenticator (Face ID/Touch ID) is available
      */
     isPlatformAuthenticatorAvailable: async function() {
+        // First, check if native biometric is available (Capacitor app)
+        const nativeCheck = await this.isNativeBiometricAvailable();
+        if (nativeCheck.available) {
+            return nativeCheck;
+        }
+
+        // Fallback to WebAuthn for web
         if (!this.isSupported()) {
-            return false;
+            return { available: false, isNative: false };
         }
         try {
-            return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            return { available, isNative: false };
         } catch (e) {
             console.error('Error checking platform authenticator:', e);
-            return false;
+            return { available: false, isNative: false };
+        }
+    },
+
+    /**
+     * Verify identity using native biometric (Capacitor)
+     */
+    verifyNative: async function(reason = 'Unlock your session') {
+        try {
+            if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.NativeBiometric) {
+                throw new Error('Native biometric not available');
+            }
+
+            const result = await window.Capacitor.Plugins.NativeBiometric.verifyIdentity({
+                reason: reason,
+                title: 'Health Tracker',
+                subtitle: 'Secure Access',
+                description: 'Authenticate to continue',
+                useFallback: true
+            });
+
+            return { success: true, verified: true };
+        } catch (error) {
+            console.error('Native biometric verification error:', error);
+            throw error;
         }
     },
 

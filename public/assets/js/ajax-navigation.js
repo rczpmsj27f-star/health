@@ -6,6 +6,8 @@
  * - Scrolls to top smoothly (100ms)
  * - Fetches pages via AJAX
  * - Swaps only main content (not header/footer)
+ * - Synchronizes page-specific head assets (inline styles, meta tags, scripts)
+ * - Refreshes global stylesheets to ensure CSS re-application
  * - Fades in new content with opacity transition (100ms)
  * - Updates URL without page reload
  * - Blocks user interaction during transitions
@@ -330,10 +332,17 @@ class AjaxNavigation {
             if (!href) return;
 
             // Check if this is a global stylesheet
-            const isGlobal = globalStylesheets.some(globalPath => {
-                // Handle both absolute paths and URLs with query params
-                return href.includes(globalPath);
-            });
+            // Use URL pathname comparison to avoid false positives from query params
+            let isGlobal = false;
+            try {
+                const url = new URL(href, window.location.origin);
+                isGlobal = globalStylesheets.some(globalPath => {
+                    return url.pathname === globalPath || url.pathname.endsWith(globalPath);
+                });
+            } catch (e) {
+                // If URL parsing fails, fall back to simple includes check
+                isGlobal = globalStylesheets.some(globalPath => href.endsWith(globalPath));
+            }
 
             if (!isGlobal) {
                 const clonedLink = link.cloneNode(true);
@@ -362,9 +371,17 @@ class AjaxNavigation {
             if (!src) return;
 
             // Check if this is a global script
-            const isGlobal = globalScripts.some(globalPath => {
-                return src.includes(globalPath);
-            });
+            // Use URL pathname comparison to avoid false positives
+            let isGlobal = false;
+            try {
+                const url = new URL(src, window.location.origin);
+                isGlobal = globalScripts.some(globalPath => {
+                    return url.pathname === globalPath || url.pathname.endsWith(globalPath);
+                });
+            } catch (e) {
+                // If URL parsing fails (e.g., for external URLs), fall back to simple endsWith check
+                isGlobal = globalScripts.some(globalPath => src.endsWith(globalPath));
+            }
 
             if (!isGlobal) {
                 // Check if this script is already loaded (compare src values programmatically)
@@ -376,9 +393,9 @@ class AjaxNavigation {
                     const clonedScript = document.createElement('script');
                     clonedScript.src = src;
                     clonedScript.setAttribute('data-page-specific', 'true');
-                    // Copy other attributes
+                    // Copy other attributes (skip 'src' and 'data-page-specific' to avoid duplication)
                     Array.from(script.attributes).forEach(attr => {
-                        if (attr.name !== 'src') {
+                        if (attr.name !== 'src' && attr.name !== 'data-page-specific') {
                             clonedScript.setAttribute(attr.name, attr.value);
                         }
                     });

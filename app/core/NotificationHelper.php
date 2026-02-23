@@ -51,6 +51,9 @@ class NotificationHelper {
         
         if (!$prefs) {
             $prefs = ['in_app' => 1, 'push' => 1, 'email' => 0];
+            error_log("No notification_preferences found for user $userId type=$type, using defaults (push=1, email=0)");
+        } else {
+            error_log("Notification preferences for user $userId type=$type: push={$prefs['push']} email={$prefs['email']}");
         }
         
         // Push notification via OneSignal
@@ -80,8 +83,11 @@ class NotificationHelper {
             
             if (!$settings || empty($settings['onesignal_player_id'])) {
                 // User hasn't registered for push notifications
+                error_log("Push skipped for user $userId: no player_id or notifications disabled");
                 return;
             }
+            
+            error_log("Sending push to user $userId via player_id=" . $settings['onesignal_player_id']);
             
             // Prepare notification data
             $notificationData = array_merge($data, [
@@ -89,15 +95,18 @@ class NotificationHelper {
             ]);
             
             // Send via OneSignal API
-            $this->sendToOneSignal(
+            $sent = $this->sendToOneSignal(
                 $settings['onesignal_player_id'],
                 $title,
                 $message,
                 $notificationData
             );
+            if (!$sent) {
+                error_log("Push delivery failed for user $userId via player_id=" . $settings['onesignal_player_id']);
+            }
             
         } catch (Exception $e) {
-            error_log("Error sending push notification: " . $e->getMessage());
+            error_log("Error sending push notification to user $userId: " . $e->getMessage());
         }
     }
     
@@ -107,7 +116,7 @@ class NotificationHelper {
     private function sendToOneSignal($playerId, $title, $message, $data = []) {
         if (!defined('ONESIGNAL_APP_ID') || !defined('ONESIGNAL_REST_API_KEY')) {
             error_log("OneSignal credentials not configured");
-            return;
+            return false;
         }
         
         $payload = [
@@ -134,7 +143,7 @@ class NotificationHelper {
         $ch = curl_init('https://onesignal.com/api/v1/notifications');
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Authorization: Basic ' . ONESIGNAL_REST_API_KEY
+            'Authorization: Bearer ' . ONESIGNAL_REST_API_KEY
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -145,8 +154,12 @@ class NotificationHelper {
         curl_close($ch);
         
         if ($httpCode !== 200 && $httpCode !== 201) {
-            error_log("OneSignal API error: HTTP $httpCode, Response: $response");
+            error_log("OneSignal API error: HTTP $httpCode, Response: $response, Player ID: $playerId");
+            return false;
         }
+        
+        error_log("OneSignal push sent successfully: HTTP $httpCode, Player ID: $playerId, Response: $response");
+        return true;
     }
     
     /**

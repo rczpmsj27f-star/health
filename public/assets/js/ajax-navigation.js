@@ -159,7 +159,10 @@ class AjaxNavigation {
             await this.refreshStylesheets();
 
             // Reinitialize page scripts
-            this.reinitializeScripts();
+            await this.reinitializeScripts();
+
+            // Notify page-specific scripts that AJAX navigation has completed
+            document.dispatchEvent(new CustomEvent('ajaxNavigationComplete'));
 
             // Fade in new content
             await this.fadeIn();
@@ -216,29 +219,37 @@ class AjaxNavigation {
         }
     }
 
-    reinitializeScripts() {
+    async reinitializeScripts() {
         // Re-run any page-specific JavaScript initialization function
         if (typeof initPageScripts === 'function') {
             initPageScripts();
         }
         
-        // Execute inline scripts from the new content
-        // Note: Scripts with src attributes won't re-execute automatically
+        // Execute scripts from the new content sequentially so that external
+        // scripts (e.g. medication-icons.js) are fully loaded before the
+        // inline scripts that depend on their globals run.
         const container = document.querySelector(this.contentSelector);
-        const scripts = container.querySelectorAll('script');
-        scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
-            // Copy attributes
-            Array.from(oldScript.attributes).forEach(attr => {
-                newScript.setAttribute(attr.name, attr.value);
+        const scripts = Array.from(container.querySelectorAll('script'));
+        for (const oldScript of scripts) {
+            await new Promise((resolve) => {
+                const newScript = document.createElement('script');
+                // Copy attributes
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                if (!oldScript.src) {
+                    // Inline script: execute synchronously then resolve
+                    newScript.textContent = oldScript.textContent;
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                    resolve();
+                } else {
+                    // External script: wait for load/error before continuing
+                    newScript.addEventListener('load', resolve);
+                    newScript.addEventListener('error', resolve);
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                }
             });
-            // Copy inline script content
-            if (!oldScript.src) {
-                newScript.textContent = oldScript.textContent;
-            }
-            // Replace old script with new one to trigger execution
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-        });
+        }
     }
 
     // Replaces each stylesheet <link> with a cloned node using a cache-busting v=timestamp,

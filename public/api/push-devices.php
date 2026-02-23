@@ -88,7 +88,7 @@ try {
                     SET device_token = ?,
                         platform = ?,
                         device_id = ?,
-                        onesignal_player_id = COALESCE(?, onesignal_player_id),
+                        onesignal_player_id = ?,
                         last_token_update = NOW(),
                         updated_at = NOW()
                     WHERE user_id = ?

@@ -168,13 +168,15 @@ async function registerDeviceToken(deviceToken) {
  * Poll for OneSignal Player ID in the background and, once available,
  * send an update to the backend so the database record is complete.
  *
- * Uses exponential back-off: starts at 500 ms, doubles after 5 attempts,
- * capped at 3 000 ms, with a maximum of 30 attempts (~1 minute total).
+ * Uses exponential back-off: starts at 500 ms, doubles between attempts,
+ * capped at 3 000 ms, with a maximum of 5 attempts (~15 s total).
+ * If the JS bridge never exposes the ID, the server-side lookup in
+ * push-devices.php will resolve it via the OneSignal REST API.
  * A module-level flag prevents duplicate concurrent retry loops.
  */
 let _playerIdRetryInProgress = false;
 
-async function retryGetAndSendPlayerId(deviceToken, maxRetries = 30) {
+async function retryGetAndSendPlayerId(deviceToken, maxRetries = 5) {
     if (_playerIdRetryInProgress) {
         console.log('📱 Player ID retry already in progress – skipping duplicate');
         return;
@@ -197,13 +199,11 @@ async function retryGetAndSendPlayerId(deviceToken, maxRetries = 30) {
             // Wait before next attempt (delay is at end so we check immediately on entry)
             await new Promise(resolve => setTimeout(resolve, delayMs));
 
-            // Exponential back-off after the first 5 fast attempts
-            if (attempt >= 5) {
-                delayMs = Math.min(delayMs * 2, 3000);
-            }
+            // Exponential back-off
+            delayMs = Math.min(delayMs * 2, 3000);
         }
 
-        console.warn('⚠️ Could not obtain OneSignal Player ID after', maxRetries, 'attempts – backend record has no Player ID');
+        console.log('📱 Player ID not available in JS bridge after', maxRetries, 'attempts – server-side lookup will handle it');
     } finally {
         _playerIdRetryInProgress = false;
     }

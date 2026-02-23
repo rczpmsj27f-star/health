@@ -79,6 +79,18 @@ try {
         // Calculate minutes difference between scheduled time and current time
         $diffMinutes = ($now->getTimestamp() - $scheduledDateTime->getTimestamp()) / 60;
         
+        // Log per-dose details for diagnostics
+        echo "[{$currentDateTime}] Dose log_id={$dose['log_id']} user={$dose['user_id']} med={$dose['medication_name']}"
+            . " scheduled={$dose['scheduled_date_time']} diff=" . round($diffMinutes, 1) . "min"
+            . " player_id=" . ($dose['onesignal_player_id'] ?: 'NONE')
+            . " notify_at_time={$dose['notify_at_time']}"
+            . " notify_10={$dose['notify_after_10min']}"
+            . " notify_20={$dose['notify_after_20min']}"
+            . " notify_30={$dose['notify_after_30min']}"
+            . " notify_60={$dose['notify_after_60min']}"
+            . " sent_at=" . ($dose['notification_sent_at_time'] ? 'YES' : 'NO')
+            . "\n";
+
         $shouldNotify = false;
         $notificationType = '';
         
@@ -163,6 +175,9 @@ try {
                 'tag' => "medication-{$dose['medication_id']}-{$scheduledTime}"
             ];
             
+            echo "[{$currentDateTime}] Sending {$notificationType} notification: '{$message}'"
+                . " to user {$dose['user_id']} via player_id={$dose['onesignal_player_id']}\n";
+            
             // Use NotificationHelper to create in-app notification and send via enabled channels
             // This will create a record in the notifications table AND send push/email based on preferences
             $notificationHelper = new NotificationHelper($pdo);
@@ -178,11 +193,13 @@ try {
                     $data
                 );
                 
-                echo "[{$currentDateTime}] Sent {$notificationType} notification for {$medicationName} to user {$dose['user_id']}\n";
+                echo "[{$currentDateTime}] Notification created (id={$notificationId}) for {$notificationType} - {$medicationName} user={$dose['user_id']}\n";
             } catch (Exception $e) {
                 echo "[{$currentDateTime}] Failed to send notification for {$medicationName} to user {$dose['user_id']}: " . 
                      $e->getMessage() . "\n";
             }
+        } else {
+            echo "[{$currentDateTime}] No notification due for log_id={$dose['log_id']} at diff=" . round($diffMinutes, 1) . "min\n";
         }
     }
     

@@ -522,7 +522,7 @@ foreach ($instructions as $i) {
         }
 
         // Initialize medication icon selector
-        document.addEventListener('DOMContentLoaded', function() {
+        function initIconSelector() {
             // Populate icon grid
             const iconGrid = document.getElementById('icon-grid');
             Object.keys(MedicationIcons.icons).forEach(key => {
@@ -609,7 +609,12 @@ foreach ($instructions as $i) {
 
             // Initial preview
             updateIconPreview();
-        });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initIconSelector);
+        } else {
+            initIconSelector();
+        }
 
         function updateIconPreview() {
             const iconType = document.getElementById('medication_icon')?.value || 'pill';

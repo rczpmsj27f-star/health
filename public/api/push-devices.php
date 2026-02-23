@@ -121,6 +121,9 @@ try {
             // via the OneSignal REST API so the DB record stays up to date even
             // when the JS bridge cannot read the native subscription ID.
             if (empty($onesignal_player_id)) {
+                // Brief delay to allow OneSignal SDK to finish registering the subscription
+                // with OneSignal's servers before we query for it
+                usleep(2000000); // 2 seconds
                 $looked_up_id = lookupOneSignalSubscription($device_token);
                 if ($looked_up_id) {
                     $onesignal_player_id = $looked_up_id;
@@ -229,9 +232,10 @@ try {
  * using the OneSignal REST API server-side.
  *
  * @param string $device_token  The APNs device token
+ * @param int    $retryCount    Internal retry counter (0 = first attempt)
  * @return string|null          The OneSignal subscription/player ID, or null if not found
  */
-function lookupOneSignalSubscription($device_token) {
+function lookupOneSignalSubscription($device_token, $retryCount = 0) {
     if (!function_exists('onesignal_is_configured') || !onesignal_is_configured()) {
         error_log("lookupOneSignalSubscription: OneSignal not configured, skipping lookup");
         return null;
@@ -240,9 +244,9 @@ function lookupOneSignalSubscription($device_token) {
     $app_id  = ONESIGNAL_APP_ID;
     $api_key = ONESIGNAL_REST_API_KEY;
 
-    // Use OneSignal REST API v5 to search for a subscription by device token
+    // Use OneSignal REST API v5 by_token endpoint to search for a subscription
     $url = "https://api.onesignal.com/apps/" . urlencode($app_id)
-         . "/subscriptions?token=" . urlencode($device_token);
+         . "/subscriptions/by_token/" . urlencode($device_token);
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -260,12 +264,25 @@ function lookupOneSignalSubscription($device_token) {
 
     if ($http_code === 200 && $response) {
         $data = json_decode($response, true);
-        // v5 subscriptions endpoint returns { "subscriptions": [ { "id": "...", ... } ] }
-        if (!empty($data['subscriptions'][0]['id'])) {
-            $player_id = $data['subscriptions'][0]['id'];
-            error_log("lookupOneSignalSubscription: Found player ID: {$player_id}");
-            return $player_id;
+        // by_token endpoint returns { "subscriptions": [ { "id": "...", "enabled": true, ... } ] }
+        if (!empty($data['subscriptions'])) {
+            $subscriptions = $data['subscriptions'];
+            // Prefer enabled subscriptions; fall back to last in array (most recent)
+            $enabledSubs = array_filter($subscriptions, fn($s) => !empty($s['enabled']));
+            $target = !empty($enabledSubs) ? end($enabledSubs) : end($subscriptions);
+            if (!empty($target['id'])) {
+                $player_id = $target['id'];
+                error_log("lookupOneSignalSubscription: Found player ID: {$player_id}");
+                return $player_id;
+            }
         }
+    }
+
+    // Retry once after 3 seconds if no subscription found yet
+    if ($retryCount < 1) {
+        error_log("lookupOneSignalSubscription: No subscription found, retrying in 3s...");
+        sleep(3);
+        return lookupOneSignalSubscription($device_token, $retryCount + 1);
     }
 
     error_log("lookupOneSignalSubscription: No subscription found. HTTP={$http_code}, response=" . substr($response ?: '', 0, 200));

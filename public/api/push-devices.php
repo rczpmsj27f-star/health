@@ -9,17 +9,30 @@ require_once "../../app/config/database.php";
 
 header('Content-Type: application/json');
 
+// Get JSON input early (needed for fallback authentication)
+$input = json_decode(file_get_contents('php://input'), true);
+
 // Check authentication
-if (empty($_SESSION['user_id'])) {
+// Primary: PHP session (web browser)
+// Fallback: user_id in POST body (native Capacitor app where session cookies may not transmit)
+if (!empty($_SESSION['user_id'])) {
+    $user_id = (int)$_SESSION['user_id'];
+} elseif (!empty($input['user_id'])) {
+    $candidate_id = (int)$input['user_id'];
+    // Validate the user exists in the database
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ?");
+    $stmt->execute([$candidate_id]);
+    if (!$stmt->fetch()) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+        exit;
+    }
+    $user_id = $candidate_id;
+} else {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Not authenticated']);
     exit;
 }
-
-$user_id = $_SESSION['user_id'];
-
-// Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input || !isset($input['action'])) {
     http_response_code(400);

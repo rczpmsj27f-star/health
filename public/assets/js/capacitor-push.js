@@ -105,16 +105,24 @@ async function initializeNativePush() {
 // Register device token with backend API
 async function registerDeviceToken(deviceToken) {
     try {
+        const body = {
+            action: 'register',
+            device_token: deviceToken,
+            platform: window.Capacitor.getPlatform()
+        };
+
+        // Include user_id for native app authentication fallback
+        // (session cookies may not be transmitted in Capacitor WebView fetch requests)
+        if (window.CURRENT_USER_ID) {
+            body.user_id = window.CURRENT_USER_ID;
+        }
+
         const response = await fetch('/api/push-devices.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                action: 'register',
-                device_token: deviceToken,
-                platform: window.Capacitor.getPlatform()
-            })
+            body: JSON.stringify(body)
         });
 
         const result = await response.json();

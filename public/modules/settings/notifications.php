@@ -51,6 +51,7 @@ unset($_SESSION['success_msg']);
     <title>Notification Preferences</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
+    <script>window.CURRENT_USER_ID = <?= isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 'null' ?>;</script>
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/capacitor-push.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/onesignal-capacitor.js?v=<?= time() ?>" defer></script>

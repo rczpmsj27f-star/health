@@ -5,7 +5,7 @@
 
 // Configuration constants
 const MAX_CAPACITOR_WAIT_RETRIES = 50; // Max 5 seconds (50 * 100ms)
-const CAPACITOR_RETRY_DELAY_MS = 100;
+let CAPACITOR_RETRY_DELAY_MS = 100;
 
 // Check if running in native Capacitor environment
 function isCapacitor() {

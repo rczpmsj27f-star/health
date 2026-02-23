@@ -147,7 +147,7 @@ function sendViaOneSignal($player_id, $title, $message, $data = []) {
     $ch = curl_init('https://onesignal.com/api/v1/notifications');
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
-        'Authorization: Basic ' . $api_key
+        'Authorization: Bearer ' . $api_key
     ]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);

@@ -188,7 +188,7 @@ async function sendPushNotification(payload) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${ONESIGNAL_API_KEY}`
+        'Authorization': `Bearer ${ONESIGNAL_API_KEY}`
       },
       body: JSON.stringify(notificationPayload)
     });

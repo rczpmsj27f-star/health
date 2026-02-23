@@ -59,9 +59,6 @@ async function initializeNativePush() {
             return;
         }
 
-        // Register with Apple Push Notification service (APNs)
-        await PushNotifications.register();
-        
         // Listen for registration success
         await PushNotifications.addListener('registration', async (token) => {
             console.log('Push registration success, token:', token.value);
@@ -93,6 +90,9 @@ async function initializeNativePush() {
             // Handle notification actions based on data
             handleNotificationAction(data);
         });
+
+        // Register with Apple Push Notification service (APNs)
+        await PushNotifications.register();
 
         console.log('Native push notifications initialized successfully');
         

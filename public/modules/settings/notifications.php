@@ -191,7 +191,7 @@ unset($_SESSION['success_msg']);
     
     <script>
     // Stored Player ID from database
-    const storedPlayerId = <?= json_encode($storedPlayerId, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS) ?>;
+    let storedPlayerId = <?= json_encode($storedPlayerId, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS) ?>;
     
     // Check if running in Capacitor (native app)
     function isCapacitor() {

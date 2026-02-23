@@ -420,11 +420,24 @@ if (document.readyState === 'loading') {
     initializeWhenReady(0);
 }
 
+// Re-show the iOS push section whenever AJAX navigation loads a new page.
+// Uses a global flag to avoid attaching duplicate listeners across re-loads.
+if (!window._capacitorPushAjaxListenerAttached) {
+    window._capacitorPushAjaxListenerAttached = true;
+    document.addEventListener('ajaxNavigationComplete', function() {
+        if (typeof window.Capacitor !== 'undefined') {
+            showIOSPushSection();
+        }
+    });
+}
+
 // Export functions for use in other scripts
 window.CapacitorPush = {
     initialize: initializeNativePush,
     isCapacitor: isCapacitor,
     registerDeviceToken: registerDeviceToken
 };
+// Also expose initializeNativePush globally so HTML onclick handlers can call it directly
+window.initializeNativePush = initializeNativePush;
 
 })();

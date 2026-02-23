@@ -6,6 +6,7 @@
 
 session_start();
 require_once "../../app/config/database.php";
+require_once __DIR__ . '/../../config.php';
 
 header('Content-Type: application/json');
 
@@ -116,6 +117,19 @@ try {
                 ]);
             }
             
+            // If no Player ID was provided in the request, look it up server-side
+            // via the OneSignal REST API so the DB record stays up to date even
+            // when the JS bridge cannot read the native subscription ID.
+            if (empty($onesignal_player_id)) {
+                $looked_up_id = lookupOneSignalSubscription($device_token);
+                if ($looked_up_id) {
+                    $onesignal_player_id = $looked_up_id;
+                    $stmt = $pdo->prepare("UPDATE user_notification_settings SET onesignal_player_id = ?, updated_at = NOW() WHERE user_id = ?");
+                    $stmt->execute([$onesignal_player_id, $user_id]);
+                    error_log("push-devices.php register: Updated onesignal_player_id via server-side lookup to {$onesignal_player_id} for user {$user_id}");
+                }
+            }
+
             echo json_encode([
                 'success' => true,
                 'message' => 'Device registered successfully',
@@ -208,6 +222,54 @@ try {
     error_log("Database error in push-devices.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database error']);
+}
+
+/**
+ * Look up the OneSignal subscription ID for a given APNs device token
+ * using the OneSignal REST API server-side.
+ *
+ * @param string $device_token  The APNs device token
+ * @return string|null          The OneSignal subscription/player ID, or null if not found
+ */
+function lookupOneSignalSubscription($device_token) {
+    if (!function_exists('onesignal_is_configured') || !onesignal_is_configured()) {
+        error_log("lookupOneSignalSubscription: OneSignal not configured, skipping lookup");
+        return null;
+    }
+
+    $app_id  = ONESIGNAL_APP_ID;
+    $api_key = ONESIGNAL_REST_API_KEY;
+
+    // Use OneSignal REST API v5 to search for a subscription by device token
+    $url = "https://api.onesignal.com/apps/" . urlencode($app_id)
+         . "/subscriptions?token=" . urlencode($device_token);
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Accept: application/json',
+        'Authorization: Bearer ' . $api_key,
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+    $response  = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    error_log("lookupOneSignalSubscription: HTTP {$http_code} for token " . substr($device_token, 0, 8) . "...");
+
+    if ($http_code === 200 && $response) {
+        $data = json_decode($response, true);
+        // v5 subscriptions endpoint returns { "subscriptions": [ { "id": "...", ... } ] }
+        if (!empty($data['subscriptions'][0]['id'])) {
+            $player_id = $data['subscriptions'][0]['id'];
+            error_log("lookupOneSignalSubscription: Found player ID: {$player_id}");
+            return $player_id;
+        }
+    }
+
+    error_log("lookupOneSignalSubscription: No subscription found. HTTP={$http_code}, response=" . substr($response ?: '', 0, 200));
+    return null;
 }
 
 

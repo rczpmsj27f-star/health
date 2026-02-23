@@ -11,7 +11,7 @@ function isCapacitor() {
 // Internal state for Player ID tracking
 let _playerIdResolve = null;
 let _playerIdResolved = false;
-const _playerIdPromise = new Promise(resolve => {
+let _playerIdPromise = new Promise(resolve => {
     _playerIdResolve = resolve;
 });
 let _playerIdListenerRegistered = false;
@@ -21,6 +21,20 @@ function _resolvePlayerId(id) {
     if (!_playerIdResolved) {
         _playerIdResolved = true;
         _playerIdResolve(id);
+    }
+}
+
+/**
+ * Reset player ID tracking state so that a fresh subscription can be
+ * obtained after the user disables and re-enables notifications.
+ * Creates a new promise that will resolve with the next available ID.
+ */
+function resetPlayerIdTracking() {
+    _playerIdResolved = false;
+    _playerIdPromise = new Promise(resolve => { _playerIdResolve = resolve; });
+    // Expose the fresh promise on the public interface
+    if (window.OneSignalCapacitor) {
+        window.OneSignalCapacitor.playerIdPromise = _playerIdPromise;
     }
 }
 
@@ -82,6 +96,9 @@ window.OneSignalCapacitor = {
 
     /** Promise that resolves with the Player ID (or null) when first available */
     playerIdPromise: _playerIdPromise,
+
+    /** Reset tracking so re-enable flows can obtain a fresh Player ID */
+    resetPlayerIdTracking: resetPlayerIdTracking,
 
     getPlayerId: async () => {
         console.log('ℹ️ OneSignalCapacitor.getPlayerId() called');

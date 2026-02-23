@@ -23,12 +23,13 @@ function showIOSPushSection() {
 
 // Initialize push notifications for native iOS
 async function initializeNativePush() {
-    // Prevent double initialization
-    if (window.capacitorPushInitialized) {
-        console.log('Push already initialized');
-        return;
+    // Reset retry flag so a re-enable flow can start a fresh retry loop
+    _playerIdRetryInProgress = false;
+
+    // Reset OneSignal player ID tracking so a re-enable gets a fresh promise
+    if (window.OneSignalCapacitor && typeof window.OneSignalCapacitor.resetPlayerIdTracking === 'function') {
+        window.OneSignalCapacitor.resetPlayerIdTracking();
     }
-    window.capacitorPushInitialized = true;
 
     if (!isCapacitor()) {
         console.log('Not running in Capacitor - skipping native push setup');
@@ -59,39 +60,44 @@ async function initializeNativePush() {
             return;
         }
 
-        // Listen for registration success
-        await PushNotifications.addListener('registration', async (token) => {
-            console.log('Push registration success, token:', token.value);
-            
-            // Register device token with backend
-            await registerDeviceToken(token.value);
-        });
+        // Attach listeners only once to avoid duplicate handlers across re-initializations
+        if (!window.capacitorPushListenersAttached) {
+            // Listen for registration success
+            await PushNotifications.addListener('registration', async (token) => {
+                console.log('Push registration success, token:', token.value);
+                
+                // Register device token with backend
+                await registerDeviceToken(token.value);
+            });
 
-        // Listen for registration errors
-        await PushNotifications.addListener('registrationError', (error) => {
-            console.error('Push registration error:', error);
-            updatePushRegistrationStatus(false);
-        });
+            // Listen for registration errors
+            await PushNotifications.addListener('registrationError', (error) => {
+                console.error('Push registration error:', error);
+                updatePushRegistrationStatus(false);
+            });
 
-        // Listen for push notifications received
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-            console.log('Push notification received:', notification);
-            
-            // Show in-app notification if app is in foreground
-            showInAppNotification(notification);
-        });
+            // Listen for push notifications received
+            await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                console.log('Push notification received:', notification);
+                
+                // Show in-app notification if app is in foreground
+                showInAppNotification(notification);
+            });
 
-        // Listen for push notification actions (user tapped notification)
-        await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-            console.log('Push notification action performed:', notification);
-            
-            const data = notification.notification.data;
-            
-            // Handle notification actions based on data
-            handleNotificationAction(data);
-        });
+            // Listen for push notification actions (user tapped notification)
+            await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+                console.log('Push notification action performed:', notification);
+                
+                const data = notification.notification.data;
+                
+                // Handle notification actions based on data
+                handleNotificationAction(data);
+            });
 
-        // Register with Apple Push Notification service (APNs)
+            window.capacitorPushListenersAttached = true;
+        }
+
+        // Always call register() to obtain a fresh APNs token on every enable
         await PushNotifications.register();
 
         console.log('Native push notifications initialized successfully');

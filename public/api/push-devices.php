@@ -66,16 +66,8 @@ try {
                 exit;
             }
             
-            // Register device token with OneSignal if needed
-            $onesignal_player_id = null;
-            if (defined('ONESIGNAL_APP_ID') && ONESIGNAL_APP_ID) {
-                try {
-                    $onesignal_player_id = registerWithOneSignal($device_token, $platform, $device_id);
-                } catch (Exception $e) {
-                    error_log("OneSignal registration failed: " . $e->getMessage());
-                    // Continue anyway - store local token
-                }
-            }
+            // Get OneSignal Player ID from the request (provided by native SDK)
+            $onesignal_player_id = $input['onesignal_player_id'] ?? null;
             
             // Check if user already has notification settings
             $stmt = $pdo->prepare("
@@ -180,62 +172,4 @@ try {
     echo json_encode(['success' => false, 'error' => 'Database error']);
 }
 
-/**
- * Register device with OneSignal
- * Creates a player/device in OneSignal for targeted notifications
- */
-function registerWithOneSignal($device_token, $platform, $device_id) {
-    $app_id = ONESIGNAL_APP_ID;
-    $api_key = ONESIGNAL_REST_API_KEY;
-    
-    if (empty($app_id) || empty($api_key)) {
-        throw new Exception("OneSignal credentials not configured");
-    }
-    
-    // Prepare device type
-    $device_type = match($platform) {
-        'ios' => 0,      // iOS
-        'android' => 1,  // Android
-        'web' => 5,      // Chrome/Web Push
-        default => 5
-    };
-    
-    // Prepare OneSignal API request
-    $data = [
-        'app_id' => $app_id,
-        'device_type' => $device_type,
-        'identifier' => $device_token
-    ];
-    
-    // Add device ID as external user ID for easier targeting
-    if ($device_id) {
-        $data['external_user_id'] = $device_id;
-    }
-    
-    // Make API request to OneSignal
-    $ch = curl_init('https://onesignal.com/api/v1/players');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'Authorization: Bearer ' . $api_key
-    ]);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    if ($http_code !== 200 && $http_code !== 201) {
-        error_log("OneSignal API error: HTTP $http_code, Response: $response");
-        throw new Exception("OneSignal API request failed");
-    }
-    
-    $result = json_decode($response, true);
-    
-    if (isset($result['id'])) {
-        return $result['id']; // Return OneSignal player ID
-    }
-    
-    throw new Exception("OneSignal registration failed: no player ID returned");
-}
+

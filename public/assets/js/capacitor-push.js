@@ -111,6 +111,12 @@ async function registerDeviceToken(deviceToken) {
             platform: window.Capacitor.getPlatform()
         };
 
+        // Get OneSignal Player ID from the native SDK subscription
+        const oneSignalPlayerId = window.OneSignal?.User?.PushSubscription?.id;
+        if (oneSignalPlayerId) {
+            body.onesignal_player_id = oneSignalPlayerId;
+        }
+
         // Include user_id for native app authentication fallback
         // (session cookies may not be transmitted in Capacitor WebView fetch requests)
         if (window.CURRENT_USER_ID) {

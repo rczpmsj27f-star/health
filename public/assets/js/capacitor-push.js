@@ -105,14 +105,18 @@ async function initializeNativePush() {
 // Register device token with backend API
 async function registerDeviceToken(deviceToken) {
     try {
+        console.log('📱 registerDeviceToken() called, token:', deviceToken);
+
         const body = {
             action: 'register',
             device_token: deviceToken,
             platform: window.Capacitor.getPlatform()
         };
 
-        // Get OneSignal Player ID from the native SDK subscription
-        const oneSignalPlayerId = window.OneSignal?.User?.PushSubscription?.id;
+        // Try to get OneSignal Player ID immediately
+        let oneSignalPlayerId = window.OneSignal?.User?.PushSubscription?.id;
+        console.log('📱 OneSignal Player ID (immediate check):', oneSignalPlayerId || 'not yet available');
+
         if (oneSignalPlayerId) {
             body.onesignal_player_id = oneSignalPlayerId;
         }
@@ -132,18 +136,108 @@ async function registerDeviceToken(deviceToken) {
         });
 
         const result = await response.json();
-        
+
         if (result.success) {
-            console.log('Device token registered successfully');
-            
+            console.log('✅ Device token registered successfully. Player ID sent:', oneSignalPlayerId || 'none (will retry)');
+
             // Update UI to show registration status
             updatePushRegistrationStatus(true);
         } else {
-            console.error('Failed to register device token:', result.error);
+            console.error('❌ Failed to register device token:', result.error);
         }
-        
+
+        // If Player ID wasn't available at registration time, poll for it
+        // in the background and send an update once it is ready.
+        if (!oneSignalPlayerId) {
+            console.log('📱 Player ID not available yet – starting background retry to obtain it...');
+            retryGetAndSendPlayerId(deviceToken);
+        }
+
     } catch (error) {
         console.error('Error registering device token:', error);
+    }
+}
+
+/**
+ * Poll for OneSignal Player ID in the background and, once available,
+ * send an update to the backend so the database record is complete.
+ *
+ * Uses exponential back-off: starts at 500 ms, doubles after 5 attempts,
+ * capped at 3 000 ms, with a maximum of 30 attempts (~1 minute total).
+ * A module-level flag prevents duplicate concurrent retry loops.
+ */
+let _playerIdRetryInProgress = false;
+
+async function retryGetAndSendPlayerId(deviceToken, maxRetries = 30) {
+    if (_playerIdRetryInProgress) {
+        console.log('📱 Player ID retry already in progress – skipping duplicate');
+        return;
+    }
+    _playerIdRetryInProgress = true;
+
+    let delayMs = 500;
+
+    try {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            const playerId = window.OneSignal?.User?.PushSubscription?.id;
+            console.log(`📱 Player ID retry ${attempt}/${maxRetries}:`, playerId || 'not yet available');
+
+            if (playerId) {
+                console.log('✅ OneSignal Player ID obtained on attempt', attempt, ':', playerId);
+                await updatePlayerIdInBackend(deviceToken, playerId);
+                return;
+            }
+
+            // Wait before next attempt (delay is at end so we check immediately on entry)
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+
+            // Exponential back-off after the first 5 fast attempts
+            if (attempt >= 5) {
+                delayMs = Math.min(delayMs * 2, 3000);
+            }
+        }
+
+        console.warn('⚠️ Could not obtain OneSignal Player ID after', maxRetries, 'attempts – backend record has no Player ID');
+    } finally {
+        _playerIdRetryInProgress = false;
+    }
+}
+
+/**
+ * Send a lightweight update to the backend to store the OneSignal Player ID
+ * against the existing device-token record.
+ */
+async function updatePlayerIdInBackend(deviceToken, playerId) {
+    try {
+        console.log('📱 Updating Player ID in backend:', playerId);
+
+        const body = {
+            action: 'update_player_id',
+            device_token: deviceToken,
+            onesignal_player_id: playerId
+        };
+
+        if (window.CURRENT_USER_ID) {
+            body.user_id = window.CURRENT_USER_ID;
+        }
+
+        const response = await fetch('/api/push-devices.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('✅ OneSignal Player ID updated in backend:', playerId);
+        } else {
+            console.error('❌ Failed to update Player ID in backend:', result.error);
+        }
+    } catch (error) {
+        console.error('Error updating Player ID in backend:', error);
     }
 }
 

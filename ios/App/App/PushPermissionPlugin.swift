@@ -28,4 +28,14 @@ public class PushPermissionPlugin: CAPPlugin {
             ])
         }
     }
+
+    @objc func getSubscriptionId(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            let subscriptionId = OneSignal.User.pushSubscription.id
+            NSLog("PushPermissionPlugin getSubscriptionId: \(subscriptionId ?? "nil")")
+            call.resolve([
+                "subscriptionId": subscriptionId ?? NSNull()
+            ])
+        }
+    }
 }

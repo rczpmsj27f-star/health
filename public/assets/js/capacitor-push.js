@@ -3,6 +3,9 @@
  * Handles iOS native push notifications via Capacitor Push Notifications plugin
  */
 
+(function() {
+'use strict';
+
 // Configuration constants
 const MAX_CAPACITOR_WAIT_RETRIES = 50; // Max 5 seconds (50 * 100ms)
 let CAPACITOR_RETRY_DELAY_MS = 100;
@@ -119,9 +122,22 @@ async function registerDeviceToken(deviceToken) {
             platform: window.Capacitor.getPlatform()
         };
 
-        // Try to get OneSignal Player ID immediately
+        // Try to get OneSignal Player ID immediately (JS SDK)
         let oneSignalPlayerId = window.OneSignal?.User?.PushSubscription?.id;
         console.log('📱 OneSignal Player ID (immediate check):', oneSignalPlayerId || 'not yet available');
+
+        // Also try native plugin immediately (Capacitor context)
+        if (!oneSignalPlayerId && window.Capacitor?.Plugins?.PushPermission?.getSubscriptionId) {
+            try {
+                const result = await window.Capacitor.Plugins.PushPermission.getSubscriptionId();
+                if (result?.subscriptionId) {
+                    oneSignalPlayerId = result.subscriptionId;
+                    console.log('📱 OneSignal Player ID from native plugin (immediate):', oneSignalPlayerId);
+                }
+            } catch (e) {
+                // Plugin not ready yet – will retry in background
+            }
+        }
 
         if (oneSignalPlayerId) {
             body.onesignal_player_id = oneSignalPlayerId;
@@ -187,6 +203,20 @@ async function retryGetAndSendPlayerId(deviceToken, maxRetries = 5) {
 
     try {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            // Try native plugin first (Capacitor context — window.OneSignal typically not available in native WebView)
+            if (window.Capacitor?.Plugins?.PushPermission?.getSubscriptionId) {
+                try {
+                    const result = await window.Capacitor.Plugins.PushPermission.getSubscriptionId();
+                    if (result?.subscriptionId) {
+                        console.log('✅ OneSignal Player ID from native plugin on attempt', attempt, ':', result.subscriptionId);
+                        await updatePlayerIdInBackend(deviceToken, result.subscriptionId);
+                        return;
+                    }
+                } catch (e) {
+                    // Plugin not ready yet – fall through to JS SDK check
+                }
+            }
+
             const playerId = window.OneSignal?.User?.PushSubscription?.id;
             console.log(`📱 Player ID retry ${attempt}/${maxRetries}:`, playerId || 'not yet available');
 
@@ -396,3 +426,5 @@ window.CapacitorPush = {
     isCapacitor: isCapacitor,
     registerDeviceToken: registerDeviceToken
 };
+
+})();

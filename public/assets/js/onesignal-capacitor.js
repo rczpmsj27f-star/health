@@ -1,6 +1,8 @@
 // OneSignal Capacitor - Native Bridge Implementation
 // Uses custom PushPermissionPlugin to request iOS notification permissions
 
+(function() {
+
 console.log('📱 OneSignal Capacitor: Initializing native bridge');
 
 // Check if running in Capacitor
@@ -73,6 +75,21 @@ async function waitForOneSignalPlayerId(maxWaitMs = 15000, intervalMs = 500) {
             _resolvePlayerId(playerId);
             return playerId;
         }
+
+        // Try native plugin (Capacitor context — window.OneSignal typically not available in native WebView)
+        if (window.Capacitor?.Plugins?.PushPermission?.getSubscriptionId) {
+            try {
+                const result = await window.Capacitor.Plugins.PushPermission.getSubscriptionId();
+                if (result?.subscriptionId) {
+                    console.log('✅ OneSignal Player ID from native plugin:', result.subscriptionId);
+                    _resolvePlayerId(result.subscriptionId);
+                    return result.subscriptionId;
+                }
+            } catch (e) {
+                // Plugin method may not be ready yet – continue polling
+            }
+        }
+
         await new Promise(resolve => setTimeout(resolve, intervalMs));
     }
 
@@ -102,9 +119,18 @@ window.OneSignalCapacitor = {
 
     getPlayerId: async () => {
         console.log('ℹ️ OneSignalCapacitor.getPlayerId() called');
-        // Return immediately if already available, otherwise wait briefly
+        // Return immediately if already available via JS SDK
         const immediate = window.OneSignal?.User?.PushSubscription?.id;
         if (immediate) return immediate;
+        // Try native plugin (Capacitor context)
+        if (window.Capacitor?.Plugins?.PushPermission?.getSubscriptionId) {
+            try {
+                const result = await window.Capacitor.Plugins.PushPermission.getSubscriptionId();
+                if (result?.subscriptionId) return result.subscriptionId;
+            } catch (e) {
+                // fall through to polling
+            }
+        }
         return waitForOneSignalPlayerId(5000);
     },
     
@@ -183,3 +209,5 @@ console.log('✅ OneSignalCapacitor bridge ready');
 if (typeof window !== 'undefined') {
     waitForOneSignalPlayerId();
 }
+
+})();

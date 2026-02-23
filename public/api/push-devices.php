@@ -68,6 +68,9 @@ try {
             
             // Get OneSignal Player ID from the request (provided by native SDK)
             $onesignal_player_id = $input['onesignal_player_id'] ?? null;
+
+            // Diagnostic logging so server logs always show what was received
+            error_log("push-devices.php register: user_id={$user_id} platform=" . ($platform ?? 'null') . " onesignal_player_id=" . ($onesignal_player_id ?? 'NULL'));
             
             // Check if user already has notification settings
             $stmt = $pdo->prepare("
@@ -160,6 +163,41 @@ try {
             ]);
             break;
             
+        case 'update_player_id':
+            // Update OneSignal Player ID for an existing device registration.
+            // Called by the frontend when the Player ID becomes available after
+            // the initial device-token registration (timing/initialization fix).
+            $device_token = $input['device_token'] ?? null;
+            $onesignal_player_id = $input['onesignal_player_id'] ?? null;
+
+            error_log("push-devices.php update_player_id: user_id={$user_id} onesignal_player_id=" . ($onesignal_player_id ?? 'NULL'));
+
+            if (empty($onesignal_player_id) || empty($device_token)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing onesignal_player_id or device_token']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("
+                UPDATE user_notification_settings
+                SET onesignal_player_id = ?,
+                    updated_at = NOW()
+                WHERE user_id = ?
+                  AND device_token = ?
+            ");
+            $stmt->execute([
+                $onesignal_player_id,
+                $user_id,
+                $device_token
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Player ID updated successfully',
+                'onesignal_player_id' => $onesignal_player_id
+            ]);
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid action']);

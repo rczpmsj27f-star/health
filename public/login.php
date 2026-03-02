@@ -198,6 +198,16 @@ unset($_SESSION['error'], $_SESSION['success']);
                 <input type="password" name="password" required>
             </div>
 
+            <div class="form-group" id="biometricEnableOption" style="display: none;">
+                <label style="display: flex; align-items: center; cursor: pointer; font-weight: normal;">
+                    <input type="checkbox" name="enable_biometric" id="enableBiometricCheck" style="margin-right: 8px; width: auto;">
+                    <span>Remember me with Face ID / Touch ID</span>
+                </label>
+                <p style="font-size: 12px; color: #666; margin: 4px 0 0 24px;">
+                    Use biometric authentication for faster sign-in on this device
+                </p>
+            </div>
+
             <button class="btn btn-accept" type="submit" style="margin-top: 10px; cursor: pointer;">Login</button>
         </form>
 
@@ -218,22 +228,24 @@ unset($_SESSION['error'], $_SESSION['success']);
         const biometricSection = document.getElementById('biometricSection');
         const biometricBtn = document.getElementById('biometricBtn');
         const biometricBtnText = document.getElementById('biometricBtnText');
+        const biometricEnableOption = document.getElementById('biometricEnableOption');
 
         // Check if biometric is supported and available
         if (!BiometricAuth.isSupported()) {
             return; // Don't show biometric option
         }
 
-        const isPlatformAvailable = await BiometricAuth.isPlatformAuthenticatorAvailable();
-        if (!isPlatformAvailable) {
+        const platformCheck = await BiometricAuth.isPlatformAuthenticatorAvailable();
+        if (!platformCheck || !platformCheck.available) {
             return; // Don't show biometric option
         }
 
         // Get stored credential ID from localStorage
         const credentialId = localStorage.getItem('biometric_credential_id');
         
-        // If no credential stored, don't show biometric option
+        // If no credential stored, show checkbox to enable biometrics
         if (!credentialId) {
+            biometricEnableOption.style.display = 'block';
             return;
         }
 

@@ -40,6 +40,12 @@ if (!empty($user['two_factor_enabled'])) {
 // Normal login if 2FA not enabled
 $_SESSION['user_id'] = $user['id'];
 
+// Check if user wants to enable biometric authentication
+if (isset($_POST['enable_biometric']) && $_POST['enable_biometric'] === 'on') {
+    $_SESSION['pending_biometric_enrollment'] = true;
+    $_SESSION['pending_biometric_username'] = $user['username'];
+}
+
 // Cache header display info in session (one-time lookup)
 $_SESSION['header_display_name'] = trim(($user['first_name'] ?? '') . ' ' . ($user['surname'] ?? ''));
 if (empty($_SESSION['header_display_name'])) {

@@ -265,14 +265,49 @@ unset($_SESSION['error'], $_SESSION['success']);
             const passwordInput = document.getElementById('passwordInput');
 
             // Check if biometric is supported
-            const isSupported = BiometricAuth.isSupported();
-            const isPlatformAvailable = await BiometricAuth.isPlatformAuthenticatorAvailable();
+            console.log('[Biometric Debug] Starting biometric check...');
+            console.log('[Biometric Debug] BiometricAuth available:', typeof BiometricAuth !== 'undefined');
 
-            if (!isSupported || !isPlatformAvailable) {
+            if (typeof BiometricAuth === 'undefined') {
+                console.error('[Biometric Debug] BiometricAuth is undefined - script not loaded');
                 statusLoading.style.display = 'none';
+                notSupportedAlert.textContent = 'Biometric authentication library failed to load. Please refresh the page.';
                 notSupportedAlert.style.display = 'block';
                 return;
             }
+
+            let isSupported, isPlatformAvailable;
+            try {
+                isSupported = BiometricAuth.isSupported();
+                console.log('[Biometric Debug] WebAuthn supported:', isSupported);
+
+                isPlatformAvailable = await BiometricAuth.isPlatformAuthenticatorAvailable();
+                console.log('[Biometric Debug] Platform authenticator result:', isPlatformAvailable);
+            } catch (error) {
+                console.error('[Biometric Debug] Error checking availability:', error);
+                statusLoading.style.display = 'none';
+                notSupportedAlert.textContent = 'Error checking biometric availability: ' + error.message;
+                notSupportedAlert.style.display = 'block';
+                return;
+            }
+
+            if (!isSupported || !isPlatformAvailable.available) {
+                statusLoading.style.display = 'none';
+                let message = 'Biometric authentication is not available. ';
+                if (!isSupported) {
+                    message += 'WebAuthn is not supported in this browser. ';
+                }
+                if (!isPlatformAvailable.available) {
+                    message += 'No platform authenticator (Face ID/Touch ID) detected. ';
+                }
+                message += 'You may need to enable Face ID in your device settings or use a compatible browser.';
+                notSupportedAlert.textContent = message;
+                notSupportedAlert.style.display = 'block';
+                console.log('[Biometric Debug] Not supported reason:', message);
+                return;
+            }
+
+            console.log('[Biometric Debug] Biometric checks passed, loading status...');
 
             // Load current status
             try {
@@ -296,9 +331,10 @@ unset($_SESSION['error'], $_SESSION['success']);
                     disableSection.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Error loading status:', error);
+                console.error('[Biometric Debug] Error loading status:', error);
+                console.error('[Biometric Debug] Error stack:', error.stack);
                 statusLoading.style.display = 'none';
-                notSupportedAlert.textContent = 'Error loading biometric status. Please try again.';
+                notSupportedAlert.textContent = 'Error loading biometric status: ' + error.message + '. Check console for details.';
                 notSupportedAlert.style.display = 'block';
             }
 
@@ -326,7 +362,9 @@ unset($_SESSION['error'], $_SESSION['success']);
                     // Success - reload page to show updated status
                     window.location.href = '/modules/settings/biometric.php?success=1';
                 } catch (error) {
-                    alert('Failed to enable biometric authentication: ' + error.message);
+                    console.error('[Biometric Debug] Registration error:', error);
+                    console.error('[Biometric Debug] Error stack:', error.stack);
+                    alert('Failed to enable biometric authentication: ' + error.message + '\n\nCheck browser console for more details.');
                     enableBtn.disabled = false;
                     enableBtn.textContent = 'Enable Face ID / Touch ID';
                 }
@@ -350,6 +388,8 @@ unset($_SESSION['error'], $_SESSION['success']);
                     // Success - reload page to show updated status
                     window.location.href = '/modules/settings/biometric.php?disabled=1';
                 } catch (error) {
+                    console.error('[Biometric Debug] Disable error:', error);
+                    console.error('[Biometric Debug] Error stack:', error.stack);
                     alert('Failed to disable biometric authentication: ' + error.message);
                     disableBtn.disabled = false;
                     disableBtn.textContent = 'Disable Face ID / Touch ID';

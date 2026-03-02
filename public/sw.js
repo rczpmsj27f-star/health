@@ -6,7 +6,7 @@
  * - Provides offline support for cached content
  */
 
-const CACHE_VERSION = 'v1-' + Date.now();
+const CACHE_VERSION = 'v2-' + Date.now();
 const CACHE_NAME = `health-${CACHE_VERSION}`;
 
 // Activate: Clean up old cache versions
@@ -31,6 +31,23 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
+
+    // ✅ BIOMETRIC: Always bypass cache - never serve stale biometric pages or API responses
+    const skipCache = [
+        '/modules/settings/biometric.php',
+        '/api/biometric/'
+    ].some(path => url.pathname.startsWith(path));
+
+    if (skipCache) {
+        event.respondWith(fetch(request));
+        return;
+    }
+
+    // Pass through non-GET requests without caching
+    if (request.method !== 'GET') {
+        event.respondWith(fetch(request));
+        return;
+    }
 
     // ✅ PHP FILES: Network first, respect Cache-Control headers
     if (url.pathname.endsWith('.php')) {

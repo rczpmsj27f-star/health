@@ -19,6 +19,11 @@ if (!$user) {
     exit;
 }
 
+// Prevent caching of this page - CRITICAL for biometric functionality
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 $error = $_SESSION['error'] ?? null;
 $success = $_SESSION['success'] ?? null;
 unset($_SESSION['error'], $_SESSION['success']);

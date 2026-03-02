@@ -49,6 +49,69 @@ class BiometricAuth {
     }
 
     /**
+     * Register a new native biometric credential for a user
+     */
+    public function registerNativeCredential(int $userId, string $credentialId, int $biometricType = 0): bool {
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE users 
+                SET biometric_enabled = 1,
+                    biometric_credential_id = ?,
+                    biometric_public_key = NULL,
+                    biometric_counter = 0,
+                    credential_type = 'native_biometric',
+                    biometric_type = ?
+                WHERE id = ?
+            ");
+
+            return $stmt->execute([
+                $credentialId,
+                $biometricType,
+                $userId
+            ]);
+        } catch (PDOException $e) {
+            error_log("Native biometric registration error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Verify a native biometric credential and return the user ID
+     */
+    public function verifyNativeCredential(string $credentialId, int &$userId = null): bool {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT id
+                FROM users
+                WHERE biometric_credential_id = ?
+                AND biometric_enabled = 1
+                AND credential_type = 'native_biometric'
+            ");
+            $stmt->execute([$credentialId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                return false;
+            }
+
+            $userId = $user['id'];
+
+            // Update last biometric login time
+            $stmt = $this->pdo->prepare("
+                UPDATE users 
+                SET last_biometric_login = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$userId]);
+
+            return true;
+        } catch (PDOException $e) {
+            error_log("Native biometric verification error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Register a new biometric credential for a user
      */
     public function registerCredential(int $userId, array $credential): bool {

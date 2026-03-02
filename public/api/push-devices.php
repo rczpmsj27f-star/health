@@ -81,14 +81,17 @@ try {
             $stmt->execute([$user_id]);
             $settings = $stmt->fetch();
             
+            // Normalize device token to lowercase for consistent storage and lookups
+            $device_token = strtolower($device_token);
+
             if ($settings) {
-                // Update existing settings
+                // Update existing settings; preserve existing onesignal_player_id if none provided
                 $stmt = $pdo->prepare("
                     UPDATE user_notification_settings 
                     SET device_token = ?,
                         platform = ?,
                         device_id = ?,
-                        onesignal_player_id = ?,
+                        onesignal_player_id = COALESCE(?, onesignal_player_id),
                         last_token_update = NOW(),
                         updated_at = NOW()
                     WHERE user_id = ?
@@ -189,9 +192,9 @@ try {
 
             error_log("push-devices.php update_player_id: user_id={$user_id} onesignal_player_id=" . ($onesignal_player_id ?? 'NULL'));
 
-            if (empty($onesignal_player_id) || empty($device_token)) {
+            if (empty($onesignal_player_id)) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing onesignal_player_id or device_token']);
+                echo json_encode(['success' => false, 'error' => 'Missing onesignal_player_id']);
                 exit;
             }
 
@@ -200,12 +203,10 @@ try {
                 SET onesignal_player_id = ?,
                     updated_at = NOW()
                 WHERE user_id = ?
-                  AND device_token = ?
             ");
             $stmt->execute([
                 $onesignal_player_id,
-                $user_id,
-                $device_token
+                $user_id
             ]);
 
             echo json_encode([
@@ -244,9 +245,12 @@ function lookupOneSignalSubscription($device_token, $retryCount = 0) {
     $app_id  = ONESIGNAL_APP_ID;
     $api_key = ONESIGNAL_REST_API_KEY;
 
+    // Normalize token to lowercase so it matches OneSignal's stored format
+    $device_token_normalized = strtolower($device_token);
+
     // Use OneSignal REST API v5 by_token endpoint to search for a subscription
     $url = "https://api.onesignal.com/apps/" . urlencode($app_id)
-         . "/subscriptions/by_token/" . urlencode($device_token);
+         . "/subscriptions/by_token/" . urlencode($device_token_normalized);
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [

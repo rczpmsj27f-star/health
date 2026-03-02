@@ -177,10 +177,11 @@ async function sendPushNotification(payload, subscriptionIds) {
       headings: { en: payload.title },
       contents: { en: payload.body },
       data: payload.data,
-      web_url: payload.data?.url || '/',
       chrome_web_icon: payload.icon,
       chrome_web_badge: payload.badge,
-      tag: payload.tag
+      tag: payload.tag,
+      ios_badgeType: 'Increase',
+      ios_badgeCount: 1
     };
 
     // Target specific subscription IDs when provided; fall back to all subscribers
@@ -299,8 +300,8 @@ cron.schedule('* * * * *', async () => {
             data: {
               medicationId: medication.id,
               scheduleTime: scheduleTime,
-              type: notificationType,
-              url: '/'
+              type: 'medication_reminder',
+              route: '/modules/medications/dashboard.php'
             }
           };
           

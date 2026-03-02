@@ -330,16 +330,21 @@ function showInAppNotification(notification) {
 function handleNotificationAction(data) {
     if (!data) return;
     
+    console.log('[Capacitor Push] Notification clicked with data:', data);
+    
     // Handle different notification types
-    if (data.type === 'medication_reminder' && data.medication_id) {
-        // Navigate to medication detail or log page
-        window.location.href = `/modules/medications/view.php?id=${data.medication_id}`;
+    if (data.type === 'medication_reminder') {
+        // Always go to medication dashboard (schedule page)
+        window.location.href = data.route || '/modules/medications/dashboard.php';
+    } else if (data.route) {
+        // Use custom route if provided
+        window.location.href = data.route;
     } else if (data.url) {
-        // Navigate to custom URL
+        // Fallback to URL
         window.location.href = data.url;
     } else {
-        // Default: go to notifications page
-        window.location.href = '/modules/settings/notifications.php';
+        // Default: go to dashboard
+        window.location.href = '/dashboard.php';
     }
 }
 

@@ -14,6 +14,11 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
+// Check for pending biometric enrollment
+$showBiometricEnrollment = isset($_SESSION['pending_biometric_enrollment']) && $_SESSION['pending_biometric_enrollment'];
+$biometricUsername = $_SESSION['pending_biometric_username'] ?? '';
+unset($_SESSION['pending_biometric_enrollment'], $_SESSION['pending_biometric_username']);
+
 // Check if user is admin
 $isAdmin = Auth::isAdmin();
 
@@ -229,6 +234,92 @@ $avatarUrl = !empty($user['profile_picture_path']) ? $user['profile_picture_path
 </head>
 <body>
     <?php include __DIR__ . '/../app/includes/header.php'; ?>
+
+    <?php if ($showBiometricEnrollment): ?>
+    <!-- Biometric Enrollment Modal -->
+    <div id="biometricEnrollmentModal" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 16px;
+    ">
+        <div style="
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        ">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
+            <h2 style="margin: 0 0 12px 0; font-size: 24px;">Enable Face ID?</h2>
+            <p style="color: #666; margin: 0 0 24px 0;">
+                Use Face ID to sign in faster and more securely. Your credential will be stored securely on this device only.
+            </p>
+            <div style="margin-bottom: 16px; text-align: left;">
+                <label for="biometricEnrollPassword" style="display: block; margin-bottom: 6px; font-size: 14px; color: #333; font-weight: 500;">Confirm your password:</label>
+                <input type="password" id="biometricEnrollPassword" autocomplete="current-password" placeholder="Enter your password" style="width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            <div id="biometricEnrollError" style="display: none; color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; padding: 10px; margin-bottom: 16px; font-size: 14px; text-align: left;"></div>
+            <button onclick="enrollBiometric()" class="btn btn-accept" style="width: 100%; margin-bottom: 12px;">
+                Enable Face ID
+            </button>
+            <button onclick="skipBiometric()" class="btn btn-secondary" style="width: 100%;">
+                Skip for Now
+            </button>
+        </div>
+    </div>
+
+    <script src="/assets/js/biometric-auth.js?v=<?= time() ?>"></script>
+    <script>
+    const biometricUsername = <?= json_encode($biometricUsername) ?>;
+
+    async function enrollBiometric() {
+        const passwordInput = document.getElementById('biometricEnrollPassword');
+        const errorDiv = document.getElementById('biometricEnrollError');
+        const password = passwordInput.value.trim();
+
+        errorDiv.style.display = 'none';
+
+        if (!password) {
+            errorDiv.textContent = 'Please enter your password.';
+            errorDiv.style.display = 'block';
+            passwordInput.focus();
+            return;
+        }
+
+        try {
+            const userId = <?= (int)$_SESSION['user_id'] ?>;
+
+            const result = await BiometricAuth.register(biometricUsername, userId, password);
+
+            if (result.success) {
+                localStorage.setItem('biometric_credential_id', result.credentialId);
+                localStorage.setItem('biometric_username', biometricUsername);
+
+                document.getElementById('biometricEnrollmentModal').remove();
+            } else {
+                throw new Error(result.error || 'Failed to enable Face ID');
+            }
+        } catch (error) {
+            console.error('Biometric enrollment error:', error);
+            errorDiv.textContent = 'Failed to enable Face ID: ' + error.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function skipBiometric() {
+        document.getElementById('biometricEnrollmentModal').remove();
+    }
+    </script>
+    <?php endif; ?>
     
     <div id="main-content">
     <!-- Push Notification Permission Banner -->

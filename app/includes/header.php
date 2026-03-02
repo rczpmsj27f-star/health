@@ -17,3 +17,5 @@ if (!isset($displayName)) {
         <div style="font-size: 12px; opacity: 0.9;"><?= date('d F Y') ?></div>
     </div>
 </div>
+<!-- Notification functions -->
+<script src="/assets/js/notifications.js?v=<?= time() ?>" defer></script>

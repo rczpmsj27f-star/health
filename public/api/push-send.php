@@ -40,7 +40,7 @@ if (empty($recipient_user_id) || empty($title) || empty($message)) {
 }
 
 try {
-    // Get recipient's device token and OneSignal player ID
+    // Get recipient's device token and OneSignal subscription ID
     $stmt = $pdo->prepare("
         SELECT device_token, platform, onesignal_player_id, notifications_enabled
         FROM user_notification_settings
@@ -100,7 +100,7 @@ try {
 /**
  * Send push notification via OneSignal
  */
-function sendViaOneSignal($player_id, $title, $message, $data = []) {
+function sendViaOneSignal($subscription_id, $title, $message, $data = []) {
     $app_id = ONESIGNAL_APP_ID;
     $api_key = ONESIGNAL_REST_API_KEY;
     
@@ -108,14 +108,14 @@ function sendViaOneSignal($player_id, $title, $message, $data = []) {
         return ['success' => false, 'error' => 'OneSignal not configured'];
     }
     
-    if (empty($player_id)) {
-        return ['success' => false, 'error' => 'No player ID'];
+    if (empty($subscription_id)) {
+        return ['success' => false, 'error' => 'No subscription ID'];
     }
     
     // Prepare notification payload
     $payload = [
         'app_id' => $app_id,
-        'include_player_ids' => [$player_id],
+        'include_subscription_ids' => [$subscription_id],
         'headings' => ['en' => $title],
         'contents' => ['en' => $message],
         'ios_badgeType' => 'Increase',
@@ -154,6 +154,13 @@ function sendViaOneSignal($player_id, $title, $message, $data = []) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     
     $response = curl_exec($ch);
+    if ($response === false) {
+        $curlError = curl_error($ch);
+        $curlErrno = curl_errno($ch);
+        curl_close($ch);
+        error_log("OneSignal curl error ($curlErrno): $curlError");
+        return ['success' => false, 'error' => "curl error ($curlErrno): $curlError"];
+    }
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     

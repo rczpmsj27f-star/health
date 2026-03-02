@@ -20,11 +20,7 @@ const NOTIFICATION_TOLERANCE_MINUTES = 1; // Tolerance window for matching sched
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../services/NotificationService.php';
 require_once __DIR__ . '/../core/NotificationHelper.php';
-
-// Initialize notification service
-$notificationService = new NotificationService();
 
 // Get current date and time
 $now = new DateTime();
@@ -82,7 +78,7 @@ try {
         // Log per-dose details for diagnostics
         echo "[{$currentDateTime}] Dose log_id={$dose['log_id']} user={$dose['user_id']} med={$dose['medication_name']}"
             . " scheduled={$dose['scheduled_date_time']} diff=" . round($diffMinutes, 1) . "min"
-            . " player_id=" . ($dose['onesignal_player_id'] ?: 'NONE')
+            . " subscription_id=" . ($dose['onesignal_player_id'] ?: 'NONE')
             . " notify_at_time={$dose['notify_at_time']}"
             . " notify_10={$dose['notify_after_10min']}"
             . " notify_20={$dose['notify_after_20min']}"
@@ -176,7 +172,7 @@ try {
             ];
             
             echo "[{$currentDateTime}] Sending {$notificationType} notification: '{$message}'"
-                . " to user {$dose['user_id']} via player_id={$dose['onesignal_player_id']}\n";
+                . " to user {$dose['user_id']} via subscription_id={$dose['onesignal_player_id']}\n";
             
             // Use NotificationHelper to create in-app notification and send via enabled channels
             // This will create a record in the notifications table AND send push/email based on preferences

@@ -72,7 +72,7 @@ class NotificationHelper {
      */
     private function sendPushNotification($userId, $type, $title, $message, $data = []) {
         try {
-            // Get user's OneSignal player ID or device token
+            // Get user's OneSignal subscription ID (stored in onesignal_player_id column) or device token
             $stmt = $this->pdo->prepare("
                 SELECT onesignal_player_id, device_token, platform, notifications_enabled
                 FROM user_notification_settings
@@ -83,11 +83,11 @@ class NotificationHelper {
             
             if (!$settings || empty($settings['onesignal_player_id'])) {
                 // User hasn't registered for push notifications
-                error_log("Push skipped for user $userId: no player_id or notifications disabled");
+                error_log("Push skipped for user $userId: no subscription_id or notifications disabled");
                 return;
             }
             
-            error_log("Sending push to user $userId via player_id=" . $settings['onesignal_player_id']);
+            error_log("Sending push to user $userId via subscription_id=" . $settings['onesignal_player_id']);
             
             // Prepare notification data
             $notificationData = array_merge($data, [
@@ -102,7 +102,7 @@ class NotificationHelper {
                 $notificationData
             );
             if (!$sent) {
-                error_log("Push delivery failed for user $userId via player_id=" . $settings['onesignal_player_id']);
+                error_log("Push delivery failed for user $userId via subscription_id=" . $settings['onesignal_player_id']);
             }
             
         } catch (Exception $e) {
@@ -113,7 +113,7 @@ class NotificationHelper {
     /**
      * Send notification to OneSignal
      */
-    private function sendToOneSignal($playerId, $title, $message, $data = []) {
+    private function sendToOneSignal($subscriptionId, $title, $message, $data = []) {
         if (!defined('ONESIGNAL_APP_ID') || !defined('ONESIGNAL_REST_API_KEY')) {
             error_log("OneSignal credentials not configured");
             return false;
@@ -121,7 +121,7 @@ class NotificationHelper {
         
         $payload = [
             'app_id' => ONESIGNAL_APP_ID,
-            'include_player_ids' => [$playerId],
+            'include_subscription_ids' => [$subscriptionId],
             'headings' => ['en' => $title],
             'contents' => ['en' => $message],
             'ios_badgeType' => 'Increase',
@@ -150,15 +150,22 @@ class NotificationHelper {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         
         $response = curl_exec($ch);
+        if ($response === false) {
+            $curlError = curl_error($ch);
+            $curlErrno = curl_errno($ch);
+            curl_close($ch);
+            error_log("OneSignal curl error ($curlErrno): $curlError");
+            return false;
+        }
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         
         if ($httpCode !== 200 && $httpCode !== 201) {
-            error_log("OneSignal API error: HTTP $httpCode, Response: $response, Player ID: $playerId");
+            error_log("OneSignal API error: HTTP $httpCode, Response: $response, Subscription ID: $subscriptionId");
             return false;
         }
         
-        error_log("OneSignal push sent successfully: HTTP $httpCode, Player ID: $playerId, Response: $response");
+        error_log("OneSignal push sent successfully: HTTP $httpCode, Subscription ID: $subscriptionId, Response: $response");
         return true;
     }
     

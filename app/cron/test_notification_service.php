@@ -15,23 +15,23 @@ echo "=== NotificationService Test ===\n\n";
 try {
     $notificationService = new NotificationService();
     
-    // Test 1: Get all active Player IDs
-    echo "Test 1: Getting active Player IDs...\n";
-    $playerIds = $notificationService->getActivePlayerIds();
-    echo "Found " . count($playerIds) . " active Player IDs\n";
+    // Test 1: Get all active Subscription IDs
+    echo "Test 1: Getting active Subscription IDs...\n";
+    $playerIds = $notificationService->getActiveSubscriptionIds();
+    echo "Found " . count($playerIds) . " active Subscription IDs\n";
     if (count($playerIds) > 0) {
-        echo "Player IDs: " . implode(', ', array_slice($playerIds, 0, 3)) . (count($playerIds) > 3 ? '...' : '') . "\n";
+        echo "Subscription IDs: " . implode(', ', array_slice($playerIds, 0, 3)) . (count($playerIds) > 3 ? '...' : '') . "\n";
     }
     echo "\n";
     
-    // Test 2: Check if a specific user has a Player ID (use user_id 1 for testing)
-    echo "Test 2: Checking Player ID for user 1...\n";
+    // Test 2: Check if a specific user has a Subscription ID (use user_id 1 for testing)
+    echo "Test 2: Checking Subscription ID for user 1...\n";
     $userId = 1;
-    $playerId = $notificationService->getUserPlayerId($userId);
+    $playerId = $notificationService->getUserSubscriptionId($userId);
     if ($playerId) {
-        echo "User $userId has Player ID: $playerId\n";
+        echo "User $userId has Subscription ID: $playerId\n";
     } else {
-        echo "User $userId does not have a Player ID or notifications are disabled\n";
+        echo "User $userId does not have a Subscription ID or notifications are disabled\n";
     }
     echo "\n";
     
@@ -45,11 +45,11 @@ try {
     ");
     $stmt->execute();
     $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo "Found " . count($settings) . " users with Player IDs:\n";
+    echo "Found " . count($settings) . " users with Subscription IDs:\n";
     foreach ($settings as $setting) {
         echo "  - User {$setting['user_id']}: ";
         echo "Notifications " . ($setting['notifications_enabled'] ? 'enabled' : 'disabled');
-        echo ", Player ID: " . substr($setting['onesignal_player_id'], 0, 20) . "...\n";
+        echo ", Subscription ID: " . substr($setting['onesignal_player_id'], 0, 20) . "...\n";
     }
     echo "\n";
     

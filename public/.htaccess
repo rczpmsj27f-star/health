@@ -1,6 +1,10 @@
+# Allow access to .well-known directory for domain verification
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
+
+    RewriteCond %{REQUEST_URI} ^/\.well-known/
+    RewriteRule ^ - [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

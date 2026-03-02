@@ -157,7 +157,9 @@ try {
                 $title = 'Medication Reminder';
                 $message = "Time to take {$medicationName}{$doseInfo}";
             } else {
-                $minutesOverdue = (int)$diffMinutes;
+                // Extract target minutes from notification type (e.g. 'reminder-10' → 10, 'reminder-30' → 30)
+                $targetMinutes = (int)str_replace('reminder-', '', $notificationType);
+                $minutesOverdue = $targetMinutes > 0 ? $targetMinutes : (int)$diffMinutes;
                 $title = 'Medication Reminder';
                 $message = "Reminder: You haven't taken {$medicationName} ({$minutesOverdue} min overdue)";
             }
@@ -167,7 +169,7 @@ try {
                 'medication_id' => $dose['medication_id'],
                 'log_id' => $dose['log_id'],
                 'type' => $notificationType,
-                'url' => 'https://ht.ianconroy.co.uk/dashboard.php',
+                'url' => 'https://ht.ianconroy.co.uk/modules/medications/dashboard.php',
                 'tag' => "medication-{$dose['medication_id']}-{$scheduledTime}"
             ];
             

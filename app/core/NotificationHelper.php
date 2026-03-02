@@ -138,6 +138,7 @@ class NotificationHelper {
                 ['id' => 'mark_taken', 'text' => 'Mark as Taken'],
                 ['id' => 'snooze', 'text' => 'Snooze']
             ];
+            $payload['url'] = 'https://ht.ianconroy.co.uk/modules/medications/dashboard.php';
         }
         
         $ch = curl_init('https://onesignal.com/api/v1/notifications');
@@ -185,6 +186,7 @@ class NotificationHelper {
             // Use PHPMailer for reliable email delivery
             require_once __DIR__ . '/../config/mailer.php';
             $mail = mailer();
+            $mail->CharSet = 'UTF-8';
             
             $mail->addAddress($user['email'], $user['first_name']);
             // Note: PHPMailer's Subject header is automatically encoded/escaped by the library
@@ -196,6 +198,7 @@ class NotificationHelper {
             
             $body = "
             <html>
+            <head><meta charset=\"UTF-8\"></head>
             <body style='font-family: Arial, sans-serif; padding: 20px;'>
                 <div style='max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;'>
                     <div style='background: #6366f1; color: white; padding: 20px;'>

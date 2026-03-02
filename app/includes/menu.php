@@ -116,9 +116,10 @@ if (isset($pdo) && !empty($_SESSION['user_id'])) {
 }
 
 .notification-item {
+    display: flex;
+    align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid var(--color-bg-light);
-    cursor: pointer;
     transition: background 0.2s;
 }
 
@@ -208,14 +209,19 @@ function loadNotifications() {
             }
             
             list.innerHTML = data.notifications.map(n => `
-                <div class="notification-item ${n.is_read ? '' : 'unread'}" 
-                     onclick="markAsRead(${n.id})"
-                     style="cursor: pointer; transition: all 0.2s;">
-                    <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
-                    <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
-                    <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
-                        ${formatTime(n.created_at)}
+                <div class="notification-item ${n.is_read ? '' : 'unread'}">
+                    <div onclick="markAsRead(${n.id})" style="flex: 1; cursor: pointer;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
+                        <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
+                        <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                            ${formatTime(n.created_at)}
+                        </div>
                     </div>
+                    <button onclick="event.stopPropagation(); deleteNotification(${n.id})"
+                            style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 12px; flex-shrink: 0;"
+                            title="Delete notification">
+                        🗑️
+                    </button>
                 </div>
             `).join('');
         })
@@ -260,6 +266,29 @@ function markAllRead() {
     }).then(() => {
         loadNotifications();
         updateBadge();
+    });
+}
+
+function deleteNotification(notificationId) {
+    fetch('/api/notifications.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'delete', notification_id: notificationId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+            updateBadge();
+        } else {
+            console.error('Failed to delete notification:', data.error);
+            alert('Failed to delete notification. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting notification:', error);
+        alert('Failed to delete notification. Please try again.');
     });
 }
 

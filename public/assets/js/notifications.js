@@ -34,13 +34,19 @@ function loadNotifications() {
             
             list.innerHTML = data.notifications.map(n => `
                 <div class="notification-item ${n.is_read ? '' : 'unread'}" 
-                     onclick="markAsRead(${n.id})"
-                     style="cursor: pointer; transition: all 0.2s;">
-                    <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
-                    <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
-                    <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
-                        ${formatTime(n.created_at)}
+                     style="display: flex; align-items: center; transition: all 0.2s;">
+                    <div onclick="markAsRead(${n.id})" style="flex: 1; cursor: pointer;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
+                        <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
+                        <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                            ${formatTime(n.created_at)}
+                        </div>
                     </div>
+                    <button onclick="event.stopPropagation(); deleteNotification(${n.id})"
+                            style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 12px; flex-shrink: 0;"
+                            title="Delete notification">
+                        🗑️
+                    </button>
                 </div>
             `).join('');
         })
@@ -129,6 +135,65 @@ function markAllRead() {
     .catch(error => {
         console.error('Error marking all notifications as read:', error);
         alert('Failed to mark all as read. Please try again.');
+    });
+}
+
+/**
+ * Delete a specific notification
+ */
+function deleteNotification(notificationId) {
+    fetch('/api/notifications.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'delete', notification_id: notificationId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+            if (typeof updateBadge === 'function') {
+                updateBadge();
+            }
+        } else {
+            console.error('Failed to delete notification:', data.error);
+            alert('Failed to delete notification. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting notification:', error);
+        alert('Failed to delete notification. Please try again.');
+    });
+}
+
+/**
+ * Update the notification badge count
+ */
+function updateBadge() {
+    fetch('/api/notifications.php?action=get_count', {
+        method: 'GET',
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.querySelector('.notification-badge');
+            const count = data.count || 0;
+
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            console.log('Badge updated:', count);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating badge:', error);
     });
 }
 

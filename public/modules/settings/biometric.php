@@ -357,6 +357,7 @@ unset($_SESSION['error'], $_SESSION['success']);
                     const status = await BiometricAuth.getStatus();
                     if (status.credential && status.credential.credentialId) {
                         localStorage.setItem('biometric_credential_id', status.credential.credentialId);
+                        localStorage.setItem('biometric_username', '<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>');
                     }
                     
                     // Success - reload page to show updated status

@@ -301,6 +301,23 @@ class NotificationHelper {
     }
     
     /**
+     * Delete a specific notification
+     */
+    public function deleteNotification($notificationId, $userId) {
+        try {
+            $stmt = $this->pdo->prepare("
+                DELETE FROM notifications 
+                WHERE id = ? AND user_id = ?
+            ");
+            $stmt->execute([$notificationId, $userId]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error deleting notification: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Get notification preferences
      */
     public function getPreferences($userId) {

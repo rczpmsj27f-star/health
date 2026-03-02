@@ -242,6 +242,13 @@ unset($_SESSION['error'], $_SESSION['success']);
         // The server will validate it during authentication
         biometricSection.style.display = 'block';
 
+        // Pre-fill username if available
+        const storedUsername = localStorage.getItem('biometric_username');
+        const usernameInput = document.querySelector('input[name="username"]');
+        if (storedUsername && usernameInput) {
+            usernameInput.value = storedUsername;
+        }
+
         // Handle biometric login
         biometricBtn.addEventListener('click', async function() {
             biometricBtn.disabled = true;

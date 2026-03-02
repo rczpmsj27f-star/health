@@ -48,10 +48,16 @@ try {
         // Update last_login for consistency with password login
         $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$userId]);
         
+        // Set biometric flags and bypass 2FA
+        $_SESSION['biometric_auth'] = true;
+        $_SESSION['two_factor_verified'] = true;
+
         echo json_encode([
             'success' => true,
             'message' => 'Authentication successful',
-            'userId' => $userId
+            'userId' => $userId,
+            'redirect' => '/dashboard.php',
+            'bypass_2fa' => true
         ]);
     } else {
         http_response_code(401);

@@ -9,13 +9,30 @@ const BiometricAuth = {
      */
     isNativeBiometricAvailable: async function() {
         try {
+            console.log('[BiometricAuth] Checking native biometric availability...');
             // Check if running in Capacitor app
-            if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
+            if (!window.Capacitor) {
+                console.log('[BiometricAuth] Capacitor not detected');
+                return { available: false, isNative: false };
+            }
+            if (typeof window.Capacitor.isNativePlatform !== 'function' || !window.Capacitor.isNativePlatform()) {
+                console.log('[BiometricAuth] Not running on a native platform');
+                return { available: false, isNative: false };
+            }
+            if (!window.Capacitor.Plugins || !window.Capacitor.Plugins.NativeBiometric) {
+                console.log('[BiometricAuth] NativeBiometric plugin not loaded');
+                return { available: false, isNative: false };
+            }
+            try {
                 const result = await window.Capacitor.Plugins.NativeBiometric.isAvailable();
+                console.log('[BiometricAuth] Native biometric check result:', result);
                 return { available: !!result.isAvailable, biometryType: result.biometryType || null, isNative: true };
+            } catch (pluginError) {
+                console.error('[BiometricAuth] NativeBiometric.isAvailable() threw an error:', pluginError);
+                return { available: false, isNative: false };
             }
         } catch (e) {
-            console.error('Error checking native biometric:', e);
+            console.error('[BiometricAuth] Error checking native biometric:', e);
         }
         return { available: false, isNative: false };
     },
@@ -34,18 +51,21 @@ const BiometricAuth = {
         // First, check if native biometric is available (Capacitor app)
         const nativeCheck = await this.isNativeBiometricAvailable();
         if (nativeCheck.available) {
+            console.log('[BiometricAuth] Native biometric available, type:', nativeCheck.biometryType);
             return nativeCheck;
         }
 
         // Fallback to WebAuthn for web
         if (!this.isSupported()) {
+            console.log('[BiometricAuth] WebAuthn not supported in this browser');
             return { available: false, isNative: false };
         }
         try {
             const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            console.log('[BiometricAuth] WebAuthn platform authenticator available:', available);
             return { available, isNative: false };
         } catch (e) {
-            console.error('Error checking platform authenticator:', e);
+            console.error('[BiometricAuth] Error checking platform authenticator:', e);
             return { available: false, isNative: false };
         }
     },
@@ -55,6 +75,7 @@ const BiometricAuth = {
      */
     verifyNative: async function(reason = 'Unlock your session') {
         try {
+            console.log('[BiometricAuth] Starting native biometric verification...');
             if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.NativeBiometric) {
                 throw new Error('Native biometric not available');
             }
@@ -64,14 +85,41 @@ const BiometricAuth = {
                 title: 'Health Tracker',
                 subtitle: 'Secure Access',
                 description: 'Authenticate to continue',
-                useFallback: true
+                useFallback: true,
+                fallbackTitle: 'Use Passcode'
             });
 
+            console.log('[BiometricAuth] Native biometric verification succeeded');
             return { success: true, verified: true };
         } catch (error) {
-            console.error('Native biometric verification error:', error);
-            throw error;
+            console.error('[BiometricAuth] Native biometric verification error:', error);
+            // Provide user-friendly error message based on error code
+            const userMessage = this._getUserFriendlyError(error);
+            const enhancedError = new Error(userMessage);
+            enhancedError.originalError = error;
+            throw enhancedError;
         }
+    },
+
+    /**
+     * Convert a biometric error to a user-friendly message
+     */
+    _getUserFriendlyError: function(error) {
+        const msg = (error?.message ?? '').toLowerCase();
+        const code = error?.code != null ? String(error.code) : '';
+        if (msg.includes('cancel') || code === '10' || code === '-128') {
+            return 'Authentication was cancelled.';
+        }
+        if (msg.includes('lockout') || code === '7' || code === '9') {
+            return 'Biometric authentication is locked out due to too many failed attempts. Please use your passcode.';
+        }
+        if (msg.includes('not enrolled') || msg.includes('no biometrics') || code === '11') {
+            return 'No biometric data is enrolled on this device. Please set up Face ID or Touch ID in Settings.';
+        }
+        if (msg.includes('not available') || msg.includes('unavailable')) {
+            return 'Biometric authentication is not available on this device.';
+        }
+        return 'Biometric authentication failed. Please try again or use your passcode.';
     },
 
     /**

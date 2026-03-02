@@ -80,13 +80,20 @@ function formatTime(timestamp) {
 function markAsRead(notificationId) {
     fetch('/api/notifications.php', {
         method: 'POST',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_read', notification_id: notificationId})
     })
-    .then(() => {
-        loadNotifications();
-        if (typeof updateBadge === 'function') {
-            updateBadge();
+    .then(response => {
+        if (!response.ok) throw new Error('Network error');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+            if (typeof updateBadge === 'function') {
+                updateBadge();
+            }
         }
     })
     .catch(error => {
@@ -98,13 +105,20 @@ function markAsRead(notificationId) {
 function markAllRead() {
     fetch('/api/notifications.php', {
         method: 'POST',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_all_read'})
     })
-    .then(() => {
-        loadNotifications();
-        if (typeof updateBadge === 'function') {
-            updateBadge();
+    .then(response => {
+        if (!response.ok) throw new Error('Network error');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+            if (typeof updateBadge === 'function') {
+                updateBadge();
+            }
         }
     })
     .catch(error => {

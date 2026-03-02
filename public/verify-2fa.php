@@ -5,6 +5,12 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use PragmaRX\Google2FA\Google2FA;
 
+// If already verified via biometric (Face ID), skip 2FA
+if (($_SESSION['two_factor_verified'] ?? false) === true) {
+    header("Location: /dashboard.php");
+    exit;
+}
+
 if (empty($_SESSION['pending_2fa_user_id'])) {
     header("Location: /login.php");
     exit;

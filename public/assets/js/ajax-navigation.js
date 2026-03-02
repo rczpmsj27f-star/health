@@ -144,6 +144,7 @@ class AjaxNavigation {
 
             // ✅ Replace content in one step
             container.innerHTML = newContent.innerHTML;
+            container.scrollTop = 0;
             
             document.title = newTitle;
 
@@ -163,6 +164,7 @@ class AjaxNavigation {
 
             // Notify page-specific scripts that AJAX navigation has completed
             document.dispatchEvent(new CustomEvent('ajaxNavigationComplete'));
+            document.dispatchEvent(new Event('ajaxPageLoaded'));
 
             // Fade in new content
             await this.fadeIn();
@@ -179,13 +181,13 @@ class AjaxNavigation {
     fadeOut() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '0';
-        return new Promise(resolve => setTimeout(resolve, 100));
+        return new Promise(resolve => setTimeout(resolve, 200));
     }
 
     fadeIn() {
         const content = document.querySelector(this.contentSelector);
         content.style.opacity = '1';
-        return new Promise(resolve => setTimeout(resolve, 100));
+        return new Promise(resolve => setTimeout(resolve, 200));
     }
 
     scrollToTop() {

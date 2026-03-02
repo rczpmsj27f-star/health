@@ -258,7 +258,8 @@ unset($_SESSION['error'], $_SESSION['success']);
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
+        // Function to initialize biometric settings
+        async function initBiometricSettings() {
             const statusLoading = document.getElementById('statusLoading');
             const statusSection = document.getElementById('statusSection');
             const statusBadge = document.getElementById('statusBadge');
@@ -269,7 +270,12 @@ unset($_SESSION['error'], $_SESSION['success']);
             const disableBtn = document.getElementById('disableBtn');
             const passwordInput = document.getElementById('passwordInput');
 
-            // Check if biometric is supported
+            // Guard: Check if elements exist (AJAX navigation safety)
+            if (!statusLoading || !statusSection) {
+                console.error('[Biometric] Required DOM elements not found - page may not be fully loaded');
+                return;
+            }
+
             console.log('[Biometric Debug] Starting biometric check...');
             console.log('[Biometric Debug] BiometricAuth available:', typeof BiometricAuth !== 'undefined');
 
@@ -344,64 +350,80 @@ unset($_SESSION['error'], $_SESSION['success']);
             }
 
             // Enable biometric authentication
-            enableBtn.addEventListener('click', async function() {
-                const password = passwordInput.value.trim();
-                
-                if (!password) {
-                    alert('Please enter your password');
-                    return;
-                }
-
-                enableBtn.disabled = true;
-                enableBtn.textContent = 'Enabling...';
-
-                try {
-                    const result = await BiometricAuth.register('<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>', <?= intval($_SESSION['user_id']) ?>, password);
+            if (enableBtn) {
+                enableBtn.addEventListener('click', async function() {
+                    const password = passwordInput.value.trim();
                     
-                    // Store credential ID in localStorage for login page
-                    const status = await BiometricAuth.getStatus();
-                    if (status.credential && status.credential.credentialId) {
-                        localStorage.setItem('biometric_credential_id', status.credential.credentialId);
-                        localStorage.setItem('biometric_username', '<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>');
+                    if (!password) {
+                        alert('Please enter your password');
+                        return;
                     }
-                    
-                    // Success - reload page to show updated status
-                    window.location.href = '/modules/settings/biometric.php?success=1';
-                } catch (error) {
-                    console.error('[Biometric Debug] Registration error:', error);
-                    console.error('[Biometric Debug] Error stack:', error.stack);
-                    alert('Failed to enable biometric authentication: ' + error.message + '\n\nCheck browser console for more details.');
-                    enableBtn.disabled = false;
-                    enableBtn.textContent = 'Enable Face ID / Touch ID';
-                }
-            });
+
+                    enableBtn.disabled = true;
+                    enableBtn.textContent = 'Enabling...';
+
+                    try {
+                        const result = await BiometricAuth.register('<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>', <?= intval($_SESSION['user_id']) ?>, password);
+                        
+                        // Store credential ID in localStorage for login page
+                        const status = await BiometricAuth.getStatus();
+                        if (status.credential && status.credential.credentialId) {
+                            localStorage.setItem('biometric_credential_id', status.credential.credentialId);
+                            localStorage.setItem('biometric_username', '<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>');
+                        }
+                        
+                        // Success - reload page to show updated status
+                        window.location.href = '/modules/settings/biometric.php?success=1';
+                    } catch (error) {
+                        console.error('[Biometric Debug] Registration error:', error);
+                        console.error('[Biometric Debug] Error stack:', error.stack);
+                        alert('Failed to enable biometric authentication: ' + error.message + '\n\nCheck browser console for more details.');
+                        enableBtn.disabled = false;
+                        enableBtn.textContent = 'Enable Face ID / Touch ID';
+                    }
+                });
+            }
 
             // Disable biometric authentication
-            disableBtn.addEventListener('click', async function() {
-                if (!confirm('Are you sure you want to disable biometric authentication? You will need to use your password to sign in.')) {
-                    return;
-                }
+            if (disableBtn) {
+                disableBtn.addEventListener('click', async function() {
+                    if (!confirm('Are you sure you want to disable biometric authentication? You will need to use your password to sign in.')) {
+                        return;
+                    }
 
-                disableBtn.disabled = true;
-                disableBtn.textContent = 'Disabling...';
+                    disableBtn.disabled = true;
+                    disableBtn.textContent = 'Disabling...';
 
-                try {
-                    await BiometricAuth.disable();
-                    
-                    // Remove credential ID from localStorage
-                    localStorage.removeItem('biometric_credential_id');
-                    
-                    // Success - reload page to show updated status
-                    window.location.href = '/modules/settings/biometric.php?disabled=1';
-                } catch (error) {
-                    console.error('[Biometric Debug] Disable error:', error);
-                    console.error('[Biometric Debug] Error stack:', error.stack);
-                    alert('Failed to disable biometric authentication: ' + error.message);
-                    disableBtn.disabled = false;
-                    disableBtn.textContent = 'Disable Face ID / Touch ID';
-                }
-            });
-        });
+                    try {
+                        await BiometricAuth.disable();
+                        
+                        // Remove credential ID from localStorage
+                        localStorage.removeItem('biometric_credential_id');
+                        localStorage.removeItem('biometric_username');
+                        
+                        // Success - reload page to show updated status
+                        window.location.href = '/modules/settings/biometric.php?disabled=1';
+                    } catch (error) {
+                        console.error('[Biometric Debug] Disable error:', error);
+                        console.error('[Biometric Debug] Error stack:', error.stack);
+                        alert('Failed to disable biometric authentication: ' + error.message);
+                        disableBtn.disabled = false;
+                        disableBtn.textContent = 'Disable Face ID / Touch ID';
+                    }
+                });
+            }
+        }
+
+        // Initialize when page is ready (works with both normal and AJAX navigation)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initBiometricSettings);
+        } else {
+            // DOM already loaded (AJAX navigation case) - wait a tiny bit for content injection
+            setTimeout(initBiometricSettings, 50);
+        }
+
+        // Also listen for AJAX navigation completion
+        document.addEventListener('ajaxPageLoaded', initBiometricSettings);
     </script>
     </div> <!-- #main-content -->
 </body>

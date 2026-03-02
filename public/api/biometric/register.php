@@ -36,7 +36,7 @@ try {
     // so we don't need to re-verify it here, but we should ensure session is valid
     
     // Verify password before enabling biometric
-    $stmt = $pdo->prepare("SELECT password_hash FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT password_hash, username FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -53,7 +53,8 @@ try {
     if ($success) {
         echo json_encode([
             'success' => true,
-            'message' => 'Biometric authentication enabled successfully'
+            'message' => 'Biometric authentication enabled successfully',
+            'username' => $user['username']
         ]);
     } else {
         http_response_code(500);

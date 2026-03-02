@@ -82,6 +82,22 @@ try {
                 $notificationHelper->markAllAsRead($userId);
                 echo json_encode(['success' => true]);
                 break;
+
+            case 'delete':
+                $notificationId = $input['notification_id'] ?? 0;
+                if ($notificationId > 0) {
+                    $deleted = $notificationHelper->deleteNotification($notificationId, $userId);
+                    if ($deleted) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Notification not found']);
+                    }
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid notification ID']);
+                }
+                break;
                 
             default:
                 http_response_code(400);

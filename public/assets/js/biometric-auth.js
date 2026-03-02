@@ -175,84 +175,67 @@ const BiometricAuth = {
     },
 
     /**
-     * Register a new biometric credential
+     * Register biometric authentication using native Face ID/Touch ID
+     * This stores credentials locally on THIS device only (no iCloud sync)
      */
     register: async function(username, userId, password) {
         try {
-            // Check if supported
-            if (!await this.isPlatformAuthenticatorAvailable()) {
+            const NativeBiometric = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric;
+
+            if (!NativeBiometric) {
+                throw new Error('Native biometric plugin is not available');
+            }
+
+            // Check if native biometric is available
+            const result = await NativeBiometric.isAvailable();
+            if (!result.isAvailable) {
                 throw new Error('Biometric authentication is not available on this device');
             }
 
-            // Get challenge from server
-            const challenge = await this.getChallenge();
-
-            // Encode user ID properly
-            const userIdBuffer = new Uint8Array(16);
-            const userIdView = new DataView(userIdBuffer.buffer);
-            userIdView.setUint32(0, userId, true); // Little-endian
-
-            // Create credential options
-            const publicKeyCredentialCreationOptions = {
-                challenge: challenge,
-                rp: {
-                    name: "Health Tracker",
-                    id: window.location.hostname
-                },
-                user: {
-                    id: userIdBuffer,
-                    name: username,
-                    displayName: username
-                },
-                pubKeyCredParams: [
-                    { alg: -7, type: "public-key" },  // ES256
-                    { alg: -257, type: "public-key" } // RS256
-                ],
-                authenticatorSelection: {
-                    authenticatorAttachment: "platform", // Use device biometrics
-                    userVerification: "required",
-                    requireResidentKey: false,
-                    residentKey: "discouraged"  // Force local-only, no iCloud sync
-                },
-                timeout: 60000,
-                attestation: "none"
-            };
-
-            // Create credential
-            const credential = await navigator.credentials.create({
-                publicKey: publicKeyCredentialCreationOptions
+            // Verify the user's identity to confirm enrollment (triggers Face ID prompt)
+            await NativeBiometric.verifyIdentity({
+                reason: "Confirm your identity to enable Face ID login",
+                title: "Enable Face ID",
+                subtitle: "Authenticate to continue",
+                description: "Use Face ID to sign in faster"
             });
 
-            if (!credential) {
-                throw new Error('Failed to create credential');
-            }
+            // Generate a secure credential ID
+            const credentialId = this.generateCredentialId();
 
-            // Prepare credential data for server
-            const credentialData = {
-                id: this.arrayBufferToBase64(credential.rawId),
-                publicKey: this.arrayBufferToBase64(credential.response.getPublicKey()),
-                type: credential.type
-            };
+            // Store the credential securely in iOS Keychain using Native Biometric
+            await NativeBiometric.setCredentials({
+                username: username,
+                password: credentialId,
+                server: window.location.hostname
+            });
 
-            // Send to server for registration
+            // Register this credential with the backend
             const response = await fetch('/api/biometric/register.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    credential: credentialData,
-                    password: password
+                    credential_id: credentialId,
+                    user_id: userId,
+                    password: password,
+                    biometric_type: result.biometryType
                 })
             });
 
-            const result = await response.json();
+            const data = await response.json();
 
-            if (!result.success) {
-                throw new Error(result.error || 'Registration failed');
+            if (!data.success) {
+                throw new Error(data.error || 'Registration failed');
             }
 
-            return result;
+            return {
+                success: true,
+                credentialId: credentialId,
+                biometryType: result.biometryType
+            };
+
         } catch (error) {
             console.error('Biometric registration error:', error);
             throw error;
@@ -260,68 +243,61 @@ const BiometricAuth = {
     },
 
     /**
-     * Authenticate using biometric
+     * Authenticate using Face ID/Touch ID
+     * Prompts for biometric, retrieves credential from Keychain, validates with server
      */
-    authenticate: async function(credentialId) {
+    authenticate: async function() {
         try {
-            // Check if supported
-            if (!await this.isPlatformAuthenticatorAvailable()) {
-                throw new Error('Biometric authentication is not available on this device');
+            const NativeBiometric = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric;
+
+            if (!NativeBiometric) {
+                throw new Error('Native biometric plugin is not available');
             }
 
-            // Get challenge from server
-            const challenge = await this.getChallenge();
+            // Check if native biometric is available
+            const result = await NativeBiometric.isAvailable();
+            if (!result.isAvailable) {
+                throw new Error('Biometric authentication is not available');
+            }
 
-            // Prepare credential ID
-            const credentialIdBuffer = this.base64ToArrayBuffer(credentialId);
-
-            // Create authentication options
-            const publicKeyCredentialRequestOptions = {
-                challenge: challenge,
-                allowCredentials: [{
-                    id: credentialIdBuffer,
-                    type: 'public-key',
-                    transports: ['internal']
-                }],
-                userVerification: "required",
-                timeout: 60000
-            };
-
-            // Get credential
-            const assertion = await navigator.credentials.get({
-                publicKey: publicKeyCredentialRequestOptions
+            // Prompt for Face ID/Touch ID
+            await NativeBiometric.verifyIdentity({
+                reason: "Sign in with Face ID",
+                title: "Sign In",
+                subtitle: "Authenticate to continue",
+                description: ""
             });
 
-            if (!assertion) {
-                throw new Error('Authentication failed');
+            // Retrieve the stored credential from iOS Keychain
+            const credentials = await NativeBiometric.getCredentials({
+                server: window.location.hostname
+            });
+
+            if (!credentials || !credentials.password) {
+                throw new Error('No biometric credentials found. Please enable Face ID in Settings.');
             }
 
-            // Prepare assertion data for server
-            const assertionData = {
-                credentialId: credentialId,
-                assertion: {
-                    authenticatorData: this.arrayBufferToBase64(assertion.response.authenticatorData),
-                    clientDataJSON: this.arrayBufferToBase64(assertion.response.clientDataJSON),
-                    signature: this.arrayBufferToBase64(assertion.response.signature)
-                }
-            };
+            const credentialId = credentials.password;
 
-            // Send to server for verification
+            // Verify with backend
             const response = await fetch('/api/biometric/authenticate.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(assertionData)
+                body: JSON.stringify({
+                    credential_id: credentialId
+                })
             });
 
-            const result = await response.json();
+            const data = await response.json();
 
-            if (!result.success) {
-                throw new Error(result.error || 'Authentication failed');
+            if (!data.success) {
+                throw new Error(data.error || 'Authentication failed');
             }
 
-            return result;
+            return data;
+
         } catch (error) {
             console.error('Biometric authentication error:', error);
             throw error;
@@ -347,23 +323,62 @@ const BiometricAuth = {
      */
     disable: async function() {
         try {
-            const response = await fetch('/api/biometric/disable.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const NativeBiometric = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric;
+
+            if (NativeBiometric) {
+                try {
+                    // Get the credential ID from Keychain before deleting
+                    const credentials = await NativeBiometric.getCredentials({
+                        server: window.location.hostname
+                    });
+
+                    if (credentials && credentials.password) {
+                        const credentialId = credentials.password;
+
+                        // Delete from backend
+                        await fetch('/api/biometric/disable.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                credential_id: credentialId
+                            })
+                        });
+                    }
+
+                    // Delete from iOS Keychain
+                    await NativeBiometric.deleteCredentials({
+                        server: window.location.hostname
+                    });
+                } catch (e) {
+                    // If keychain operations fail, still attempt backend disable
+                    await fetch('/api/biometric/disable.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
                 }
-            });
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to disable biometric authentication');
+            } else {
+                await fetch('/api/biometric/disable.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
-            
-            return result;
+
+            return { success: true };
         } catch (error) {
             console.error('Error disabling biometric:', error);
             throw error;
         }
+    },
+
+    /**
+     * Generate a unique credential ID
+     */
+    generateCredentialId: function() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     }
 };
 

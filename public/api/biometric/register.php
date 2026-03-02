@@ -23,36 +23,33 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     $input = json_decode(file_get_contents('php://input'), true);
-    
-    if (!isset($input['password']) || !isset($input['credential'])) {
+
+    if (!isset($input['password']) || !isset($input['credential_id'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Missing required fields']);
         exit;
     }
-    
+
     $userId = $_SESSION['user_id'];
     $password = $input['password'];
-    $credential = $input['credential'];
-    
-    // Verify challenge (optional but recommended for registration)
-    // The challenge is already consumed during WebAuthn credential creation
-    // so we don't need to re-verify it here, but we should ensure session is valid
-    
+    $credentialId = $input['credential_id'];
+    $biometricType = isset($input['biometric_type']) ? (int)$input['biometric_type'] : 0;
+
     // Verify password before enabling biometric
     $stmt = $pdo->prepare("SELECT password_hash, username FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$user || !password_verify($password, $user['password_hash'])) {
         http_response_code(401);
         echo json_encode(['success' => false, 'error' => 'Invalid password']);
         exit;
     }
-    
-    // Register the credential
+
+    // Register the native biometric credential
     $biometricAuth = new BiometricAuth($pdo);
-    $success = $biometricAuth->registerCredential($userId, $credential);
-    
+    $success = $biometricAuth->registerNativeCredential($userId, $credentialId, $biometricType);
+
     if ($success) {
         echo json_encode([
             'success' => true,
@@ -61,7 +58,7 @@ try {
         ]);
     } else {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to register credential']);
+        echo json_encode(['success' => false, 'error' => 'Failed to store credential']);
     }
 } catch (Exception $e) {
     error_log("Biometric registration error: " . $e->getMessage());

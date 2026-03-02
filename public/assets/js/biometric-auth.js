@@ -211,7 +211,8 @@ const BiometricAuth = {
                 authenticatorSelection: {
                     authenticatorAttachment: "platform", // Use device biometrics
                     userVerification: "required",
-                    requireResidentKey: false
+                    requireResidentKey: false,
+                    residentKey: "discouraged"  // Force local-only, no iCloud sync
                 },
                 timeout: 60000,
                 attestation: "none"

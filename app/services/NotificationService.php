@@ -2,7 +2,7 @@
 
 /**
  * NotificationService
- * Handles OneSignal push notification sending with targeted Player IDs
+ * Handles OneSignal push notification sending with targeted Subscription IDs
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -22,11 +22,11 @@ class NotificationService {
     }
     
     /**
-     * Get all active Player IDs for users with notifications enabled
+     * Get all active Subscription IDs for users with notifications enabled
      * 
-     * @return array Array of Player IDs
+     * @return array Array of Subscription IDs
      */
-    public function getActivePlayerIds() {
+    public function getActiveSubscriptionIds() {
         $stmt = $this->pdo->prepare("
             SELECT DISTINCT onesignal_player_id 
             FROM user_notification_settings 
@@ -45,12 +45,12 @@ class NotificationService {
     }
     
     /**
-     * Get Player ID for a specific user
+     * Get Subscription ID for a specific user
      * 
      * @param int $userId The user ID
-     * @return string|null The Player ID or null
+     * @return string|null The Subscription ID or null
      */
-    public function getUserPlayerId($userId) {
+    public function getUserSubscriptionId($userId) {
         $stmt = $this->pdo->prepare("
             SELECT onesignal_player_id 
             FROM user_notification_settings 
@@ -66,9 +66,9 @@ class NotificationService {
     }
     
     /**
-     * Send push notification to specific Player IDs
+     * Send push notification to specific Subscription IDs
      * 
-     * @param array $playerIds Array of OneSignal Player IDs
+     * @param array $playerIds Array of OneSignal Subscription IDs
      * @param string $title Notification title
      * @param string $message Notification message
      * @param array $data Additional data to send with notification
@@ -76,13 +76,13 @@ class NotificationService {
      */
     public function sendNotification($playerIds, $title, $message, $data = []) {
         if (empty($playerIds)) {
-            return ['success' => false, 'error' => 'No Player IDs provided'];
+            return ['success' => false, 'error' => 'No subscription IDs provided'];
         }
         
         // Prepare notification payload
         $payload = [
             'app_id' => $this->appId,
-            'include_player_ids' => $playerIds,
+            'include_subscription_ids' => $playerIds,
             'headings' => ['en' => $title],
             'contents' => ['en' => $message],
             'data' => $data,
@@ -110,6 +110,13 @@ class NotificationService {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         
         $response = curl_exec($ch);
+        if ($response === false) {
+            $curlError = curl_error($ch);
+            $curlErrno = curl_errno($ch);
+            curl_close($ch);
+            error_log("OneSignal curl error ($curlErrno): $curlError");
+            return ['success' => false, 'error' => "curl error ($curlErrno): $curlError"];
+        }
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         
@@ -141,13 +148,13 @@ class NotificationService {
      * @return array Response
      */
     public function sendToUser($userId, $title, $message, $data = []) {
-        $playerId = $this->getUserPlayerId($userId);
+        $subscriptionId = $this->getUserSubscriptionId($userId);
         
-        if (!$playerId) {
-            return ['success' => false, 'error' => 'User does not have notifications enabled or Player ID not found'];
+        if (!$subscriptionId) {
+            return ['success' => false, 'error' => 'User does not have notifications enabled or subscription ID not found'];
         }
         
-        return $this->sendNotification([$playerId], $title, $message, $data);
+        return $this->sendNotification([$subscriptionId], $title, $message, $data);
     }
     
     /**
@@ -159,7 +166,7 @@ class NotificationService {
      * @return array Response
      */
     public function sendToAll($title, $message, $data = []) {
-        $playerIds = $this->getActivePlayerIds();
+        $playerIds = $this->getActiveSubscriptionIds();
         
         if (empty($playerIds)) {
             return ['success' => false, 'error' => 'No active subscribers found'];

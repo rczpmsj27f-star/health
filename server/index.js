@@ -170,11 +170,10 @@ app.post('/api/settings', async (req, res) => {
 });
 
 // Function to send push notification via OneSignal
-async function sendPushNotification(payload) {
+async function sendPushNotification(payload, subscriptionIds) {
   try {
     const notificationPayload = {
       app_id: ONESIGNAL_APP_ID,
-      included_segments: ['All'],
       headings: { en: payload.title },
       contents: { en: payload.body },
       data: payload.data,
@@ -184,10 +183,18 @@ async function sendPushNotification(payload) {
       tag: payload.tag
     };
 
+    // Target specific subscription IDs when provided; fall back to all subscribers
+    if (subscriptionIds && subscriptionIds.length > 0) {
+      notificationPayload.include_subscription_ids = subscriptionIds;
+    } else {
+      notificationPayload.included_segments = ['All'];
+    }
+
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Authorization uses the OneSignal REST API key
         'Authorization': `Bearer ${ONESIGNAL_API_KEY}`
       },
       body: JSON.stringify(notificationPayload)
@@ -297,8 +304,8 @@ cron.schedule('* * * * *', async () => {
             }
           };
           
-          // Send notification via OneSignal
-          await sendPushNotification(payload);
+          // Send notification via OneSignal, targeting specific subscription if available
+          await sendPushNotification(payload, medication.subscriptionIds || []);
         }
       }
     }

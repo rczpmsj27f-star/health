@@ -94,10 +94,13 @@ function markAsRead(notificationId) {
             if (typeof updateBadge === 'function') {
                 updateBadge();
             }
+        } else {
+            console.error('Failed to mark as read:', data.error);
         }
     })
     .catch(error => {
         console.error('Error marking notification as read:', error);
+        alert('Failed to mark notification as read. Please try again.');
     });
 }
 
@@ -119,10 +122,13 @@ function markAllRead() {
             if (typeof updateBadge === 'function') {
                 updateBadge();
             }
+        } else {
+            console.error('Failed to mark all as read:', data.error);
         }
     })
     .catch(error => {
         console.error('Error marking all notifications as read:', error);
+        alert('Failed to mark all as read. Please try again.');
     });
 }
 

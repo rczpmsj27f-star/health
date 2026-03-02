@@ -68,8 +68,7 @@ try {
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
                     <div class="notification-item <?= $notification['is_read'] ? '' : 'unread' ?>" 
-                         onclick="markAsRead(<?= $notification['id'] ?>)"
-                         style="cursor: pointer; padding: 16px; border-bottom: 1px solid #e5e7eb; transition: all 0.2s;">
+                         style="padding: 16px; border-bottom: 1px solid #e5e7eb; transition: all 0.2s;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                             <div style="font-weight: 600; font-size: 16px; color: #1f2937;">
                                 <?= htmlspecialchars($notification['title']) ?>
@@ -81,27 +80,41 @@ try {
                         <div style="font-size: 14px; color: #4b5563; margin-bottom: 8px; line-height: 1.5;">
                             <?= htmlspecialchars($notification['message']) ?>
                         </div>
-                        <div style="font-size: 12px; color: #9ca3af;">
-                            <?php
-                            $time = strtotime($notification['created_at']);
-                            $now = time();
-                            $diff = $now - $time;
-                            
-                            if ($diff < 60) {
-                                echo 'Just now';
-                            } elseif ($diff < 3600) {
-                                $mins = floor($diff / 60);
-                                echo $mins . ($mins == 1 ? ' min' : ' mins') . ' ago';
-                            } elseif ($diff < 86400) {
-                                $hours = floor($diff / 3600);
-                                echo $hours . ($hours == 1 ? ' hour' : ' hours') . ' ago';
-                            } elseif ($diff < 604800) {
-                                $days = floor($diff / 86400);
-                                echo $days . ($days == 1 ? ' day' : ' days') . ' ago';
-                            } else {
-                                echo date('M j, Y', $time);
-                            }
-                            ?>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 12px; color: #9ca3af;">
+                                <?php
+                                $time = strtotime($notification['created_at']);
+                                $now = time();
+                                $diff = $now - $time;
+                                
+                                if ($diff < 60) {
+                                    echo 'Just now';
+                                } elseif ($diff < 3600) {
+                                    $mins = floor($diff / 60);
+                                    echo $mins . ($mins == 1 ? ' min' : ' mins') . ' ago';
+                                } elseif ($diff < 86400) {
+                                    $hours = floor($diff / 3600);
+                                    echo $hours . ($hours == 1 ? ' hour' : ' hours') . ' ago';
+                                } elseif ($diff < 604800) {
+                                    $days = floor($diff / 86400);
+                                    echo $days . ($days == 1 ? ' day' : ' days') . ' ago';
+                                } else {
+                                    echo date('M j, Y', $time);
+                                }
+                                ?>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <?php if (!$notification['is_read']): ?>
+                                <button onclick="markAsRead(<?= intval($notification['id']) ?>)"
+                                        style="background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                    Mark Read
+                                </button>
+                                <?php endif; ?>
+                                <button onclick="deleteNotification(<?= intval($notification['id']) ?>)"
+                                        style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -173,6 +186,26 @@ try {
         })
         .catch(error => {
             console.error('Error marking notification as read:', error);
+        });
+    }
+    
+    function deleteNotification(notificationId) {
+        fetch('/api/notifications.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'delete', notification_id: notificationId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Failed to delete notification. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting notification:', error);
+            alert('Failed to delete notification. Please try again.');
         });
     }
     

@@ -231,7 +231,7 @@ class NotificationHelper {
         try {
             $stmt = $this->pdo->prepare("
                 SELECT COUNT(*) as count FROM notifications 
-                WHERE user_id = ? AND is_read = 0
+                WHERE user_id = ? AND is_read = 0 AND type != 'overdue_alert'
             ");
             // Explicitly cast user_id to integer
             $stmt->execute([(int)$userId]);

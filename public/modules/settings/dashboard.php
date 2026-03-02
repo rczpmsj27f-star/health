@@ -119,7 +119,7 @@ $isAdmin = Auth::isAdmin();
             <a class="tile" href="/modules/settings/linked_users.php">
                 <div class="tile-icon">👥</div>
                 <div class="tile-title">Linked Users</div>
-                <div class="tile-desc">Manage caregiver connections</div>
+                <div class="tile-desc">Manage linked user connections</div>
             </a>
             
             <a class="tile" href="/modules/settings/notifications.php">

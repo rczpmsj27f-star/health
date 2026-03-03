@@ -13,23 +13,6 @@ $notificationHelper = new NotificationHelper($pdo);
 $notifications = $notificationHelper->getRecent($_SESSION['user_id'], 50);
 $unreadCount = $notificationHelper->getUnreadCount($_SESSION['user_id']);
 
-// Debug logging
-error_log("Notifications page - User ID: " . $_SESSION['user_id']);
-error_log("Notifications page - Notifications count: " . count($notifications));
-error_log("Notifications page - Unread count: " . $unreadCount);
-if (!empty($notifications)) {
-    error_log("Notifications page - First notification: " . json_encode($notifications[0]));
-}
-
-// Direct query to verify data exists
-try {
-    $debugStmt = $pdo->prepare("SELECT COUNT(*) as total, SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread FROM notifications WHERE user_id = ?");
-    $debugStmt->execute([$_SESSION['user_id']]);
-    $debugResult = $debugStmt->fetch(PDO::FETCH_ASSOC);
-    error_log("Notifications page - Direct query total: " . $debugResult['total'] . ", unread: " . $debugResult['unread']);
-} catch (Exception $e) {
-    error_log("Notifications page - Debug query error: " . $e->getMessage());
-}
 ?>
 <!DOCTYPE html>
 <html>
@@ -48,15 +31,6 @@ try {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <h2 style="color: var(--color-primary); font-size: 28px; margin: 0;">🔔 Notifications</h2>
         </div>
-        
-        <!-- Debug info (can be removed in production) -->
-        <?php if (count($notifications) === 0 && $unreadCount > 0): ?>
-        <div style="background: #fef3c7; color: #92400e; padding: 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
-            <strong>⚠️ Debug Info:</strong> Badge shows <?= $unreadCount ?> unread notification(s), but no notifications found in list.
-            This may indicate a database query issue or user ID mismatch.
-            <br><small>User ID: <?= $_SESSION['user_id'] ?></small>
-        </div>
-        <?php endif; ?>
         
         <div id="notificationList" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: calc(var(--footer-height, 70px) + 10px);">
             <?php if (empty($notifications)): ?>

@@ -347,7 +347,8 @@ foreach ($instructions as $i) {
                         </div>
                         
                         <!-- Timing Type Selection (only for once per day) -->
-                        <div id="timing-type-section" style="display: <?= ($schedule['times_per_day'] == 1 && $schedule['frequency_type'] === 'per_day' && empty($schedule['is_prn'])) ? 'block' : 'none' ?>; margin-top: 16px;">
+                        <?php $isOncePerDay = $schedule['frequency_type'] === 'per_day' && (intval($schedule['times_per_day']) ?: 1) == 1; ?>
+                        <div id="timing-type-section" style="display: <?= $isOncePerDay ? 'block' : 'none' ?>; margin-top: 16px;">
                             <div class="form-group">
                                 <label style="display: block; margin-bottom: 12px; font-weight: 600;">How do you take this medication?</label>
                                 
@@ -364,7 +365,7 @@ foreach ($instructions as $i) {
                         </div>
 
                         <!-- Specific Time Input (shown when "specific time" is selected) -->
-                        <div id="specific-time-input" style="display: <?= ($schedule['times_per_day'] == 1 && $schedule['frequency_type'] === 'per_day' && empty($schedule['is_prn']) && empty($schedule['special_timing'])) ? 'block' : 'none' ?>; margin-top: 16px;">
+                        <div id="specific-time-input" style="display: <?= ($isOncePerDay && empty($schedule['special_timing'])) ? 'block' : 'none' ?>; margin-top: 16px;">
                             <div class="form-group">
                                 <label>What time? *</label>
                                 <input type="time" name="dose_time_1" id="dose_time_1" value="<?= htmlspecialchars($doseTimesArray[1] ?? '') ?>">
@@ -372,7 +373,7 @@ foreach ($instructions as $i) {
                         </div>
 
                         <!-- Flexible Timing Options (shown when "flexible" is selected) -->
-                        <div id="flexible-timing-section" style="display: <?= ($schedule['times_per_day'] == 1 && $schedule['frequency_type'] === 'per_day' && empty($schedule['is_prn']) && !empty($schedule['special_timing'])) ? 'block' : 'none' ?>; margin-top: 16px;">
+                        <div id="flexible-timing-section" style="display: <?= ($isOncePerDay && !empty($schedule['special_timing'])) ? 'block' : 'none' ?>; margin-top: 16px;">
                             <div class="form-group">
                                 <label>When to Take</label>
                                 <?= renderDropdown($pdo, 'special_timing', 'special_timing', $schedule['special_timing'] ?? '', ['id' => 'special_timing', 'class' => 'form-control']) ?>

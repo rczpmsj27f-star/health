@@ -87,6 +87,13 @@ $isAdmin = Auth::isAdmin();
         input, select, textarea {
             font-size: 16px !important;
         }
+
+        /* Ensure time inputs don't overflow screen */
+        .form-group input[type="time"] {
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -263,7 +270,7 @@ $isAdmin = Auth::isAdmin();
                     </div>
                     
                     <!-- Timing Type Selection (only for once per day) -->
-                    <div id="timing-type-section" style="display: none; margin-top: 16px;">
+                    <div id="timing-type-section" style="display: block; margin-top: 16px;">
                         <div class="form-group">
                             <label style="display: block; margin-bottom: 12px; font-weight: 600;">How do you take this medication?</label>
                             
@@ -280,7 +287,7 @@ $isAdmin = Auth::isAdmin();
                     </div>
 
                     <!-- Specific Time Input (shown when "specific time" is selected) -->
-                    <div id="specific-time-input" style="display: none; margin-top: 16px;">
+                    <div id="specific-time-input" style="display: block; margin-top: 16px;">
                         <div class="form-group">
                             <label>What time? *</label>
                             <input type="time" name="dose_time_1" id="dose_time_1">
@@ -641,10 +648,8 @@ $isAdmin = Auth::isAdmin();
                 timeInputsContainer.innerHTML = '';
             }
             
-            // Update UI after making section visible
-            setTimeout(function() {
-                updateTimingTypeUI();
-            }, 50);
+            // Update UI now that the section is visible
+            updateTimingTypeUI();
         } else {
             console.log('📝 Showing multiple time inputs for', timesPerDay, 'times per day');
             
@@ -831,19 +836,17 @@ $isAdmin = Auth::isAdmin();
         }
     }
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🚀 Page loaded - initializing timing inputs');
-        
-        // Format time displays based on user's locale preference
+    // Initialize timing inputs (handles both direct navigation and AJAX navigation)
+    function initTimingInputs() {
         updateTimeDisplaysInDropdown();
-        
-        // Small delay to ensure all elements are in DOM
-        setTimeout(function() {
-            updateTimeInputs();
-            console.log('✅ Timing inputs initialized');
-        }, 100);
-    });
+        updateTimeInputs();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTimingInputs);
+    } else {
+        initTimingInputs();
+    }
     </script>
 </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>

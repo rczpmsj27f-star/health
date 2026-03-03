@@ -183,6 +183,7 @@ try {
                     $stmt->execute([$medId, $userId, $doseTime->format('Y-m-d H:i:s')]);
                 }
             }
+        }
     }
 
     // 4. Insert instructions

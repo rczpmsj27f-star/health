@@ -152,6 +152,25 @@ foreach ($instructions as $i) {
         input, select, textarea {
             font-size: 16px !important;
         }
+
+        /* Prevent input overflow on mobile */
+        .form-group input[type="time"],
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group textarea {
+            max-width: 100% !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            max-width: 100% !important;
+            width: 100% !important;
+            -webkit-appearance: none !important;
+        }
     </style>
 </head>
 <body>
@@ -807,10 +826,12 @@ foreach ($instructions as $i) {
         }
     }
     
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize on page load (handles both direct navigation and AJAX navigation)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { updateTimeInputs(); });
+    } else {
         updateTimeInputs();
-    });
+    }
     </script>
 </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>

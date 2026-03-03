@@ -84,6 +84,7 @@ function formatTime(timestamp) {
 
 // Mark notification as read
 function markAsRead(notificationId) {
+    console.log('🔔 Marking notification as read:', notificationId);
     fetch('/api/notifications.php', {
         method: 'POST',
         credentials: 'include',
@@ -96,13 +97,15 @@ function markAsRead(notificationId) {
     })
     .then(data => {
         if (data.success) {
+            console.log('✅ Notification marked as read');
             loadNotifications();
-            // Force badge update with a small delay to ensure DOM is ready
+            // Update badge with delay to ensure server update completes
             setTimeout(() => {
                 if (typeof updateBadge === 'function') {
                     updateBadge();
+                    console.log('🔄 Badge update requested');
                 }
-            }, 100);
+            }, 200);
         } else {
             console.error('Failed to mark as read:', data.error);
         }
@@ -128,12 +131,12 @@ function markAllRead() {
     .then(data => {
         if (data.success) {
             loadNotifications();
-            // Force badge update with a small delay to ensure DOM is ready
+            // Update badge with delay to ensure server update completes
             setTimeout(() => {
                 if (typeof updateBadge === 'function') {
                     updateBadge();
                 }
-            }, 100);
+            }, 200);
         } else {
             console.error('Failed to mark all as read:', data.error);
         }
@@ -176,6 +179,7 @@ function deleteNotification(notificationId) {
  * Update the notification badge count
  */
 function updateBadge() {
+    console.log('🔄 Updating badge count...');
     fetch('/api/notifications.php?action=get_count', {
         method: 'GET',
         credentials: 'include'
@@ -185,6 +189,8 @@ function updateBadge() {
         if (data.success) {
             const badge = document.querySelector('.notification-badge');
             const count = data.count || 0;
+
+            console.log('📊 Badge count from API:', count);
 
             if (badge) {
                 if (count > 0) {

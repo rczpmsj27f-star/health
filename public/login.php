@@ -8,7 +8,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login – Health Tracker</title>
     
     <!-- PWA Support -->
@@ -91,7 +91,7 @@ unset($_SESSION['error'], $_SESSION['success']);
             padding: 12px 16px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 16px;
             box-sizing: border-box;
             transition: border-color 0.3s;
         }

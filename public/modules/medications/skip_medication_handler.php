@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/auth.php";
+require_once "../../../app/core/LinkedUserHelper.php";
 
 // Check if this is an AJAX request
 $isAjax = isset($_POST['ajax']) && $_POST['ajax'] == '1';

@@ -110,8 +110,8 @@ $overdueCheckDate = date('Y-m-d');
 $stmtOverdue = $pdo->prepare("
     SELECT COUNT(DISTINCT CONCAT(m.id, '_', mdt.dose_time)) as cnt
     FROM medications m
-    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
-    LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
+    INNER JOIN medication_schedules ms ON m.id = ms.medication_id
+    INNER JOIN medication_dose_times mdt ON m.id = mdt.medication_id
     WHERE m.user_id = :user_id
     AND (m.archived = 0 OR m.archived IS NULL)
     AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
@@ -558,7 +558,6 @@ foreach ($allDashboardMeds as $med) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 8px;
             position: relative;
         }
@@ -582,14 +581,16 @@ foreach ($allDashboardMeds as $med) {
         }
         
         .med-info {
-            flex: 1;
-            min-width: 200px;
+            flex: 1 1 0;
+            min-width: 0;
         }
         
         .med-actions {
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
         }
         
         .btn-taken {
@@ -1353,6 +1354,8 @@ foreach ($allDashboardMeds as $med) {
     let pendingLateLog = null;
     // Early logging state
     let pendingEarlyLog = null;
+    // Linked user ID (null if viewing own medications)
+    const forUserId = <?= $viewingLinkedUser ? (int)$targetUserId : 'null' ?>;
 
     // Toggle function for collapsible time groups
     function toggleTimeGroup(groupId) {

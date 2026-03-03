@@ -67,16 +67,32 @@ async function initializeNativePush() {
         if (!window.capacitorPushListenersAttached) {
             // Listen for registration success
             await PushNotifications.addListener('registration', async (token) => {
-                console.log('Push registration success, token:', token.value);
+                console.log('✅ Push registration success:', token.value);
                 
-                // Register device token with backend
-                await registerDeviceToken(token.value);
-            });
-
-            // Listen for registration errors
-            await PushNotifications.addListener('registrationError', (error) => {
-                console.error('Push registration error:', error);
-                updatePushRegistrationStatus(false);
+                // Validate APNs token format (64 hex characters)
+                if (token.value && /^[0-9a-fA-F]{64}$/.test(token.value)) {
+                    console.log('✅ Token format valid');
+                    
+                    try {
+                        await registerDeviceToken(token.value);
+                        console.log('✅ Token registered with backend');
+                    } catch (error) {
+                        console.error('❌ Failed to register token:', error);
+                        
+                        // Retry once
+                        setTimeout(async () => {
+                            console.log('🔄 Retrying token registration...');
+                            try {
+                                await registerDeviceToken(token.value);
+                                console.log('✅ Retry successful');
+                            } catch (e) {
+                                console.error('❌ Retry failed:', e);
+                            }
+                        }, 5000);
+                    }
+                } else {
+                    console.error('❌ Invalid token format:', token.value);
+                }
             });
 
             // Listen for push notifications received
@@ -98,6 +114,32 @@ async function initializeNativePush() {
             });
 
             window.capacitorPushListenersAttached = true;
+        }
+
+        // Handle registration errors (separate guard to allow independent re-attachment)
+        if (!window.capacitorPushErrorListenersAttached) {
+            await PushNotifications.addListener('registrationError', (error) => {
+                console.error('❌ Push registration error:', error);
+                console.error('Error details:', JSON.stringify(error));
+                updatePushRegistrationStatus(false);
+                
+                setTimeout(async () => {
+                    console.log('🔄 Attempting to recover from registration error...');
+                    try {
+                        const permStatus = await PushNotifications.checkPermissions();
+                        console.log('Permission status:', permStatus);
+                        
+                        if (permStatus.receive === 'granted') {
+                            await PushNotifications.register();
+                            console.log('✅ Re-registration attempted');
+                        }
+                    } catch (e) {
+                        console.error('❌ Recovery failed:', e);
+                    }
+                }, 3000);
+            });
+            
+            window.capacitorPushErrorListenersAttached = true;
         }
 
         // Always call register() to obtain a fresh APNs token on every enable

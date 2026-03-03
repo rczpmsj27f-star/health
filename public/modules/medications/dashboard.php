@@ -437,6 +437,7 @@ foreach ($allDashboardMeds as $med) {
     <script src="/assets/js/splash-screen.js?v=<?= time() ?>"></script>
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/modal.js?v=<?= time() ?>" defer></script>
+    <script src="/assets/js/confirm-modal.js?v=<?= time() ?>" defer></script>
     <script src="/assets/js/medication-icons.js?v=<?= time() ?>"></script>
     <style>
         .page-content {

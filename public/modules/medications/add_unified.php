@@ -293,13 +293,13 @@ $isAdmin = Auth::isAdmin();
                             <label>When to take:</label>
                             <select name="special_timing" id="special_timing">
                                 <option value="">Select...</option>
-                                <option value="on_waking">On waking (10:00 AM reminder)</option>
-                                <option value="before_bed">Before bed (10:00 PM reminder)</option>
-                                <option value="with_breakfast">With breakfast (10:00 AM reminder)</option>
-                                <option value="with_lunch">With lunch (2:00 PM reminder)</option>
-                                <option value="with_dinner">With dinner (8:00 PM reminder)</option>
-                                <option value="morning_anytime">Morning - anytime (12:00 PM reminder)</option>
-                                <option value="evening_anytime">Evening - anytime (10:00 PM reminder)</option>
+                                <option value="on_waking">🌅 On waking (10:00 reminder)</option>
+                                <option value="before_bed">🌙 Before bed (22:00 reminder)</option>
+                                <option value="with_breakfast">🍳 With breakfast (10:00 reminder)</option>
+                                <option value="with_lunch">🍽️ With lunch (14:00 reminder)</option>
+                                <option value="with_dinner">🍝 With dinner (20:00 reminder)</option>
+                                <option value="morning_anytime">☀️ Morning - anytime (12:00 reminder)</option>
+                                <option value="evening_anytime">🌆 Evening - anytime (22:00 reminder)</option>
                             </select>
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Choose a general time - you'll get a reminder at the time shown
@@ -620,49 +620,81 @@ $isAdmin = Auth::isAdmin();
     
     // Update time inputs based on times per day
     function updateTimeInputs() {
+        console.log('📋 updateTimeInputs() called');
+        
         let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
         let timingTypeSection = document.getElementById("timing-type-section");
         let timeInputsContainer = document.getElementById("time_inputs_container");
         
+        console.log('Times per day:', timesPerDay);
+        console.log('Timing type section exists:', !!timingTypeSection);
+        
         if (timesPerDay === 1) {
-            // Show timing type selection
-            timingTypeSection.style.display = 'block';
-            timeInputsContainer.innerHTML = ''; // Clear multiple times
+            console.log('✅ Showing timing type section for once per day');
             
-            // Update the UI based on current selection
-            updateTimingTypeUI();
-        } else {
-            // Hide timing type selection, show multiple time inputs
-            timingTypeSection.style.display = 'none';
-            document.getElementById("specific-time-input").style.display = 'none';
-            document.getElementById("flexible-timing-section").style.display = 'none';
-            
-            // Generate multiple time inputs
-            let html = '<div style="margin-top:16px;"><strong>Dose Times:</strong></div>';
-            for (let i = 1; i <= timesPerDay; i++) {
-                html += `<div class="form-group">`;
-                html += `<label>Time ${i}:</label>`;
-                html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}">`;
-                html += `</div>`;
+            if (timingTypeSection) {
+                timingTypeSection.style.display = 'block';
+                console.log('Set timing-type-section display to block');
             }
             
-            // Add evenly split button
-            html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+            if (timeInputsContainer) {
+                timeInputsContainer.innerHTML = '';
+            }
             
-            timeInputsContainer.innerHTML = html;
+            // Update UI after making section visible
+            setTimeout(function() {
+                updateTimingTypeUI();
+            }, 50);
+        } else {
+            console.log('📝 Showing multiple time inputs for', timesPerDay, 'times per day');
+            
+            if (timingTypeSection) {
+                timingTypeSection.style.display = 'none';
+            }
+            
+            const specificTimeInput = document.getElementById("specific-time-input");
+            const flexibleTimingSection = document.getElementById("flexible-timing-section");
+            
+            if (specificTimeInput) specificTimeInput.style.display = 'none';
+            if (flexibleTimingSection) flexibleTimingSection.style.display = 'none';
+            
+            if (timeInputsContainer) {
+                let html = '<div style="margin-top:16px;"><strong>Dose Times:</strong></div>';
+                for (let i = 1; i <= timesPerDay; i++) {
+                    html += '<div class="form-group">';
+                    html += '<label>Time ' + i + ':</label>';
+                    html += '<input type="time" name="dose_time_' + i + '" id="dose_time_' + i + '">';
+                    html += '</div>';
+                }
+                html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+                timeInputsContainer.innerHTML = html;
+            }
         }
     }
     
     // Update UI based on timing type selection
     function updateTimingTypeUI() {
-        let timingType = document.querySelector('input[name="timing_type"]:checked')?.value;
+        console.log('🔄 updateTimingTypeUI() called');
+        
+        let timingTypeRadio = document.querySelector('input[name="timing_type"]:checked');
+        let timingType = timingTypeRadio ? timingTypeRadio.value : 'specific_time';
+        
+        console.log('Timing type:', timingType);
+        
         let specificTimeInput = document.getElementById("specific-time-input");
         let flexibleTimingSection = document.getElementById("flexible-timing-section");
         
+        if (!specificTimeInput || !flexibleTimingSection) {
+            console.warn('⚠️ Required elements not found');
+            return;
+        }
+        
         if (timingType === 'specific_time') {
+            console.log('⏰ Showing specific time input');
             specificTimeInput.style.display = 'block';
             flexibleTimingSection.style.display = 'none';
         } else if (timingType === 'flexible') {
+            console.log('📅 Showing flexible timing options');
             specificTimeInput.style.display = 'none';
             flexibleTimingSection.style.display = 'block';
         }
@@ -741,9 +773,70 @@ $isAdmin = Auth::isAdmin();
         }
     }
     
+    // Detect if user prefers 12 or 24 hour format
+    function getUserTimeFormat() {
+        const testDate = new Date(2000, 0, 1, 13, 0, 0);
+        const timeString = testDate.toLocaleTimeString(navigator.language, {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+        return timeString.includes('13') ? '24' : '12';
+    }
+
+    // Format time based on user preference (12-hour as "10:00am" with NO space)
+    function formatTimeForDisplay(time24) {
+        const timeFormat = getUserTimeFormat();
+        if (timeFormat === '24') {
+            return time24;
+        } else {
+            const [hours, minutes] = time24.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'pm' : 'am';
+            const hour12 = hour % 12 || 12;
+            return hour12 + ':' + minutes + ampm;
+        }
+    }
+
+    // Update all time displays in dropdown
+    function updateTimeDisplaysInDropdown() {
+        const select = document.getElementById('special_timing');
+        if (!select) return;
+        
+        const timeMapping = {
+            'on_waking': '10:00',
+            'before_bed': '22:00',
+            'with_breakfast': '10:00',
+            'with_lunch': '14:00',
+            'with_dinner': '20:00',
+            'morning_anytime': '12:00',
+            'evening_anytime': '22:00'
+        };
+        
+        const emojiMapping = {
+            'on_waking': '🌅 On waking',
+            'before_bed': '🌙 Before bed',
+            'with_breakfast': '🍳 With breakfast',
+            'with_lunch': '🍽️ With lunch',
+            'with_dinner': '🍝 With dinner',
+            'morning_anytime': '☀️ Morning - anytime',
+            'evening_anytime': '🌆 Evening - anytime'
+        };
+        
+        for (const option of select.options) {
+            const value = option.value;
+            if (value && timeMapping[value]) {
+                const formattedTime = formatTimeForDisplay(timeMapping[value]);
+                option.textContent = emojiMapping[value] + ' (' + formattedTime + ' reminder)';
+            }
+        }
+    }
+
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🚀 Page loaded - initializing timing inputs');
+        
+        // Format time displays based on user's locale preference
+        updateTimeDisplaysInDropdown();
         
         // Small delay to ensure all elements are in DOM
         setTimeout(function() {

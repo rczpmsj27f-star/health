@@ -80,7 +80,7 @@ foreach ($instructions as $i) {
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Edit Medication - <?= htmlspecialchars($med['name']) ?></title>
     <link rel="stylesheet" href="/assets/css/app.css?v=<?= time() ?>">
     <script src="/assets/js/menu.js?v=<?= time() ?>" defer></script>
@@ -146,6 +146,11 @@ foreach ($instructions as $i) {
         
         .stepper-btn:active {
             transform: scale(0.95);
+        }
+        
+        /* Prevent iOS zoom on input focus */
+        input, select, textarea {
+            font-size: 16px !important;
         }
     </style>
 </head>

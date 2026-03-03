@@ -138,7 +138,8 @@ class NotificationHelper {
                 ['id' => 'mark_taken', 'text' => 'Mark as Taken'],
                 ['id' => 'snooze', 'text' => 'Snooze']
             ];
-            $payload['url'] = 'https://ht.ianconroy.co.uk/modules/medications/dashboard.php';
+            // Use relative route in data, not absolute URL, to stay in app
+            $payload['data']['route'] = '/modules/medications/dashboard.php';
         }
         
         $ch = curl_init('https://onesignal.com/api/v1/notifications');

@@ -1696,38 +1696,6 @@ foreach ($allDashboardMeds as $med) {
         updateCountdowns(); // Initial call
     }
     
-    // Nudge functionality for linked users
-    async function sendNudge(medicationId, toUserId) {
-        const confirmed = await confirmAction(
-            'Send a gentle reminder to take this medication?',
-            'Send Reminder'
-        );
-        
-        if (!confirmed) {
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('medication_id', medicationId);
-        formData.append('to_user_id', toUserId);
-        
-        fetch('/modules/medications/nudge_handler.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessModal('Nudge sent! ✓', 2000);
-            } else {
-                showErrorModal('Error: ' + data.error);
-            }
-        })
-        .catch(error => {
-            showErrorModal('An error occurred. Please try again.');
-            console.error('Error:', error);
-        });
-    }
     </script>
     </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>

@@ -209,7 +209,7 @@ function loadNotifications() {
             }
             
             list.innerHTML = data.notifications.map(n => `
-                <div class="notification-item ${n.is_read ? '' : 'unread'}">
+                <div id="notification-${n.id}" class="notification-item ${n.is_read ? '' : 'unread'}">
                     <div onclick="event.preventDefault(); event.stopPropagation(); markAsRead(${n.id})" style="flex: 1; cursor: pointer;">
                         <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
                         <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
@@ -251,9 +251,18 @@ function markAsRead(notificationId) {
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_read', notification_id: notificationId})
-    }).then(() => {
-        loadNotifications();
-        updateBadge();
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            const item = document.getElementById('notification-' + notificationId);
+            if (item) {
+                item.classList.remove('unread');
+                const badge = item.querySelector('.new-badge');
+                if (badge) badge.remove();
+                const btn = item.querySelector('.mark-read-btn');
+                if (btn) btn.remove();
+            }
+            updateBadge();
+        }
     });
 }
 
@@ -263,9 +272,17 @@ function markAllRead() {
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'mark_all_read'})
-    }).then(() => {
-        loadNotifications();
-        updateBadge();
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+                const badge = item.querySelector('.new-badge');
+                if (badge) badge.remove();
+                const btn = item.querySelector('.mark-read-btn');
+                if (btn) btn.remove();
+            });
+            updateBadge();
+        }
     });
 }
 

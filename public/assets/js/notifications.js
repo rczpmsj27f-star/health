@@ -33,7 +33,7 @@ function loadNotifications() {
             }
             
             list.innerHTML = data.notifications.map(n => `
-                <div class="notification-item ${n.is_read ? '' : 'unread'}" 
+                <div id="notification-${n.id}" class="notification-item ${n.is_read ? '' : 'unread'}" 
                      style="display: flex; align-items: center; transition: all 0.2s;">
                     <div onclick="event.preventDefault(); event.stopPropagation(); markAsRead(${n.id})" style="flex: 1; cursor: pointer;">
                         <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
@@ -98,14 +98,18 @@ function markAsRead(notificationId) {
     .then(data => {
         if (data.success) {
             console.log('✅ Notification marked as read');
-            loadNotifications();
-            // Update badge with longer delay to ensure server update completes
-            setTimeout(() => {
-                if (typeof updateBadge === 'function') {
-                    updateBadge();
-                    console.log('🔄 Badge update requested');
-                }
-            }, 500);
+            const item = document.getElementById('notification-' + notificationId);
+            if (item) {
+                item.classList.remove('unread');
+                const badge = item.querySelector('.new-badge');
+                if (badge) badge.remove();
+                const btn = item.querySelector('.mark-read-btn');
+                if (btn) btn.remove();
+            }
+            if (typeof updateBadge === 'function') {
+                updateBadge();
+                console.log('🔄 Badge update requested');
+            }
         } else {
             console.error('Failed to mark as read:', data.error);
         }
@@ -130,13 +134,16 @@ function markAllRead() {
     })
     .then(data => {
         if (data.success) {
-            loadNotifications();
-            // Update badge with delay to ensure server update completes
-            setTimeout(() => {
-                if (typeof updateBadge === 'function') {
-                    updateBadge();
-                }
-            }, 200);
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+                const badge = item.querySelector('.new-badge');
+                if (badge) badge.remove();
+                const btn = item.querySelector('.mark-read-btn');
+                if (btn) btn.remove();
+            });
+            if (typeof updateBadge === 'function') {
+                updateBadge();
+            }
         } else {
             console.error('Failed to mark all as read:', data.error);
         }
@@ -187,22 +194,23 @@ function updateBadge() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const badge = document.querySelector('.notification-badge');
+            const badges = document.querySelectorAll('.notification-badge');
             const count = data.count || 0;
 
             console.log('📊 Badge count from API:', count);
 
-            if (badge) {
+            badges.forEach(badge => {
                 if (count > 0) {
                     badge.textContent = count > 99 ? '99+' : count;
                     badge.style.display = 'flex';
                 } else {
                     badge.style.display = 'none';
                 }
-                
                 // Force reflow to ensure update is visible
                 badge.offsetHeight;
-                
+            });
+
+            if (badges.length > 0) {
                 console.log('✅ Badge updated to:', count);
             } else {
                 console.warn('⚠️ Notification badge element not found in DOM');

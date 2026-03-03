@@ -4,6 +4,37 @@ This directory contains cron scripts for sending automated medication reminders.
 
 ## Scripts
 
+### `generate_daily_medication_logs.php` (NEW)
+
+Generates tomorrow's `medication_logs` entries from active medication schedules.
+
+**Run daily at midnight:**
+```bash
+0 0 * * * /usr/bin/php /path/to/health/app/cron/generate_daily_medication_logs.php >> /path/to/health/app/logs/cron.log 2>&1
+```
+
+**What it does:**
+- Queries all active medications with daily schedules (`frequency_type = 'per_day'`, `is_prn = 0`)
+- Creates `medication_logs` entries for tomorrow
+- Prevents duplicates by checking for existing entries
+- Logs created/skipped counts
+
+**Testing:**
+```bash
+# Run manually to test
+php /path/to/health/app/cron/generate_daily_medication_logs.php
+
+# Verify in database
+SELECT ml.*, m.name as medication_name
+FROM medication_logs ml
+INNER JOIN medications m ON ml.medication_id = m.id
+WHERE DATE(ml.scheduled_date_time) = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+AND ml.status = 'pending'
+ORDER BY ml.scheduled_date_time;
+```
+
+---
+
 ### `send_medication_reminders.php`
 
 Sends medication reminders to users based on their notification preferences and medication schedules.
@@ -23,15 +54,17 @@ Sends medication reminders to users based on their notification preferences and 
 
 ## Cron Setup
 
-### Option 1: Run every minute (recommended)
-
-Add this to your crontab (`crontab -e`):
+Add both cron jobs to your crontab (`crontab -e`):
 
 ```bash
+# Generate tomorrow's medication logs at midnight
+0 0 * * * /usr/bin/php /path/to/health/app/cron/generate_daily_medication_logs.php >> /path/to/health/app/logs/cron.log 2>&1
+
+# Send medication reminders every minute
 * * * * * /usr/bin/php /path/to/health/app/cron/send_medication_reminders.php >> /path/to/health/app/logs/cron.log 2>&1
 ```
 
-### Option 2: Run every 5 minutes (less frequent)
+### Option 2: Run reminders every 5 minutes (less frequent)
 
 ```bash
 */5 * * * * /usr/bin/php /path/to/health/app/cron/send_medication_reminders.php >> /path/to/health/app/logs/cron.log 2>&1

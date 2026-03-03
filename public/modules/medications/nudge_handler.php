@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once "../../../config.php";
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/LinkedUserHelper.php";
 require_once "../../../app/core/NotificationHelper.php";

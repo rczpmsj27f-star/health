@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once "../../../config.php";
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/LinkedUserHelper.php";
 require_once "../../../app/core/NotificationHelper.php";
@@ -43,11 +44,26 @@ try {
                 if ($linkRow && $accepterRow) {
                     $notificationHelper->create(
                         $linkRow['invited_by'],
-                        'link_request',
+                        'link_accepted',
                         '🔗 Link Accepted',
                         $accepterRow['first_name'] . ' has accepted your link invitation',
                         $_SESSION['user_id']
                     );
+
+                    // Notify the accepter that they are now linked
+                    $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
+                    $stmt->execute([$linkRow['invited_by']]);
+                    $inviterRow = $stmt->fetch();
+
+                    if ($inviterRow) {
+                        $notificationHelper->create(
+                            $_SESSION['user_id'],
+                            'link_request',
+                            '🔗 Link Request Accepted',
+                            'You are now linked with ' . $inviterRow['first_name'],
+                            $linkRow['invited_by']
+                        );
+                    }
                 }
 
                 header("Location: /modules/settings/privacy_settings.php");

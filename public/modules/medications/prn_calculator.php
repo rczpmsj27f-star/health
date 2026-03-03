@@ -23,8 +23,7 @@ if (!$medicationId) {
 $stmt = $pdo->prepare("
     SELECT m.*, md.dose_amount, md.dose_unit, 
            ms.max_doses_per_day, ms.min_hours_between_doses, 
-           ms.initial_dose, ms.subsequent_dose, ms.doses_per_administration,
-           m.notes, m.instructions
+           ms.initial_dose, ms.subsequent_dose, ms.doses_per_administration
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id

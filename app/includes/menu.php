@@ -330,6 +330,16 @@ function updateBadge() {
             } else if (existingBadge) {
                 existingBadge.remove();
             }
+
+            const footerBadges = document.querySelectorAll('.footer-badge');
+            footerBadges.forEach(badge => {
+                if (data.count > 0) {
+                    badge.textContent = data.count > 9 ? '9+' : data.count;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
         });
 }
 

@@ -210,6 +210,16 @@ function updateBadge() {
                 badge.offsetHeight;
             });
 
+            const footerBadges = document.querySelectorAll('.footer-badge');
+            footerBadges.forEach(badge => {
+                if (count > 0) {
+                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+
             if (badges.length > 0) {
                 console.log('✅ Badge updated to:', count);
             } else {

@@ -67,7 +67,7 @@ if ($currentYear == 2026 && $currentMonth < 2) {
 
 // Get all active medications (exclude PRN medications from compliance)
 $stmt = $pdo->prepare("
-    SELECT m.id, m.name, m.icon, m.color, m.secondary_color, m.end_date, m.created_at, md.dose_amount, md.dose_unit
+    SELECT m.id, m.name, m.icon, m.color, m.secondary_color, m.end_date, m.start_date, md.dose_amount, md.dose_unit
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -178,7 +178,7 @@ $prnData = [];
 if ($medType === 'prn') {
     // Get all active PRN medications
     $stmt = $pdo->prepare("
-        SELECT m.id, m.name, m.icon, m.color, m.secondary_color, m.end_date, m.created_at, md.dose_amount, md.dose_unit
+        SELECT m.id, m.name, m.icon, m.color, m.secondary_color, m.end_date, m.start_date, md.dose_amount, md.dose_unit
         FROM medications m
         LEFT JOIN medication_doses md ON m.id = md.medication_id
         INNER JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -964,7 +964,7 @@ if ($medType === 'prn') {
                     $skippedLogs = $data['skipped_logs'];
                     
                     // Check if medication was active today
-                    $medStartDate = $med['created_at'];
+                    $medStartDate = $med['start_date'];
                     $medEndDate = $med['end_date'];
                     $isMedActiveToday = true;
                     
@@ -1102,7 +1102,7 @@ if ($medType === 'prn') {
                                     $isToday = $day['is_today'];
                                     
                                     // Check if medication was active on this date
-                                    $medStartDate = $med['created_at'];
+                                    $medStartDate = $med['start_date'];
                                     $medEndDate = $med['end_date'];
                                     $isMedActive = true;
                                     
@@ -1244,7 +1244,7 @@ if ($medType === 'prn') {
                             $activeDaysInWeek = 0;
                             for ($d = 0; $d < 7; $d++) {
                                 $dayDate = date('Y-m-d', strtotime("+$d days", strtotime($week['start'])));
-                                $medStartDate = $med['created_at'];
+                                $medStartDate = $med['start_date'];
                                 $medEndDate = $med['end_date'];
                                 $isMedActive = true;
                                 
@@ -1452,7 +1452,7 @@ if ($medType === 'prn') {
                                 $isFuture = strtotime($dateStr) > strtotime(date('Y-m-d'));
                                 
                                 // Check if medication was active on this date
-                                $medStartDate = $med['created_at'];
+                                $medStartDate = $med['start_date'];
                                 $medEndDate = $med['end_date'];
                                 $isMedActive = true;
                                 
@@ -1551,7 +1551,7 @@ if ($medType === 'prn') {
                         $expectedDosesPerDay = max(1, $expectedDosesPerDay);
                         
                         // Count only active days in the year (from med start to today or year end, excluding future and before med creation)
-                        $medStartDate = $med['created_at'];
+                        $medStartDate = $med['start_date'];
                         $medEndDate = $med['end_date'];
                         
                         // Determine the actual start date for counting

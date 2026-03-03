@@ -13,7 +13,15 @@
         </div>
     </div>
     
-    <div class="med-actions" style="display: flex; gap: 8px;">
+    <div class="med-actions" style="display: flex; gap: 8px; align-items: center;">
+        <?php if (isset($medInfoForJs) && !empty($medInfoForJs[$med['id']])): ?>
+        <button type="button"
+                onclick="showMedInfo(<?= $med['id'] ?>)"
+                style="background: none; border: none; cursor: pointer; font-size: 20px; padding: 2px 4px; line-height: 1; flex-shrink: 0;"
+                title="View medication info">
+            <?= $medInfoForJs[$med['id']]['is_warning'] ? '⚠️' : 'ℹ️' ?>
+        </button>
+        <?php endif; ?>
         <?php if ($med['log_status'] === 'taken'): ?>
             <?php 
             // Format the taken time using TimeFormatter if available, otherwise use 12-hour format as fallback

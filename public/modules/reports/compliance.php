@@ -154,7 +154,8 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
             <?php if (!$viewingLinkedUser || $canExportLinkedUser): ?>
             <a href="/modules/reports/export.php?format=csv<?= $viewingLinkedUser ? '&export_user=linked' : '' ?>" 
                class="btn btn-secondary" 
-               style="text-decoration: none; padding: 10px 16px;">
+               style="text-decoration: none; padding: 10px 16px;"
+               target="_blank">
                 💾 Export CSV
             </a>
             <?php endif; ?>
@@ -260,7 +261,8 @@ $targetUserName = $targetUser ? $targetUser['first_name'] : 'User';
                 <?php if (!$viewingLinkedUser || $canExportLinkedUser): ?>
                 <a href="/modules/reports/export.php?format=csv<?= $viewingLinkedUser ? '&export_user=linked' : '' ?>" 
                    class="btn btn-secondary" 
-                   style="text-decoration: none; text-align: center; display: block; padding: 14px;">
+                   style="text-decoration: none; text-align: center; display: block; padding: 14px;"
+                   target="_blank">
                     💾 Export CSV
                 </a>
                 <?php endif; ?>

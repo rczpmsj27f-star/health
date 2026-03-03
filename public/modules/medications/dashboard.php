@@ -212,9 +212,9 @@ ksort($timedMedications);
 
 // Get PRN medications
 $stmt = $pdo->prepare("
-    SELECT m.id, m.name, m.current_stock, m.icon, m.color, m.secondary_color, 
+    SELECT m.id, m.name, m.current_stock, m.icon, m.color, m.secondary_color, m.notes, m.instructions,
            md.dose_amount, md.dose_unit, 
-           ms.doses_per_administration, ms.max_doses_per_day, ms.min_hours_between_doses
+           ms.doses_per_administration, ms.max_doses_per_day, ms.min_hours_between_doses, ms.custom_instructions
     FROM medications m
     LEFT JOIN medication_doses md ON m.id = md.medication_id
     LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
@@ -278,6 +278,57 @@ foreach ($prnMedications as $med) {
         'next_available_time' => $nextAvailableTime,
         'time_remaining_seconds' => max(0, $timeRemaining)
     ];
+}
+
+// Build med info data array for JavaScript (info/warning icons on cards)
+$warningKeywords = ['warning', 'allergy', 'avoid', 'danger', 'critical', 'important', 'do not'];
+$medInfoForJs = [];
+// Combine today's scheduled meds and PRN meds (dedup by id since a med could theoretically appear in both)
+$allDashboardMeds = array_merge($todaysMeds, $prnMedications);
+$dashboardMedIds = array_unique(array_column($allDashboardMeds, 'id'));
+
+// Fetch medication_instructions only for medications shown on the dashboard
+$medInstructions = [];
+if (!empty($dashboardMedIds)) {
+    $placeholders = implode(',', array_fill(0, count($dashboardMedIds), '?'));
+    $stmt = $pdo->prepare("
+        SELECT medication_id, instruction_text
+        FROM medication_instructions
+        WHERE medication_id IN ($placeholders)
+    ");
+    $stmt->execute($dashboardMedIds);
+    while ($row = $stmt->fetch()) {
+        $medInstructions[$row['medication_id']][] = $row['instruction_text'];
+    }
+}
+
+foreach ($allDashboardMeds as $med) {
+    $medId = $med['id'];
+    if (isset($medInfoForJs[$medId])) continue; // skip duplicates
+    $infoItems = [];
+    if (!empty($med['instructions'])) {
+        $infoItems[] = ['label' => 'Instructions', 'text' => $med['instructions']];
+    }
+    if (!empty($med['notes'])) {
+        $infoItems[] = ['label' => 'Notes', 'text' => $med['notes']];
+    }
+    if (!empty($med['custom_instructions'])) {
+        $infoItems[] = ['label' => 'Schedule Notes', 'text' => $med['custom_instructions']];
+    }
+    foreach ($medInstructions[$medId] ?? [] as $instrText) {
+        $infoItems[] = ['label' => 'Instruction', 'text' => $instrText];
+    }
+    if (!empty($infoItems)) {
+        $allText = strtolower(implode(' ', array_column($infoItems, 'text')));
+        $isWarning = false;
+        foreach ($warningKeywords as $kw) {
+            if (strpos($allText, $kw) !== false) {
+                $isWarning = true;
+                break;
+            }
+        }
+        $medInfoForJs[$medId] = ['items' => $infoItems, 'is_warning' => $isWarning, 'name' => $med['name']];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -979,6 +1030,14 @@ foreach ($prnMedications as $med) {
                     </div>
                     
                     <div class="med-actions">
+                        <?php if (isset($medInfoForJs) && !empty($medInfoForJs[$med['id']])): ?>
+                        <button type="button"
+                                onclick="showMedInfo(<?= $med['id'] ?>)"
+                                style="background: none; border: none; cursor: pointer; font-size: 20px; padding: 2px 4px; line-height: 1; flex-shrink: 0;"
+                                title="View medication info">
+                            <?= $medInfoForJs[$med['id']]['is_warning'] ? '⚠️' : 'ℹ️' ?>
+                        </button>
+                        <?php endif; ?>
                         <?php if ($canTake): ?>
                             <a href="/modules/medications/prn_calculator.php?medication_id=<?= $med['id'] ?>" class="btn-taken" style="text-decoration: none; display: inline-block;">
                                 ✓ Take Dose
@@ -1088,6 +1147,20 @@ foreach ($prnMedications as $med) {
         </div>
     </div>
     
+    <!-- Medication Info Modal -->
+    <div id="medInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="medInfoModalTitle">ℹ️ Medication Info</h3>
+            </div>
+            <div class="modal-body" id="medInfoModalBody" style="max-height: 60vh; overflow-y: auto;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeMedInfoModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
     <style>
     /* Generic modal styles */
     .modal {
@@ -1119,6 +1192,39 @@ foreach ($prnMedications as $med) {
     </style>
     
     <script>
+    // Medication info data for info/warning icons
+    var medInfoData = <?= json_encode($medInfoForJs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+
+    function showMedInfo(medId) {
+        var data = medInfoData[medId];
+        if (!data) return;
+        var icon = data.is_warning ? '⚠️' : 'ℹ️';
+        document.getElementById('medInfoModalTitle').textContent = icon + ' ' + data.name;
+        var body = '';
+        data.items.forEach(function(item) {
+            body += '<div style="margin-bottom: 12px;">';
+            body += '<strong style="display: block; font-size: 12px; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: 4px;">' + escHtml(item.label) + '</strong>';
+            body += '<div style="font-size: 15px; color: var(--color-text);">' + escHtml(item.text).replace(/\n/g, '<br>') + '</div>';
+            body += '</div>';
+        });
+        document.getElementById('medInfoModalBody').innerHTML = body;
+        var modal = document.getElementById('medInfoModal');
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    }
+
+    function escHtml(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+    }
+
+    function closeMedInfoModal() {
+        var modal = document.getElementById('medInfoModal');
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
+
     // Late logging state
     let pendingLateLog = null;
     // Early logging state

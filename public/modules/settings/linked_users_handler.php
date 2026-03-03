@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/LinkedUserHelper.php";
+require_once "../../../app/core/NotificationHelper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -9,6 +10,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $linkedHelper = new LinkedUserHelper($pdo);
+$notificationHelper = new NotificationHelper($pdo);
 $action = $_POST['action'] ?? '';
 
 try {
@@ -28,6 +30,26 @@ try {
             
             if ($result['success']) {
                 $_SESSION['success_msg'] = "Invite accepted from " . htmlspecialchars($result['inviter_name']) . "! Now set your privacy permissions.";
+
+                // Notify the inviter that their link was accepted
+                $stmt = $pdo->prepare("SELECT invited_by FROM user_links WHERE id = ?");
+                $stmt->execute([$result['link_id']]);
+                $linkRow = $stmt->fetch();
+
+                $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
+                $stmt->execute([$_SESSION['user_id']]);
+                $accepterRow = $stmt->fetch();
+
+                if ($linkRow && $accepterRow) {
+                    $notificationHelper->create(
+                        $linkRow['invited_by'],
+                        'link_request',
+                        '🔗 Link Accepted',
+                        $accepterRow['first_name'] . ' has accepted your link invitation',
+                        $_SESSION['user_id']
+                    );
+                }
+
                 header("Location: /modules/settings/privacy_settings.php");
                 exit;
             } else {

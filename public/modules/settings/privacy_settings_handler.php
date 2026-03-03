@@ -2,6 +2,7 @@
 session_start();
 require_once "../../../app/config/database.php";
 require_once "../../../app/core/LinkedUserHelper.php";
+require_once "../../../app/core/NotificationHelper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -9,6 +10,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $linkedHelper = new LinkedUserHelper($pdo);
+$notificationHelper = new NotificationHelper($pdo);
 
 // Validate and sanitize input
 $linkId = filter_input(INPUT_POST, 'link_id', FILTER_VALIDATE_INT);
@@ -47,6 +49,31 @@ try {
     
     // Try to activate the link if both users have set permissions
     if ($linkedHelper->activateLink($linkId)) {
+        // Notify both users that the link is now active
+        $stmt = $pdo->prepare("SELECT id, first_name FROM users WHERE id IN (?, ?)");
+        $stmt->execute([$_SESSION['user_id'], $theirUserId]);
+        $userNames = [];
+        while ($row = $stmt->fetch()) {
+            $userNames[$row['id']] = $row['first_name'];
+        }
+        $myName = $userNames[$_SESSION['user_id']] ?? 'your partner';
+        $theirName = $userNames[$theirUserId] ?? 'your partner';
+
+        $notificationHelper->create(
+            $_SESSION['user_id'],
+            'link_accepted',
+            '🔗 You\'re now linked!',
+            'Your profile is now linked with ' . $theirName,
+            $theirUserId
+        );
+        $notificationHelper->create(
+            $theirUserId,
+            'link_accepted',
+            '🔗 You\'re now linked!',
+            'Your profile is now linked with ' . $myName,
+            $_SESSION['user_id']
+        );
+
         $_SESSION['success_msg'] = "Privacy settings saved and link activated!";
     } else {
         // Get the linked user's name from database instead of POST for security

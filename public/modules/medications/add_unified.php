@@ -88,11 +88,23 @@ $isAdmin = Auth::isAdmin();
             font-size: 16px !important;
         }
 
-        /* Ensure time inputs don't overflow screen */
-        .form-group input[type="time"] {
-            max-width: 100%;
-            width: 100%;
-            box-sizing: border-box;
+        /* Prevent input overflow on mobile */
+        .form-group input[type="time"],
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group textarea {
+            max-width: 100% !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            max-width: 100% !important;
+            width: 100% !important;
+            -webkit-appearance: none !important;
         }
     </style>
 </head>

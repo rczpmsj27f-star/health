@@ -170,7 +170,7 @@ try {
                         INSERT INTO medication_dose_times (medication_id, dose_number, dose_time)
                         VALUES (?, 1, ?)
                     ");
-                    $stmt->execute([$medId, 1, $_POST['dose_time_1']]);
+                    $stmt->execute([$medId, $_POST['dose_time_1']]);
                 }
 
                 // Create log ONLY if dose time is in the future

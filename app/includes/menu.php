@@ -210,7 +210,7 @@ function loadNotifications() {
             
             list.innerHTML = data.notifications.map(n => `
                 <div class="notification-item ${n.is_read ? '' : 'unread'}">
-                    <div onclick="markAsRead(${n.id})" style="flex: 1; cursor: pointer;">
+                    <div onclick="event.preventDefault(); event.stopPropagation(); markAsRead(${n.id})" style="flex: 1; cursor: pointer;">
                         <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(n.title)}</div>
                         <div style="font-size: 13px; color: var(--color-text-secondary);">${escapeHtml(n.message)}</div>
                         <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">

@@ -2,6 +2,21 @@
 session_start();
 require_once "../../../app/config/database.php";
 
+// Map special timing to default reminder times
+function getDefaultReminderTime($specialTiming) {
+    $timingMap = [
+        'on_waking'       => '10:00',
+        'before_bed'      => '22:00',
+        'with_breakfast'  => '10:00',
+        'with_lunch'      => '14:00',
+        'with_dinner'     => '20:00',
+        'morning_anytime' => '12:00',
+        'evening_anytime' => '22:00'
+    ];
+
+    return $timingMap[$specialTiming] ?? '12:00'; // Default to noon
+}
+
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
     exit;
@@ -121,29 +136,53 @@ try {
                 }
             }
         } elseif ($timesPerDay == 1) {
-            // Once daily - create a pending log for today only if there's a future time
-            // If no specific time is set, default to noon
-            $doseTimeStr = !empty($_POST['dose_time_1']) ? $_POST['dose_time_1'] : '12:00';
-            
-            // Save dose time if provided
-            if (!empty($_POST['dose_time_1'])) {
+            // Once daily - handle timing type (specific_time or flexible)
+            $timingType = $_POST['timing_type'] ?? 'specific_time';
+
+            if ($timingType === 'flexible' && !empty($_POST['special_timing'])) {
+                // User chose flexible timing - use default reminder time
+                $specialTimingVal = $_POST['special_timing'];
+                $doseTimeStr = getDefaultReminderTime($specialTimingVal);
+
+                // Store the dose time
                 $stmt = $pdo->prepare("
                     INSERT INTO medication_dose_times (medication_id, dose_number, dose_time)
-                    VALUES (?, ?, ?)
+                    VALUES (?, 1, ?)
                 ");
-                $stmt->execute([$medId, 1, $_POST['dose_time_1']]);
+                $stmt->execute([$medId, $doseTimeStr]);
+
+                // Create log for today if time is in future
+                $doseTime = DateTime::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . $doseTimeStr . ':00');
+                if ($doseTime > $currentTime) {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
+                        VALUES (?, ?, ?, 'pending')
+                    ");
+                    $stmt->execute([$medId, $userId, $doseTime->format('Y-m-d H:i:s')]);
+                }
+            } else {
+                // User chose specific time (or no timing_type sent)
+                $doseTimeStr = !empty($_POST['dose_time_1']) ? $_POST['dose_time_1'] : '12:00';
+
+                // Save dose time if provided
+                if (!empty($_POST['dose_time_1'])) {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO medication_dose_times (medication_id, dose_number, dose_time)
+                        VALUES (?, 1, ?)
+                    ");
+                    $stmt->execute([$medId, 1, $_POST['dose_time_1']]);
+                }
+
+                // Create log ONLY if dose time is in the future
+                $doseTime = DateTime::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . $doseTimeStr . ':00');
+                if ($doseTime > $currentTime) {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
+                        VALUES (?, ?, ?, 'pending')
+                    ");
+                    $stmt->execute([$medId, $userId, $doseTime->format('Y-m-d H:i:s')]);
+                }
             }
-            
-            // Create log ONLY if dose time is in the future
-            $doseTime = DateTime::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . $doseTimeStr . ':00');
-            if ($doseTime > $currentTime) {
-                $stmt = $pdo->prepare("
-                    INSERT INTO medication_logs (medication_id, user_id, scheduled_date_time, status)
-                    VALUES (?, ?, ?, 'pending')
-                ");
-                $stmt->execute([$medId, $userId, $doseTime->format('Y-m-d H:i:s')]);
-            }
-        }
     }
 
     // 4. Insert instructions

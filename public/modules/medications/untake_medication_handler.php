@@ -47,7 +47,7 @@ if ($isForLinkedUser) {
         exit;
     }
 
-    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $forUserId);
     if (!$myPermissions || !$myPermissions['can_mark_taken']) {
         $errorMsg = "You don't have permission to manage medications for this user";
         if ($isAjax) {

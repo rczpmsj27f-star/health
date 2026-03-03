@@ -305,7 +305,10 @@ function updateBadge() {
                 if (existingBadge) {
                     existingBadge.textContent = data.count > 9 ? '9+' : data.count;
                 } else {
-                    bell.innerHTML += `<span class="notification-badge">${data.count > 9 ? '9+' : data.count}</span>`;
+                    const badge = document.createElement('span');
+                    badge.className = 'notification-badge';
+                    badge.textContent = data.count > 9 ? '9+' : data.count;
+                    bell.appendChild(badge);
                 }
             } else if (existingBadge) {
                 existingBadge.remove();

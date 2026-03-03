@@ -327,8 +327,33 @@ foreach ($instructions as $i) {
                             </div>
                         </div>
                         
-                        <!-- Special Timing for Once Daily Meds (Issue #104) -->
-                        <div id="special-timing-section" style="display: none; margin-top: 16px;">
+                        <!-- Timing Type Selection (only for once per day) -->
+                        <div id="timing-type-section" style="display: none; margin-top: 16px;">
+                            <div class="form-group">
+                                <label style="display: block; margin-bottom: 12px; font-weight: 600;">How do you take this medication?</label>
+                                
+                                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; cursor: pointer;">
+                                    <input type="radio" name="timing_type" value="specific_time" <?= empty($schedule['special_timing']) ? 'checked' : '' ?> onchange="updateTimingTypeUI()">
+                                    <span style="margin-left: 8px; font-weight: 500;">⏰ At a specific time each day</span>
+                                </label>
+                                
+                                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                                    <input type="radio" name="timing_type" value="flexible" <?= !empty($schedule['special_timing']) ? 'checked' : '' ?> onchange="updateTimingTypeUI()">
+                                    <span style="margin-left: 8px; font-weight: 500;">📅 Sometime during the day (flexible timing)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Specific Time Input (shown when "specific time" is selected) -->
+                        <div id="specific-time-input" style="display: none; margin-top: 16px;">
+                            <div class="form-group">
+                                <label>What time? *</label>
+                                <input type="time" name="dose_time_1" id="dose_time_1" value="<?= htmlspecialchars($doseTimesArray[1] ?? '') ?>">
+                            </div>
+                        </div>
+
+                        <!-- Flexible Timing Options (shown when "flexible" is selected) -->
+                        <div id="flexible-timing-section" style="display: none; margin-top: 16px;">
                             <div class="form-group">
                                 <label>When to Take</label>
                                 <?= renderDropdown($pdo, 'special_timing', 'special_timing', $schedule['special_timing'] ?? '', ['id' => 'special_timing', 'class' => 'form-control']) ?>
@@ -654,34 +679,52 @@ foreach ($instructions as $i) {
     function updateTimeInputs() {
         let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
         let container = document.getElementById("time_inputs_container");
-        let specialTimingSection = document.getElementById("special-timing-section");
+        let timingTypeSection = document.getElementById("timing-type-section");
         
-        // Show special timing section only when times_per_day = 1
         if (timesPerDay === 1) {
-            specialTimingSection.style.display = 'block';
+            if (timingTypeSection) timingTypeSection.style.display = 'block';
+            if (container) container.innerHTML = '';
+            updateTimingTypeUI();
         } else {
-            specialTimingSection.style.display = 'none';
-        }
-        
-        // Get existing dose times from PHP
-        let existingTimes = <?= json_encode($doseTimesArray, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-        
-        if (timesPerDay >= 1) {
-            let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
-            for (let i = 1; i <= timesPerDay; i++) {
-                html += `<label>Time ${i}:</label>`;
-                let timeValue = existingTimes[i] || '';
-                html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}" value="${timeValue}">`;
-            }
+            if (timingTypeSection) timingTypeSection.style.display = 'none';
             
-            // Add evenly split button only if more than 1 dose per day
-            if (timesPerDay > 1) {
+            const specificTimeInput = document.getElementById("specific-time-input");
+            const flexibleTimingSection = document.getElementById("flexible-timing-section");
+            if (specificTimeInput) specificTimeInput.style.display = 'none';
+            if (flexibleTimingSection) flexibleTimingSection.style.display = 'none';
+            
+            // Get existing dose times from PHP
+            let existingTimes = <?= json_encode($doseTimesArray, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+            
+            if (container) {
+                let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
+                for (let i = 1; i <= timesPerDay; i++) {
+                    html += `<div class="form-group"><label>Time ${i}:</label>`;
+                    let timeValue = existingTimes[i] || '';
+                    html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}" value="${timeValue}"></div>`;
+                }
                 html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
+                container.innerHTML = html;
             }
-            
-            container.innerHTML = html;
-        } else {
-            container.innerHTML = '';
+        }
+    }
+    
+    // Update UI based on timing type selection
+    function updateTimingTypeUI() {
+        let timingTypeRadio = document.querySelector('input[name="timing_type"]:checked');
+        let timingType = timingTypeRadio ? timingTypeRadio.value : 'specific_time';
+        
+        let specificTimeInput = document.getElementById("specific-time-input");
+        let flexibleTimingSection = document.getElementById("flexible-timing-section");
+        
+        if (!specificTimeInput || !flexibleTimingSection) return;
+        
+        if (timingType === 'specific_time') {
+            specificTimeInput.style.display = 'block';
+            flexibleTimingSection.style.display = 'none';
+        } else if (timingType === 'flexible') {
+            specificTimeInput.style.display = 'none';
+            flexibleTimingSection.style.display = 'block';
         }
     }
     

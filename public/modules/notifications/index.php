@@ -67,14 +67,14 @@ try {
                 </div>
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
-                    <div class="notification-item <?= $notification['is_read'] ? '' : 'unread' ?>" 
+                    <div id="notification-<?= intval($notification['id']) ?>" class="notification-item <?= $notification['is_read'] ? '' : 'unread' ?>" 
                          style="padding: 16px; border-bottom: 1px solid #e5e7eb; transition: all 0.2s;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                             <div style="font-weight: 600; font-size: 16px; color: #1f2937;">
                                 <?= htmlspecialchars($notification['title']) ?>
                             </div>
                             <?php if (!$notification['is_read']): ?>
-                                <span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: 12px;">NEW</span>
+                                <span class="new-badge" style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: 12px;">NEW</span>
                             <?php endif; ?>
                         </div>
                         <div style="font-size: 14px; color: #4b5563; margin-bottom: 8px; line-height: 1.5;">
@@ -106,6 +106,7 @@ try {
                             <div style="display: flex; gap: 8px;">
                                 <?php if (!$notification['is_read']): ?>
                                 <button onclick="markAsRead(<?= intval($notification['id']) ?>)"
+                                        class="mark-read-btn"
                                         style="background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
                                     Mark Read
                                 </button>
@@ -123,7 +124,7 @@ try {
         
         <?php if ($unreadCount > 0): ?>
         <!-- Fixed position "Mark All as Read" button above footer -->
-        <div style="position: fixed; bottom: calc(var(--footer-height, 70px) + 10px); left: 50%; transform: translateX(-50%); width: min(900px, calc(100vw - 32px)); z-index: 999;">
+        <div id="mark-all-bar" style="position: fixed; bottom: calc(var(--footer-height, 70px) + 10px); left: 50%; transform: translateX(-50%); width: min(900px, calc(100vw - 32px)); z-index: 999;">
             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); text-align: center;">
                 <button onclick="markAllRead()" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;">
                     Mark All as Read
@@ -180,8 +181,15 @@ try {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Reload page to update UI
-                window.location.reload();
+                const item = document.getElementById('notification-' + notificationId);
+                if (item) {
+                    item.classList.remove('unread');
+                    const badge = item.querySelector('.new-badge');
+                    if (badge) badge.remove();
+                    const btn = item.querySelector('.mark-read-btn');
+                    if (btn) btn.remove();
+                }
+                updateMarkAllBar();
             }
         })
         .catch(error => {
@@ -198,7 +206,13 @@ try {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.reload();
+                const item = document.getElementById('notification-' + notificationId);
+                if (item) item.remove();
+                const list = document.getElementById('notificationList');
+                if (list && list.querySelectorAll('.notification-item').length === 0) {
+                    list.innerHTML = '<div style="padding: 60px 20px; text-align: center; color: var(--color-text-secondary);"><div style="font-size: 64px; margin-bottom: 16px;">🔔</div><div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No notifications yet</div><div style="font-size: 14px;">You\'ll see your medication reminders and alerts here</div></div>';
+                }
+                updateMarkAllBar();
             } else {
                 alert('Failed to delete notification. Please try again.');
             }
@@ -218,13 +232,26 @@ try {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Reload page to update UI
-                window.location.reload();
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                    const badge = item.querySelector('.new-badge');
+                    if (badge) badge.remove();
+                    const btn = item.querySelector('.mark-read-btn');
+                    if (btn) btn.remove();
+                });
+                updateMarkAllBar();
             }
         })
         .catch(error => {
             console.error('Error marking all notifications as read:', error);
         });
+    }
+
+    function updateMarkAllBar() {
+        const bar = document.getElementById('mark-all-bar');
+        if (bar && !document.querySelector('.notification-item.unread')) {
+            bar.style.display = 'none';
+        }
     }
     </script>
 </body>

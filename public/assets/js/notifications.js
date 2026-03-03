@@ -97,9 +97,12 @@ function markAsRead(notificationId) {
     .then(data => {
         if (data.success) {
             loadNotifications();
-            if (typeof updateBadge === 'function') {
-                updateBadge();
-            }
+            // Force badge update with a small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (typeof updateBadge === 'function') {
+                    updateBadge();
+                }
+            }, 100);
         } else {
             console.error('Failed to mark as read:', data.error);
         }
@@ -125,9 +128,12 @@ function markAllRead() {
     .then(data => {
         if (data.success) {
             loadNotifications();
-            if (typeof updateBadge === 'function') {
-                updateBadge();
-            }
+            // Force badge update with a small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (typeof updateBadge === 'function') {
+                    updateBadge();
+                }
+            }, 100);
         } else {
             console.error('Failed to mark all as read:', data.error);
         }
@@ -187,14 +193,26 @@ function updateBadge() {
                 } else {
                     badge.style.display = 'none';
                 }
+                
+                // Force reflow to ensure update is visible
+                badge.offsetHeight;
+                
+                console.log('✅ Badge updated to:', count);
+            } else {
+                console.warn('⚠️ Notification badge element not found in DOM');
             }
-
-            console.log('Badge updated:', count);
         }
     })
     .catch(error => {
         console.error('Error updating badge:', error);
     });
+}
+
+// Update badge on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateBadge);
+} else {
+    updateBadge();
 }
 
 // Enhanced nudge with better UX

@@ -24,14 +24,6 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
     exit;
 }
 
-// Validate start_date is not in the future
-$today = date('Y-m-d');
-if ($startDate > $today) {
-    $_SESSION['error'] = "Start date cannot be in the future.";
-    header("Location: /modules/medications/add_unified.php");
-    exit;
-}
-
 try {
     // Start transaction
     $pdo->beginTransaction();

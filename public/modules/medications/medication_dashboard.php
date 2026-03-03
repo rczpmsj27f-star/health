@@ -16,6 +16,46 @@ if (empty($_SESSION['user_id'])) {
 
 // Check if user is admin
 $isAdmin = Auth::isAdmin();
+
+// Get overdue medication count for the logged-in user
+$overdueCheckDow  = date('D');
+$overdueCheckDate = date('Y-m-d');
+$stmtOverdue = $pdo->prepare("
+    SELECT COUNT(DISTINCT CONCAT(m.id, '_', mdt.dose_time)) as cnt
+    FROM medications m
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+    LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
+    WHERE m.user_id = :user_id
+    AND (m.archived = 0 OR m.archived IS NULL)
+    AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
+    AND (
+        ms.frequency_type = 'per_day'
+        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE :day_of_week)
+    )
+    AND mdt.dose_time IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1 FROM medication_logs ml2
+        WHERE ml2.medication_id = m.id
+        AND DATE(ml2.scheduled_date_time) = :today_date
+        AND TIME(ml2.scheduled_date_time) = mdt.dose_time
+        AND ml2.status IN ('taken', 'skipped')
+    )
+    AND (
+        (ms.special_timing = 'on_waking'  AND CONCAT(:today_date2, ' 09:00:00') < NOW())
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date3, ' 22:00:00') < NOW())
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking','before_bed'))
+            AND CONCAT(:today_date4, ' ', mdt.dose_time) < NOW())
+    )
+");
+$stmtOverdue->execute([
+    'user_id'     => $_SESSION['user_id'],
+    'day_of_week' => "%$overdueCheckDow%",
+    'today_date'  => $overdueCheckDate,
+    'today_date2' => $overdueCheckDate,
+    'today_date3' => $overdueCheckDate,
+    'today_date4' => $overdueCheckDate,
+]);
+$overdueCount = (int)$stmtOverdue->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html>
@@ -81,6 +121,7 @@ $isAdmin = Auth::isAdmin();
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .tile:hover {
@@ -105,6 +146,21 @@ $isAdmin = Auth::isAdmin();
             opacity: 0.9;
             color: #ffffff;
         }
+
+        .tile-overdue-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border-radius: 12px;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 22px;
+            text-align: center;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -118,9 +174,17 @@ $isAdmin = Auth::isAdmin();
         
         <div class="dashboard-grid">
             <a class="tile" href="/modules/medications/dashboard.php">
+                <?php if ($overdueCount > 0): ?>
+                    <span class="tile-overdue-badge"><?= $overdueCount ?></span>
+                <?php endif; ?>
                 <div class="tile-icon">📅</div>
                 <div class="tile-title">View Schedule</div>
-                <div class="tile-desc">See today's medications</div>
+                <div class="tile-desc">
+                    See today's medications
+                    <?php if ($overdueCount > 0): ?>
+                        <span style="display:block; margin-top:4px; font-weight:600; color:#ffebee;">• <?= $overdueCount ?> overdue</span>
+                    <?php endif; ?>
+                </div>
             </a>
             
             <a class="tile" href="/modules/medications/list.php">

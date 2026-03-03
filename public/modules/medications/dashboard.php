@@ -1312,8 +1312,8 @@ foreach ($allDashboardMeds as $med) {
     </style>
     
     <script>
-    // Linked user ID for forwarding actions (empty string if viewing own medications)
-    const forUserId = '<?= $viewingLinkedUser ? (int)$targetUserId : '' ?>';
+    // Linked user ID for forwarding actions (null if viewing own medications)
+    const forUserId = <?= $viewingLinkedUser ? (int)$targetUserId : 'null' ?>;
 
     // Medication info data for info/warning icons
     var medInfoData = <?= json_encode($medInfoForJs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;

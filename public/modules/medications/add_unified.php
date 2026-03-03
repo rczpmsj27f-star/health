@@ -3,6 +3,7 @@ require_once "../../../app/includes/cache-buster.php";
 require_once "../../../app/core/auth.php";
 require_once "../../../app/config/database.php";
 require_once "../../../app/helpers/dropdown_helper.php";
+require_once "../../../app/core/LinkedUserHelper.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: /login.php");
@@ -10,6 +11,27 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $isAdmin = Auth::isAdmin();
+
+// Check if adding for a linked user
+$linkedHelper = new LinkedUserHelper($pdo);
+$linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+$forUserId = isset($_GET['for_user_id']) ? (int)$_GET['for_user_id'] : null;
+$isForLinkedUser = false;
+
+if ($forUserId && $linkedUser && $linkedUser['linked_user_id'] == $forUserId) {
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if ($myPermissions && $myPermissions['can_add_medications']) {
+        $isForLinkedUser = true;
+    } else {
+        $_SESSION['error'] = "You don't have permission to add medications for this user";
+        header("Location: /modules/medications/list.php");
+        exit;
+    }
+} elseif ($forUserId) {
+    $_SESSION['error'] = "Invalid user";
+    header("Location: /modules/medications/list.php");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -126,6 +148,12 @@ $isAdmin = Auth::isAdmin();
         <?php endif; ?>
 
         <form method="POST" action="/modules/medications/add_unified_handler.php" id="medForm">
+            <?php if ($isForLinkedUser): ?>
+            <input type="hidden" name="for_user_id" value="<?= htmlspecialchars($forUserId) ?>">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 10px; margin-bottom: 24px;">
+                <strong>👥 Adding medication for <?= htmlspecialchars($linkedUser['linked_user_name']) ?></strong>
+            </div>
+            <?php endif; ?>
             <!-- Section 1: Medication Search -->
             <div class="form-section">
                 <div class="form-section-title">1. Medication Information</div>

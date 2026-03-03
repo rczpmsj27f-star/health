@@ -278,7 +278,9 @@ $archivedMeds = $stmt->fetchAll();
         <?php endif; ?>
         
         <div class="action-buttons" style="margin-top: 32px;">
-            <a class="btn btn-primary" href="/modules/medications/add_unified.php">➕ Add Medication</a>
+            <?php if (!$viewingLinkedUser || !empty($myPermissions['can_add_medications'])): ?>
+            <a class="btn btn-primary" href="/modules/medications/add_unified.php<?= $viewingLinkedUser ? '?for_user_id=' . $targetUserId : '' ?>">➕ Add Medication</a>
+            <?php endif; ?>
         </div>
     </div>
     

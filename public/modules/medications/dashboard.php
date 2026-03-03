@@ -1064,6 +1064,9 @@ foreach ($allDashboardMeds as $med) {
                 <div class="modal-body">
                     <input type="hidden" name="medication_id" id="skip_medication_id">
                     <input type="hidden" name="scheduled_date_time" id="skip_scheduled_date_time">
+                    <?php if ($viewingLinkedUser): ?>
+                    <input type="hidden" name="for_user_id" value="<?= $targetUserId ?>">
+                    <?php endif; ?>
                     
                     <p style="margin-bottom: 16px; color: var(--color-text-secondary);">
                         Why are you skipping <strong id="skip_medication_name"></strong>?
@@ -1427,7 +1430,10 @@ foreach ($allDashboardMeds as $med) {
                     body: new URLSearchParams({
                         'medication_id': medId,
                         'scheduled_date_time': scheduledDateTime,
-                        'ajax': '1'
+                        'ajax': '1',
+                        <?php if ($viewingLinkedUser): ?>
+                        'for_user_id': '<?= $targetUserId ?>'
+                        <?php endif; ?>
                     })
                 })
                 .then(response => response.json())

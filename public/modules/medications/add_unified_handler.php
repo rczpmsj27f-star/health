@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once "../../../app/config/database.php";
+require_once "../../../app/core/LinkedUserHelper.php";
 
 // Map special timing to default reminder times
 function getDefaultReminderTime($specialTiming) {
@@ -22,12 +23,33 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+// Check if adding for a linked user
+$linkedHelper = new LinkedUserHelper($pdo);
+$forUserId = $_POST['for_user_id'] ?? $_SESSION['user_id'];
+$isForLinkedUser = $forUserId != $_SESSION['user_id'];
+
+if ($isForLinkedUser) {
+    $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
+    if (!$linkedUser || $linkedUser['linked_user_id'] != $forUserId) {
+        $_SESSION['error'] = "Invalid user";
+        header("Location: /modules/medications/add_unified.php");
+        exit;
+    }
+    $myPermissions = $linkedHelper->getPermissions($linkedUser['id'], $_SESSION['user_id']);
+    if (!$myPermissions || !$myPermissions['can_add_medications']) {
+        $_SESSION['error'] = "You don't have permission to add medications for this user";
+        header("Location: /modules/medications/add_unified.php");
+        exit;
+    }
+}
+
+$userId = $forUserId;
+$addFormUrl = $isForLinkedUser ? '/modules/medications/add_unified.php?for_user_id=' . urlencode($forUserId) : '/modules/medications/add_unified.php';
 
 // Validate start_date is provided
 if (empty($_POST['start_date'])) {
     $_SESSION['error'] = "Start date is required. Please specify when you started taking this medication.";
-    header("Location: /modules/medications/add_unified.php");
+    header("Location: " . $addFormUrl);
     exit;
 }
 
@@ -35,7 +57,7 @@ if (empty($_POST['start_date'])) {
 $startDate = $_POST['start_date'];
 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
     $_SESSION['error'] = "Invalid start date format. Please use YYYY-MM-DD.";
-    header("Location: /modules/medications/add_unified.php");
+    header("Location: " . $addFormUrl);
     exit;
 }
 
@@ -225,13 +247,14 @@ try {
 
     // Redirect to list with success modal
     $_SESSION['success'] = 'Medication added successfully!';
-    header("Location: /modules/medications/list.php");
+    $redirectUrl = $isForLinkedUser ? '/modules/medications/list.php?view=linked' : '/modules/medications/list.php';
+    header("Location: " . $redirectUrl);
     exit;
 
 } catch (Exception $e) {
     // Rollback on error
     $pdo->rollBack();
     $_SESSION['error'] = "Failed to add medication: " . $e->getMessage();
-    header("Location: /modules/medications/add_unified.php");
+    header("Location: " . $addFormUrl);
     exit;
 }

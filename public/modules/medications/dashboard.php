@@ -49,6 +49,47 @@ $isToday = $viewDate === date('Y-m-d');
 $prevDate = date('Y-m-d', strtotime($viewDate . ' -1 day'));
 $nextDate = date('Y-m-d', strtotime($viewDate . ' +1 day'));
 
+// Get overdue medication count for the logged-in user (always the current user, not the target)
+$overdueCheckDow = date('D');
+$overdueCheckDate = date('Y-m-d');
+$stmtOverdue = $pdo->prepare("
+    SELECT COUNT(DISTINCT CONCAT(m.id, '_', mdt.dose_time)) as cnt
+    FROM medications m
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+    LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
+    WHERE m.user_id = :user_id
+    AND (m.archived = 0 OR m.archived IS NULL)
+    AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
+    AND (
+        ms.frequency_type = 'per_day'
+        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE :day_of_week)
+    )
+    AND mdt.dose_time IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1 FROM medication_logs ml2
+        WHERE ml2.medication_id = m.id
+        AND DATE(ml2.scheduled_date_time) = :today_date
+        AND TIME(ml2.scheduled_date_time) = mdt.dose_time
+        AND ml2.status IN ('taken', 'skipped')
+    )
+    AND (
+        (ms.special_timing = 'on_waking' AND CONCAT(:today_date, ' 09:00:00') < NOW())
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') < NOW())
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) < NOW())
+    )
+    AND (
+        (ms.special_timing = 'on_waking' AND CONCAT(:today_date, ' 09:00:00') >= m.created_at)
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date, ' 22:00:00') >= m.created_at)
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking', 'before_bed')) AND CONCAT(:today_date, ' ', mdt.dose_time) >= m.created_at)
+    )
+");
+$stmtOverdue->execute([
+    'user_id' => $_SESSION['user_id'],
+    'day_of_week' => "%$overdueCheckDow%",
+    'today_date' => $overdueCheckDate,
+]);
+$overdueCount = (int)$stmtOverdue->fetchColumn();
+
 // Get today's medications (adjust for view date)
 $today = date('D', strtotime($viewDate)); // Mon, Tue, Wed, etc.
 
@@ -818,7 +859,7 @@ foreach ($allDashboardMeds as $med) {
         
         <!-- Scheduled Medications Section -->
         <div class="schedule-section">
-            <h3>Scheduled Medications</h3>
+            <h3>Scheduled Medications<?php if ($overdueCount > 0): ?><span style="background: #dc2626; color: white; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; margin-left: 8px;"><?= $overdueCount ?> overdue</span><?php endif; ?></h3>
             
             <!-- Compact Date Navigation -->
             <div style="text-align: center; margin-bottom: 20px;">
@@ -1195,6 +1236,9 @@ foreach ($allDashboardMeds as $med) {
     </style>
     
     <script>
+    // Linked user ID for forwarding actions (empty string if viewing own medications)
+    const forUserId = '<?= $viewingLinkedUser ? (int)$targetUserId : '' ?>';
+
     // Medication info data for info/warning icons
     var medInfoData = <?= json_encode($medInfoForJs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
@@ -1350,9 +1394,9 @@ foreach ($allDashboardMeds as $med) {
         }
         
         // Add for_user_id if viewing linked user
-        <?php if ($viewingLinkedUser): ?>
-        formData.append('for_user_id', '<?= $targetUserId ?>');
-        <?php endif; ?>
+        if (forUserId) {
+            formData.append('for_user_id', forUserId);
+        }
         
         // Submit to take_handler
         fetch('/modules/medications/take_medication_handler.php', {
@@ -1427,14 +1471,15 @@ foreach ($allDashboardMeds as $med) {
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: new URLSearchParams({
-                        'medication_id': medId,
-                        'scheduled_date_time': scheduledDateTime,
-                        'ajax': '1',
-                        <?php if ($viewingLinkedUser): ?>
-                        'for_user_id': '<?= $targetUserId ?>'
-                        <?php endif; ?>
-                    })
+                    body: (() => {
+                        const p = new URLSearchParams({
+                            'medication_id': medId,
+                            'scheduled_date_time': scheduledDateTime,
+                            'ajax': '1'
+                        });
+                        if (forUserId) p.append('for_user_id', forUserId);
+                        return p;
+                    })()
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -1497,6 +1542,7 @@ foreach ($allDashboardMeds as $med) {
         
         const formData = new FormData(this);
         formData.append('ajax', '1');
+        if (forUserId) formData.append('for_user_id', forUserId);
         
         fetch('/modules/medications/skip_medication_handler.php', {
             method: 'POST',

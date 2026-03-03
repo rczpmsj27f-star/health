@@ -10,6 +10,44 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
+function sendPush($pdo, $userId, $title, $message) {
+    $envFile = __DIR__ . '/../../../.env';
+    if (!file_exists($envFile)) return;
+    $env = parse_ini_file($envFile, false, INI_SCANNER_RAW);
+    $appId  = $env['ONESIGNAL_APP_ID'] ?? '';
+    $apiKey = $env['ONESIGNAL_REST_API_KEY'] ?? '';
+    if (!$appId || !$apiKey) return;
+
+    $stmt = $pdo->prepare("SELECT onesignal_player_id FROM user_notification_settings WHERE user_id = ? AND notifications_enabled = 1");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+    if (!$row || empty($row['onesignal_player_id'])) return;
+
+    $payload = json_encode([
+        'app_id'                   => $appId,
+        'include_subscription_ids' => [$row['onesignal_player_id']],
+        'headings'                 => ['en' => $title],
+        'contents'                 => ['en' => $message],
+        'ios_badgeType'            => 'Increase',
+        'ios_badgeCount'           => 1,
+    ]);
+
+    $ch = curl_init('https://onesignal.com/api/v1/notifications');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Authorization: Bearer ' . $apiKey]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    $response = curl_exec($ch);
+    if ($response === false) {
+        error_log("Direct push to user $userId: curl error: " . curl_error($ch));
+        curl_close($ch);
+        return;
+    }
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    error_log("Direct push to user $userId: HTTP $httpCode, Response: $response");
+}
+
 $linkedHelper = new LinkedUserHelper($pdo);
 $notificationHelper = new NotificationHelper($pdo);
 $action = $_POST['action'] ?? '';
@@ -49,6 +87,7 @@ try {
                         $accepterRow['first_name'] . ' has accepted your link invitation',
                         $_SESSION['user_id']
                     );
+                    sendPush($pdo, $linkRow['invited_by'], '🔗 Link Accepted', $accepterRow['first_name'] . ' has accepted your link invitation');
 
                     // Notify the accepter that they are now linked
                     $stmt = $pdo->prepare("SELECT first_name FROM users WHERE id = ?");
@@ -63,6 +102,7 @@ try {
                             'You are now linked with ' . $inviterRow['first_name'],
                             $linkRow['invited_by']
                         );
+                        sendPush($pdo, $_SESSION['user_id'], '🔗 Link Request Accepted', 'You are now linked with ' . $inviterRow['first_name']);
                     }
                 }
 

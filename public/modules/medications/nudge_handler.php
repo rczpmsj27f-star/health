@@ -12,6 +12,44 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
+function sendPush($pdo, $userId, $title, $message) {
+    $envFile = __DIR__ . '/../../../.env';
+    if (!file_exists($envFile)) return;
+    $env = parse_ini_file($envFile, false, INI_SCANNER_RAW);
+    $appId  = $env['ONESIGNAL_APP_ID'] ?? '';
+    $apiKey = $env['ONESIGNAL_REST_API_KEY'] ?? '';
+    if (!$appId || !$apiKey) return;
+
+    $stmt = $pdo->prepare("SELECT onesignal_player_id FROM user_notification_settings WHERE user_id = ? AND notifications_enabled = 1");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+    if (!$row || empty($row['onesignal_player_id'])) return;
+
+    $payload = json_encode([
+        'app_id'                   => $appId,
+        'include_subscription_ids' => [$row['onesignal_player_id']],
+        'headings'                 => ['en' => $title],
+        'contents'                 => ['en' => $message],
+        'ios_badgeType'            => 'Increase',
+        'ios_badgeCount'           => 1,
+    ]);
+
+    $ch = curl_init('https://onesignal.com/api/v1/notifications');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Authorization: Bearer ' . $apiKey]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    $response = curl_exec($ch);
+    if ($response === false) {
+        error_log("Direct push to user $userId: curl error: " . curl_error($ch));
+        curl_close($ch);
+        return;
+    }
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    error_log("Direct push to user $userId: HTTP $httpCode, Response: $response");
+}
+
 $linkedHelper = new LinkedUserHelper($pdo);
 $notificationHelper = new NotificationHelper($pdo);
 
@@ -69,6 +107,8 @@ $notificationHelper->create(
     $_SESSION['user_id'],
     $medicationId
 );
+
+sendPush($pdo, $toUserId, '👋 Nudge from ' . $myName, $myName . ' is reminding you to take "' . $med['name'] . '"');
 
 // Record nudge
 $linkedHelper->recordNudge($_SESSION['user_id'], $toUserId, $medicationId);

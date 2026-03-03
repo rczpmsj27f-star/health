@@ -190,6 +190,7 @@ try {
                     if (btn) btn.remove();
                 }
                 updateMarkAllBar();
+                if (typeof updateBadge === 'function') updateBadge();
             }
         })
         .catch(error => {
@@ -213,6 +214,7 @@ try {
                     list.innerHTML = '<div style="padding: 60px 20px; text-align: center; color: var(--color-text-secondary);"><div style="font-size: 64px; margin-bottom: 16px;">🔔</div><div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No notifications yet</div><div style="font-size: 14px;">You\'ll see your medication reminders and alerts here</div></div>';
                 }
                 updateMarkAllBar();
+                if (typeof updateBadge === 'function') updateBadge();
             } else {
                 alert('Failed to delete notification. Please try again.');
             }
@@ -240,6 +242,7 @@ try {
                     if (btn) btn.remove();
                 });
                 updateMarkAllBar();
+                if (typeof updateBadge === 'function') updateBadge();
             }
         })
         .catch(error => {

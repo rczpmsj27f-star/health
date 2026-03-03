@@ -826,10 +826,12 @@ foreach ($instructions as $i) {
         }
     }
     
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize on page load (handles both direct navigation and AJAX navigation)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { updateTimeInputs(); });
+    } else {
         updateTimeInputs();
-    });
+    }
     </script>
 </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>

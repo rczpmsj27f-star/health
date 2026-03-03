@@ -262,13 +262,47 @@ $isAdmin = Auth::isAdmin();
                         </div>
                     </div>
                     
-                    <!-- Special Timing for Once Daily Meds (Issue #104) -->
-                    <div id="special-timing-section" style="display: none; margin-top: 16px;">
+                    <!-- Timing Type Selection (only for once per day) -->
+                    <div id="timing-type-section" style="display: none; margin-top: 16px;">
                         <div class="form-group">
-                            <label>When to Take</label>
-                            <?= renderDropdown($pdo, 'special_timing', 'special_timing', '', ['id' => 'special_timing', 'class' => 'form-control']) ?>
+                            <label style="display: block; margin-bottom: 12px; font-weight: 600;">How do you take this medication?</label>
+                            
+                            <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; cursor: pointer;">
+                                <input type="radio" name="timing_type" value="specific_time" checked onchange="updateTimingTypeUI()">
+                                <span style="margin-left: 8px; font-weight: 500;">⏰ At a specific time each day</span>
+                            </label>
+                            
+                            <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                                <input type="radio" name="timing_type" value="flexible" onchange="updateTimingTypeUI()">
+                                <span style="margin-left: 8px; font-weight: 500;">📅 Sometime during the day (flexible timing)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Specific Time Input (shown when "specific time" is selected) -->
+                    <div id="specific-time-input" style="display: none; margin-top: 16px;">
+                        <div class="form-group">
+                            <label>What time? *</label>
+                            <input type="time" name="dose_time_1" id="dose_time_1">
+                        </div>
+                    </div>
+
+                    <!-- Flexible Timing Options (shown when "flexible" is selected) -->
+                    <div id="flexible-timing-section" style="display: none; margin-top: 16px;">
+                        <div class="form-group">
+                            <label>When to take:</label>
+                            <select name="special_timing" id="special_timing">
+                                <option value="">Select...</option>
+                                <option value="on_waking">On waking (10:00 AM reminder)</option>
+                                <option value="before_bed">Before bed (10:00 PM reminder)</option>
+                                <option value="with_breakfast">With breakfast (10:00 AM reminder)</option>
+                                <option value="with_lunch">With lunch (2:00 PM reminder)</option>
+                                <option value="with_dinner">With dinner (8:00 PM reminder)</option>
+                                <option value="morning_anytime">Morning - anytime (12:00 PM reminder)</option>
+                                <option value="evening_anytime">Evening - anytime (10:00 PM reminder)</option>
+                            </select>
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
-                                Choose a general time or set specific times below
+                                Choose a general time - you'll get a reminder at the time shown
                             </small>
                         </div>
                         
@@ -276,7 +310,7 @@ $isAdmin = Auth::isAdmin();
                             <label>Custom Instructions (optional)</label>
                             <textarea name="custom_instructions" 
                                       id="custom_instructions"
-                                      rows="2" 
+                                      rows="3" 
                                       placeholder="e.g., Take 30 minutes before breakfast"
                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
@@ -284,10 +318,9 @@ $isAdmin = Auth::isAdmin();
                             </small>
                         </div>
                     </div>
-                    
-                    <div id="time_inputs_container">
-                        <!-- Time inputs will be dynamically generated here -->
-                    </div>
+
+                    <!-- Multiple Times Container (shown when times_per_day > 1) -->
+                    <div id="time_inputs_container"></div>
                 </div>
 
                 <div id="weekly" style="display:none;">
@@ -588,31 +621,50 @@ $isAdmin = Auth::isAdmin();
     // Update time inputs based on times per day
     function updateTimeInputs() {
         let timesPerDay = parseInt(document.getElementById("times_per_day").value) || 1;
-        let container = document.getElementById("time_inputs_container");
-        let specialTimingSection = document.getElementById("special-timing-section");
+        let timingTypeSection = document.getElementById("timing-type-section");
+        let timeInputsContainer = document.getElementById("time_inputs_container");
         
-        // Show special timing section only when times_per_day = 1
         if (timesPerDay === 1) {
-            specialTimingSection.style.display = 'block';
+            // Show timing type selection
+            timingTypeSection.style.display = 'block';
+            timeInputsContainer.innerHTML = ''; // Clear multiple times
+            
+            // Update the UI based on current selection
+            updateTimingTypeUI();
         } else {
-            specialTimingSection.style.display = 'none';
-        }
-        
-        if (timesPerDay >= 1) {
-            let html = '<div style="margin-top:10px;"><strong>Dose Times:</strong></div>';
+            // Hide timing type selection, show multiple time inputs
+            timingTypeSection.style.display = 'none';
+            document.getElementById("specific-time-input").style.display = 'none';
+            document.getElementById("flexible-timing-section").style.display = 'none';
+            
+            // Generate multiple time inputs
+            let html = '<div style="margin-top:16px;"><strong>Dose Times:</strong></div>';
             for (let i = 1; i <= timesPerDay; i++) {
+                html += `<div class="form-group">`;
                 html += `<label>Time ${i}:</label>`;
                 html += `<input type="time" name="dose_time_${i}" id="dose_time_${i}">`;
+                html += `</div>`;
             }
             
-            // Add evenly split button only if more than 1 dose per day
-            if (timesPerDay > 1) {
-                html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
-            }
+            // Add evenly split button
+            html += '<button type="button" class="btn btn-secondary" onclick="evenlySplitTimes()" style="margin-top: 12px;">⏰ Evenly split (7am - 10pm)</button>';
             
-            container.innerHTML = html;
-        } else {
-            container.innerHTML = '';
+            timeInputsContainer.innerHTML = html;
+        }
+    }
+    
+    // Update UI based on timing type selection
+    function updateTimingTypeUI() {
+        let timingType = document.querySelector('input[name="timing_type"]:checked')?.value;
+        let specificTimeInput = document.getElementById("specific-time-input");
+        let flexibleTimingSection = document.getElementById("flexible-timing-section");
+        
+        if (timingType === 'specific_time') {
+            specificTimeInput.style.display = 'block';
+            flexibleTimingSection.style.display = 'none';
+        } else if (timingType === 'flexible') {
+            specificTimeInput.style.display = 'none';
+            flexibleTimingSection.style.display = 'block';
         }
     }
     
@@ -691,7 +743,13 @@ $isAdmin = Auth::isAdmin();
     
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        updateTimeInputs();
+        console.log('🚀 Page loaded - initializing timing inputs');
+        
+        // Small delay to ensure all elements are in DOM
+        setTimeout(function() {
+            updateTimeInputs();
+            console.log('✅ Timing inputs initialized');
+        }, 100);
     });
     </script>
 </div> <!-- #main-content -->

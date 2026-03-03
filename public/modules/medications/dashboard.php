@@ -22,6 +22,61 @@ $linkedUser = $linkedHelper->getLinkedUser($_SESSION['user_id']);
 $viewingLinkedUser = isset($_GET['view']) && $_GET['view'] === 'linked' && $linkedUser;
 $targetUserId = $viewingLinkedUser ? $linkedUser['linked_user_id'] : $_SESSION['user_id'];
 
+// --- Overdue counts for tab badges ---
+$tabDow  = date('D');
+$tabDate = date('Y-m-d');
+$tabStmt = $pdo->prepare("
+    SELECT COUNT(DISTINCT CONCAT(m.id, '_', mdt.dose_time)) as cnt
+    FROM medications m
+    LEFT JOIN medication_schedules ms ON m.id = ms.medication_id
+    LEFT JOIN medication_dose_times mdt ON m.id = mdt.medication_id
+    WHERE m.user_id = :user_id
+    AND (m.archived = 0 OR m.archived IS NULL)
+    AND (ms.is_prn = 0 OR ms.is_prn IS NULL)
+    AND (
+        ms.frequency_type = 'per_day'
+        OR (ms.frequency_type = 'per_week' AND ms.days_of_week LIKE :day_of_week)
+    )
+    AND mdt.dose_time IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1 FROM medication_logs ml2
+        WHERE ml2.medication_id = m.id
+        AND DATE(ml2.scheduled_date_time) = :today_date
+        AND TIME(ml2.scheduled_date_time) = mdt.dose_time
+        AND ml2.status IN ('taken', 'skipped')
+    )
+    AND (
+        (ms.special_timing = 'on_waking'  AND CONCAT(:today_date2, ' 09:00:00') < NOW())
+        OR (ms.special_timing = 'before_bed' AND CONCAT(:today_date3, ' 22:00:00') < NOW())
+        OR ((ms.special_timing IS NULL OR ms.special_timing NOT IN ('on_waking','before_bed'))
+            AND CONCAT(:today_date4, ' ', mdt.dose_time) < NOW())
+    )
+");
+// My tab badge
+$tabStmt->execute([
+    'user_id'     => $_SESSION['user_id'],
+    'day_of_week' => "%$tabDow%",
+    'today_date'  => $tabDate,
+    'today_date2' => $tabDate,
+    'today_date3' => $tabDate,
+    'today_date4' => $tabDate,
+]);
+$myTabOverdueCount = (int)$tabStmt->fetchColumn();
+
+// Linked user tab badge (only if there is a linked user)
+$linkedTabOverdueCount = 0;
+if ($linkedUser && $linkedUser['status'] === 'active') {
+    $tabStmt->execute([
+        'user_id'     => $linkedUser['linked_user_id'],
+        'day_of_week' => "%$tabDow%",
+        'today_date'  => $tabDate,
+        'today_date2' => $tabDate,
+        'today_date3' => $tabDate,
+        'today_date4' => $tabDate,
+    ]);
+    $linkedTabOverdueCount = (int)$tabStmt->fetchColumn();
+}
+
 // Initialize TimeFormatter - use current user's preferences, NOT the target user's
 $timeFormatter = new TimeFormatter($pdo, $_SESSION['user_id']);
 
@@ -774,6 +829,21 @@ foreach ($allDashboardMeds as $med) {
         .tile-green {
             background: linear-gradient(135deg, #52C41A 0%, #389E0D 100%);
         }
+
+        .tab-overdue-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: #ef4444;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -818,21 +888,27 @@ foreach ($allDashboardMeds as $med) {
         <div style="background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 12px;">
             <a href="/modules/medications/dashboard.php<?= isset($_GET['date']) ? '?date=' . urlencode($_GET['date']) : '' ?>" 
                class="tab-button <?= !$viewingLinkedUser ? 'active' : '' ?>"
-               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; <?= !$viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
+               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; <?= !$viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
                 <img src="<?= htmlspecialchars($myPic) ?>" 
                      alt="My profile" 
                      onerror="this.src='/assets/images/default-avatar.svg'"
                      style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 2px solid <?= !$viewingLinkedUser ? 'white' : 'var(--color-border)' ?>;">
                 My Medications
+                <?php if ($myTabOverdueCount > 0): ?>
+                    <span class="tab-overdue-badge"><?= $myTabOverdueCount ?></span>
+                <?php endif; ?>
             </a>
             <a href="/modules/medications/dashboard.php?view=linked<?= isset($_GET['date']) ? '&date=' . urlencode($_GET['date']) : '' ?>" 
                class="tab-button <?= $viewingLinkedUser ? 'active' : '' ?>"
-               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; <?= $viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
+               style="flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; <?= $viewingLinkedUser ? 'background: var(--color-primary); color: white;' : 'background: var(--color-bg-light); color: var(--color-text);' ?>">
                 <img src="<?= htmlspecialchars($theirPic) ?>" 
                      alt="<?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s profile" 
                      onerror="this.src='/assets/images/default-avatar.svg'"
                      style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 2px solid <?= $viewingLinkedUser ? 'white' : 'var(--color-border)' ?>;">
                 Manage <?= htmlspecialchars($linkedUser['linked_user_name']) ?>'s Meds
+                <?php if ($linkedTabOverdueCount > 0): ?>
+                    <span class="tab-overdue-badge"><?= $linkedTabOverdueCount ?></span>
+                <?php endif; ?>
             </a>
         </div>
         <?php endif; ?>

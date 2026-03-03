@@ -69,14 +69,43 @@ async function initializeNativePush() {
             await PushNotifications.addListener('registration', async (token) => {
                 console.log('Push registration success, token:', token.value);
                 
-                // Register device token with backend
-                await registerDeviceToken(token.value);
+                // Register device token with backend (always update to handle token refresh)
+                try {
+                    await registerDeviceToken(token.value);
+                } catch (error) {
+                    console.error('❌ Failed to register device token:', error);
+                    // Retry once after delay
+                    setTimeout(async () => {
+                        try {
+                            await registerDeviceToken(token.value);
+                        } catch (retryError) {
+                            console.error('❌ Retry also failed to register device token:', retryError);
+                        }
+                    }, 5000);
+                }
             });
 
             // Listen for registration errors
             await PushNotifications.addListener('registrationError', (error) => {
                 console.error('Push registration error:', error);
                 updatePushRegistrationStatus(false);
+
+                // Try to recover by requesting permissions again after a short delay.
+                // Use a flag to prevent concurrent recovery attempts.
+                if (!window._pushRegistrationRecoveryInProgress) {
+                    window._pushRegistrationRecoveryInProgress = true;
+                    setTimeout(async () => {
+                        console.log('🔄 Attempting to recover from registration error...');
+                        try {
+                            await PushNotifications.requestPermissions();
+                            await PushNotifications.register();
+                        } catch (e) {
+                            console.error('❌ Recovery failed:', e);
+                        } finally {
+                            window._pushRegistrationRecoveryInProgress = false;
+                        }
+                    }, 2000);
+                }
             });
 
             // Listen for push notifications received

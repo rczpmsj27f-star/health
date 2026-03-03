@@ -66,6 +66,16 @@ try {
                 echo json_encode(['success' => false, 'error' => 'Invalid platform']);
                 exit;
             }
+
+            // For iOS (APNs), validate that the device token is a 64-character hex string
+            if ($platform === 'ios') {
+                if (strlen($device_token) !== 64 || !ctype_xdigit($device_token)) {
+                    error_log("push-devices.php register: Invalid APNs token format for user {$user_id}");
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => 'Invalid device token format']);
+                    exit;
+                }
+            }
             
             // Get OneSignal Player ID from the request (provided by native SDK)
             $onesignal_player_id = $input['onesignal_player_id'] ?? null;

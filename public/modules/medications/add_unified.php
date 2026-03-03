@@ -293,13 +293,13 @@ $isAdmin = Auth::isAdmin();
                             <label>When to take:</label>
                             <select name="special_timing" id="special_timing">
                                 <option value="">Select...</option>
-                                <option value="on_waking">On waking (10:00 AM reminder)</option>
-                                <option value="before_bed">Before bed (10:00 PM reminder)</option>
-                                <option value="with_breakfast">With breakfast (10:00 AM reminder)</option>
-                                <option value="with_lunch">With lunch (2:00 PM reminder)</option>
-                                <option value="with_dinner">With dinner (8:00 PM reminder)</option>
-                                <option value="morning_anytime">Morning - anytime (12:00 PM reminder)</option>
-                                <option value="evening_anytime">Evening - anytime (10:00 PM reminder)</option>
+                                <option value="on_waking" data-time="10:00" data-label="🌅 On waking">🌅 On waking (10:00 reminder)</option>
+                                <option value="before_bed" data-time="22:00" data-label="🌙 Before bed">🌙 Before bed (22:00 reminder)</option>
+                                <option value="with_breakfast" data-time="10:00" data-label="🍳 With breakfast">🍳 With breakfast (10:00 reminder)</option>
+                                <option value="with_lunch" data-time="14:00" data-label="🍽️ With lunch">🍽️ With lunch (14:00 reminder)</option>
+                                <option value="with_dinner" data-time="20:00" data-label="🍝 With dinner">🍝 With dinner (20:00 reminder)</option>
+                                <option value="morning_anytime" data-time="12:00" data-label="☀️ Morning - anytime">☀️ Morning - anytime (12:00 reminder)</option>
+                                <option value="evening_anytime" data-time="22:00" data-label="🌆 Evening - anytime">🌆 Evening - anytime (22:00 reminder)</option>
                             </select>
                             <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
                                 Choose a general time - you'll get a reminder at the time shown
@@ -750,7 +750,39 @@ $isAdmin = Auth::isAdmin();
             updateTimeInputs();
             console.log('✅ Timing inputs initialized');
         }, 100);
+
+        // Format special timing dropdown options using user's locale preference
+        document.querySelectorAll('#special_timing option[data-time]').forEach(function(option) {
+            const time24 = option.getAttribute('data-time');
+            const label = option.getAttribute('data-label');
+            option.textContent = label + ' (' + formatTime(time24) + ' reminder)';
+        });
     });
+
+    // Detect if user prefers 12 or 24 hour format
+    function getUserTimeFormat() {
+        const testDate = new Date(2000, 0, 1, 13, 0, 0);
+        const timeString = testDate.toLocaleTimeString(navigator.language, {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+        return timeString.includes('13') ? '24' : '12';
+    }
+
+    // Format time based on user preference
+    function formatTime(time24) {
+        const timeFormat = getUserTimeFormat();
+        if (timeFormat === '24') {
+            return time24;
+        } else {
+            // Convert to 12-hour format without space (e.g., "10:00am")
+            const [hours, minutes] = time24.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'pm' : 'am';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minutes}${ampm}`;
+        }
+    }
     </script>
 </div> <!-- #main-content -->
 <?php include __DIR__ . '/../../../app/includes/footer.php'; ?>
